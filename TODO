@@ -1,0 +1,7 @@
+TODO :
+	
+	- Kernel manager (restart dead kernel ?)
+	- Option des kernels :
+	
+		from jupyter_client import manager
+		kmanager, kclient = manager.start_new_kernel(extra_arguments=["--matplotlib='inline'"])
