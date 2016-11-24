@@ -3,7 +3,7 @@
 #
 # File Name : CUITools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : mar. 22 nov. 2016 17:35:17 CET
+# Last Modified : jeu. 24 nov. 2016 14:06:21 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -15,7 +15,14 @@ DESCRIPTION
 @author: Cyril Desjouy
 """
 
+###############################################################################
+# IMPORT
+###############################################################################
 
+
+###############################################################################
+# FORMAT CELL
+###############################################################################
 def format_cell(variables, string, max_width):
     ''' Format cells for display '''
 
