@@ -1,11 +1,23 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# File Name : KernelTools.py
+# Creation Date : Fri Nov  4 21:49:15 2016
+# Last Modified : mar. 22 nov. 2016 17:32:10 CET
+# Created By : Cyril Desjouy
+#
+# Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
+# Distributed under terms of the BSD license.
 """
-Created on Fri Nov  4 21:49:15 2016
 
-@author: cdesjouy
+DESCRIPTION
+
+@author: Cyril Desjouy
 """
+
+
 ###############################################################################
-# Imports
+# IMPORTS
 ###############################################################################
 from jupyter_client import BlockingKernelClient, manager
 from Queue import Empty

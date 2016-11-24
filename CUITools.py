@@ -1,8 +1,18 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# File Name : CUITools.py
+# Creation Date : Mon Nov 21 23:26:57 2016
+# Last Modified : mar. 22 nov. 2016 17:35:17 CET
+# Created By : Cyril Desjouy
+#
+# Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
+# Distributed under terms of the BSD license.
 """
-Created on Mon Nov 21 23:26:57 2016
 
-@author: cdesjouy
+DESCRIPTION
+
+@author: Cyril Desjouy
 """
 
 

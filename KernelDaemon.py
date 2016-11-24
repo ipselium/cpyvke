@@ -1,10 +1,24 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# File Name : KernelDaemon.py
+# Creation Date : Fri Nov  4 21:49:15 2016
+# Last Modified : mar. 22 nov. 2016 17:36:13 CET
+# Created By : Cyril Desjouy
+#
+# Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
+# Distributed under terms of the BSD license.
 """
-Created on Fri Nov  4 21:49:15 2016
 
-@author: cdesjouy
+DESCRIPTION
+
+@author: Cyril Desjouy
 """
 
+
+###############################################################################
+# IMPORTS
+###############################################################################
 from IPython.lib.kernel import find_connection_file
 from IPython.kernel import BlockingKernelClient
 from Queue import Empty, Full

@@ -1,16 +1,26 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# File Name : cVKE_Main.py
+# Creation Date : Fri Nov  4 21:49:15 2016
+# Last Modified : mar. 22 nov. 2016 17:39:04 CET
+# Created By : Cyril Desjouy
+#
+# Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
+# Distributed under terms of the BSD license.
 """
-Created on Fri Nov  4 21:49:15 2016
 
 To upgrade :
     pip install ipython --update
 To downgrade:
     pip install ipython==2.4.1
 
-@author: cdesjouy
+@author: Cyril Desjouy
 """
+
+
 ###############################################################################
-# Imports
+# IMPORTS
 ###############################################################################
 import argparse
 from jupyter_client import find_connection_file

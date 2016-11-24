@@ -1,11 +1,23 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# File Name : CUIMenuKernel.py
+# Creation Date : Mon Nov 14 09:08:25 2016
+# Last Modified : mar. 22 nov. 2016 17:34:20 CET
+# Created By : Cyril Desjouy
+#
+# Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
+# Distributed under terms of the BSD license.
 """
-Created on Mon Nov 14 09:08:25 2016
 
-@author: cdesjouy
+DESCRIPTION
+
+@author: Cyril Desjouy
 """
+
+
 ###############################################################################
-# Imports
+# IMPORTS
 ###############################################################################
 from __future__ import division  # You don't need this in Python3
 import os

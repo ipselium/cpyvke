@@ -1,13 +1,25 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# File Name : CUIMainWin.py
+# Creation Date : Wed Nov  9 10:03:04 2016
+# Last Modified : jeu. 24 nov. 2016 07:13:27 CET
+# Created By : Cyril Desjouy
+#
+# Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
+# Distributed under terms of the BSD license.
 """
-Created on Wed Nov  9 10:03:04 2016
 
-@author: cdesjouy
+DESCRIPTION
+
+@author: Cyril Desjouy
 """
+
+
 ###############################################################################
-### Imports
+# IMPORTS
 ###############################################################################
-from __future__ import division  #You don't need this in Python3
+from __future__ import division  # You don't need this in Python3
 from threading import Thread
 import curses
 import traceback
@@ -19,7 +31,7 @@ from time import sleep
 ### Personal Libs
 ###############################################################################
 from CUIMenuVar import MenuVarCUI
-from CUIMenuHelp import MenuHelpCUI
+from CUIMenuHelp import MenuHelpCUI, MenuHelpPadCUI
 from CUIMenuKernel import MenuKernelCUI
 from CUIWidgets import WarningMsg
 from CUITools import format_cell
@@ -136,7 +148,7 @@ class CUI(Thread):
 
             # Menu Help
             if self.pkey == 104:    # -> h
-                help_menu = MenuHelpCUI(self.stdscreen)
+                help_menu = MenuHelpPadCUI(self.stdscreen)
                 help_menu.Display()
                 self.stdscreen.erase()
                 self.stdscreen.border(0)

@@ -1,11 +1,24 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# File Name : ModuleInspector.py
+# Creation Date : Thu Nov 10 15:07:17 2016
+# Last Modified : mar. 22 nov. 2016 17:33:02 CET
+# Created By : Cyril Desjouy
+#
+# Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
+# Distributed under terms of the BSD license.
 """
-Created on Thu Nov 10 15:07:17 2016
 
-@author: cdesjouy
+DESCRIPTION
+
+@author: Cyril Desjouy
 """
 
 
+###############################################################################
+# IMPORTS
+###############################################################################
 import inspect
 import os, sys
 

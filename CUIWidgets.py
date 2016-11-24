@@ -1,11 +1,23 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# File Name : CUIWidgets.py
+# Creation Date : Wed Nov  9 16:29:28 2016
+# Last Modified : mar. 22 nov. 2016 17:35:33 CET
+# Created By : Cyril Desjouy
+#
+# Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
+# Distributed under terms of the BSD license.
 """
-Created on Wed Nov  9 16:29:28 2016
 
-@author: cdesjouy
+DESCRIPTION
+
+@author: Cyril Desjouy
 """
+
+
 ###############################################################################
-# Imports
+# IMPORTS
 ###############################################################################
 import curses
 from curses import panel
