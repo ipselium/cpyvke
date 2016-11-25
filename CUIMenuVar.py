@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuVar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mar. 22 nov. 2016 17:34:42 CET
+# Last Modified : ven. 25 nov. 2016 17:01:08 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -24,7 +24,7 @@ from curses import panel
 from PlotServer import SendToMPL
 from numpy import array
 
-from CUIWidgets import Inspector, Viewer, WarningMsg
+from CUIWidgets import Inspector, Viewer, WarningMsg, EditSave
 
 
 class MenuVarCUI(object):
@@ -46,11 +46,18 @@ class MenuVarCUI(object):
             self.varval = self.varval.split("'")[1]
             self.plot = Inspector(self)
 
-        elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] in ('str', 'dict', 'list', 'tuple'):
+        elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] in ('dict', 'list', 'tuple'):
+            CUI_self.qreq.put('print ' + self.varname)
+            self.varval = CUI_self.qans.get()
+            self.varval = eval(self.varval)
+            self.plot = Viewer(self.stdscreen, self.varval, self.varname)
+
+        elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] == 'str':
             CUI_self.qreq.put(self.varname)
             self.varval = CUI_self.qans.get()
             self.varval = eval(self.varval)
-            self.plot = Viewer(self)
+            self.plot = Viewer(self.stdscreen, self.varval, self.varname)
+            self.edit = EditSave(self.stdscreen, self.varval, self.varname)
 
         elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] in ('function'):
             self.varval = '[function]'
@@ -147,10 +154,14 @@ class MenuVarCUI(object):
             return []
 
         elif self.vartype == 'str':
-            return [('View', 'self.plot.Display()')]
+            return [('View', 'self.plot.Display()'),
+                    ('Less', "self.edit.Exec('less')"),
+                    ('Edit', "self.edit.Exec('edit')"),
+                    ('Save', "self.edit.Exec('save')")]
 
         elif self.vartype == 'module':
-            return [('Description', "self.plot.Display('Description')"), ('Help', "self.plot.Display('Help')")]
+            return [('Description', "self.plot.Display('Description')"),
+                    ('Help', "self.plot.Display('Help')")]
 
         elif self.vartype == 'list':
             return [('View', 'self.plot.Display()')]

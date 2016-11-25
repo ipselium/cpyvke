@@ -3,7 +3,7 @@
 #
 # File Name : CUIMainWin.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : jeu. 24 nov. 2016 14:07:50 CET
+# Last Modified : ven. 25 nov. 2016 15:26:45 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -46,7 +46,7 @@ from CUITools import format_cell
 ###############################################################################
 #******************************************************************************
 class CUI(Thread):
-    def __init__(self, kc, cf, qstop, qvar, qreq, qans, qkc):
+    def __init__(self, kc, cf, qstop, qvar, qreq, qans, qkc, DEBUG=False):
         ''' Init CUI Class '''
         Thread.__init__(self)
         self.kc = kc
@@ -57,7 +57,7 @@ class CUI(Thread):
         self.qans = qans
         self.qkc = qkc
         self.curse_delay = 5
-        self.DEBUG = False
+        self.DEBUG = DEBUG
 
         ### Init CUI :
         self.close_signal = 'continue'

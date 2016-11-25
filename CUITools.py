@@ -3,7 +3,7 @@
 #
 # File Name : CUITools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : jeu. 24 nov. 2016 14:06:21 CET
+# Last Modified : ven. 25 nov. 2016 13:44:06 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -54,3 +54,45 @@ def format_cell(variables, string, max_width):
         typ = typ[0:max_width-4] + '... '
 
     return name[0:max_width] + val[0:max_width] + typ[0:max_width]
+
+
+###############################################################################
+def dump(obj, nested_level=0, output=[]):
+    ''' '''
+
+    if nested_level == 0:
+        output = []
+
+    spacing = '   '
+    if type(obj) is dict:
+        output.append('%s{' % ((nested_level) * spacing))
+        for k, v in obj.items():
+            if hasattr(v, '__iter__'):
+                output.append('%s%s:' % ((nested_level + 1) * spacing, k))
+                dump(v, nested_level + 1, output)
+            else:
+                output.append('%s%s: %s' % ((nested_level + 1) * spacing, k, v))
+        output.append('%s}' % (nested_level * spacing))
+
+    elif type(obj) is list:
+        output.append('%s[' % ((nested_level) * spacing))
+        for v in obj:
+            if hasattr(v, '__iter__'):
+                dump(v, nested_level + 1, output)
+            else:
+                output.append('%s%s' % ((nested_level + 1) * spacing, v))
+        output.append('%s]' % ((nested_level) * spacing))
+
+    elif type(obj) is tuple:
+        output.append('%s(' % ((nested_level) * spacing))
+        for v in obj:
+            if hasattr(v, '__iter__'):
+                dump(v, nested_level + 1, output)
+            else:
+                output.append('%s%s' % ((nested_level + 1) * spacing, v))
+        output.append('%s)' % ((nested_level) * spacing))
+
+    else:
+        output.append('%s%s' % (nested_level * spacing, obj))
+    return output
+

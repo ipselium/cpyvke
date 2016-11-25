@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mar. 22 nov. 2016 17:31:10 CET
+# Last Modified : ven. 25 nov. 2016 15:23:12 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -163,15 +163,18 @@ class Watcher(Thread):
             sleep(0.5)
 
         while self.kc.iopub_channel.msg_ready():
-            data = self.kc.get_iopub_msg(timeout=0.1)
-
+            data = self.kc.get_iopub_msg()
             if data['msg_type'] == 'stream' and code == 'whos':
                 value = data['content']['text']
                 if self.ONLY_DAEMON is True:
+                    print('Execute result :')
                     print(data['content']['text'])
 
             elif data['msg_type'] == 'execute_result' and code != 'whos':
                 value = data['content']['data']['text/plain']
+
+            elif data['msg_type'] == 'stream' and code != 'whos':
+                value = data['content']['text']
 
         self.msg = 0
 
