@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuHelp.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 24 nov. 2016 08:45:56 CET
+# Last Modified : lun. 28 nov. 2016 12:33:46 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -85,12 +85,15 @@ class MenuHelpPadCUI(object):
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
 
         # Init Menu
+        self.padpos = 0
+
         self.nb_items = 14
         self.pad_width = 38
         self.pad_height = self.nb_items+2
+
         self.menu_help = curses.newpad(self.pad_height, self.pad_width)
-        self.padpos = 0
         self.menu_help.keypad(1)
+
         self.menu_title = '| Help |'
         self.menu_help.addstr(2, 2, 'Bindings :', curses.A_BOLD)
         self.menu_help.addstr(4, 3, '(h) This Help !')

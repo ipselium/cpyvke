@@ -3,7 +3,7 @@
 #
 # File Name : CUIWidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : ven. 25 nov. 2016 16:59:52 CET
+# Last Modified : lun. 28 nov. 2016 16:08:12 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -22,72 +22,10 @@ DESCRIPTION
 import curses
 from curses import panel
 from time import sleep
-import subprocess
 ###############################################################################
 # Personal Libs
 ###############################################################################
-from ModuleInspector import describe, manual  # Used in the menu_list
-from CUISuspend import suspend_curses
-from CUITools import dump
-
-
-###############################################################################
-###############################################################################
-###############################################################################
-class Inspector(object):
-    def __init__(self, CUI_self):
-        ''' Init Inspector Class '''
-        self.varval = CUI_self.varval
-        self.stdscreen = CUI_self.CUI_self.stdscreen
-
-###############################################################################
-    def Display(self, Arg):
-        ''' '''
-        if Arg == 'Help':
-            manual(self.varval)
-        elif Arg == 'Description':
-            describe(__import__(self.varval))
-
-        with suspend_curses():
-            subprocess.call(['less', 'tmp'])
-            subprocess.call(['rm', 'tmp'])
-
-        self.stdscreen.refresh()
-
-
-###############################################################################
-###############################################################################
-###############################################################################
-class EditSave(object):
-    def __init__(self, stdscreen, varval, varname):
-        ''' Init EditSave Class '''
-        self.varval = varval
-        self.varname = varname
-        self.stdscreen = stdscreen
-
-###############################################################################
-    def Exec(self, mode='edit'):
-        ''' '''
-
-        if mode == 'save':
-            filename = 'SaveFiles/' + self.varname
-            with open(filename, 'w') as f:
-                f.write(self.varval)
-        else:
-            filename = '/tmp/tmp_cVKE'
-            with open(filename, 'w') as f:
-                f.write(self.varval)
-
-            if mode == 'edit':
-                app = 'vim'
-            elif mode == 'less':
-                app = 'less'
-
-            with suspend_curses():
-                subprocess.call([app, filename])
-                subprocess.call(['rm', filename])
-
-        self.stdscreen.refresh()
+from ctools import dump
 
 
 ###############################################################################
@@ -158,12 +96,17 @@ class Viewer(object):
 ###############################################################################
 ###############################################################################
 class WarningMsg(object):
-    def __init__(self, CUI_self):
+    def __init__(self, stdscreen):
         ''' Init WarningMsg Class '''
-        self.cyan_text = CUI_self.cyan_text
-        self.red_text = CUI_self.red_text
-        self.stdscreen = CUI_self.stdscreen
-        self.screen_width = CUI_self.screen_width
+
+        self.stdscreen = stdscreen
+        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
+
+        # Define Styles
+        curses.init_pair(2, curses.COLOR_CYAN, -1)
+        curses.init_pair(3, curses.COLOR_RED, -1)
+        self.cyan_text = curses.color_pair(2)
+        self.red_text = curses.color_pair(3)
 
     def Display(self, wng_msg):
         ''' Display ** wng_msg ** '''

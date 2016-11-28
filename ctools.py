@@ -3,7 +3,7 @@
 #
 # File Name : CUITools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : ven. 25 nov. 2016 13:44:06 CET
+# Last Modified : lun. 28 nov. 2016 15:57:12 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -18,6 +18,7 @@ DESCRIPTION
 ###############################################################################
 # IMPORT
 ###############################################################################
+import curses
 
 
 ###############################################################################
@@ -96,3 +97,15 @@ def dump(obj, nested_level=0, output=[]):
         output.append('%s%s' % (nested_level * spacing, obj))
     return output
 
+
+###############################################################################
+class suspend_curses():
+    """Context Manager to temporarily leave curses mode"""
+
+    def __enter__(self):
+        curses.endwin()
+
+    def __exit__(self, exc_type, exc_val, tb):
+        stdscreen = curses.initscr()
+        stdscreen.refresh()
+        curses.doupdate()

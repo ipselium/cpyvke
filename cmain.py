@@ -3,7 +3,7 @@
 #
 # File Name : CUIMainWin.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : ven. 25 nov. 2016 15:26:45 CET
+# Last Modified : lun. 28 nov. 2016 16:06:58 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -30,14 +30,11 @@ from time import sleep
 ###############################################################################
 ### Personal Libs
 ###############################################################################
-from CUIMenuVar import MenuVarCUI
-from CUIMenuHelp import MenuHelpCUI, MenuHelpPadCUI
-from CUIMenuKernel import MenuKernelCUI
-from CUIWidgets import WarningMsg
-from CUITools import format_cell
-###############################################################################
-###############################################################################
-###############################################################################
+from cvar import MenuVarCUI
+from chelp import MenuHelpCUI, MenuHelpPadCUI
+from ckernel import MenuKernelCUI
+from cwidgets import WarningMsg
+from ctools import format_cell
 
 
 #******************************************************************************
@@ -169,7 +166,7 @@ class CUI(Thread):
                 try:
                     self.search_index = min([i for i, s in enumerate(self.strings) if self.search in s])
                 except ValueError:
-                    Wmsg = WarningMsg(self)
+                    Wmsg = WarningMsg(self.stdscreen)
                     Wmsg.Display('Variable ' + self.search + ' not in kernel')
                     pass
                 else:

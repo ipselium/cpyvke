@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Thu Nov 10 15:07:17 2016
-# Last Modified : mar. 22 nov. 2016 17:33:02 CET
+# Last Modified : lun. 28 nov. 2016 15:29:03 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -129,11 +129,11 @@ def describe_klass(obj):
    dedent()
    print
 
-def describe(module):
+def describe(module, filename):
    """ Describe the module object passed as argument
    including its classes and functions """
 
-   sys.stdout = open('tmp', 'w')
+   sys.stdout = open(filename, 'w')
 
    wi('[Module: %s]\n' % module.__name__)
 
@@ -154,10 +154,6 @@ def describe(module):
       wi('(No members)')
 
    dedent()
-
-def manual(module):
-    sys.stdout = open('tmp', 'w')
-    print help(module)
 
 
 if __name__ == "__main__":

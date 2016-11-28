@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuKernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 22 nov. 2016 17:34:20 CET
+# Last Modified : lun. 28 nov. 2016 16:06:13 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -28,8 +28,8 @@ from time import sleep
 ###############################################################################
 # Personal Libs
 ###############################################################################
-from KernelTools import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
-from CUIWidgets import WarningMsg
+from ktools import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
+from cwidgets import WarningMsg
 
 
 ###############################################################################
@@ -190,13 +190,11 @@ class MenuKernelCUI(object):
                 else:
                     self.page = self.page - 1
                     self.position = self.row_max+(self.row_max*(self.page-1))
-        if self.pkey in (curses.KEY_LEFT, 339):
-            if self.page > 1:
+        if self.pkey in (curses.KEY_LEFT, 339) and self.page > 1:
                 self.page = self.page - 1
                 self.position = 1+(self.row_max*(self.page-1))
 
-        if self.pkey in (curses.KEY_RIGHT, 338):
-            if self.page < pages:
+        if self.pkey in (curses.KEY_RIGHT, 338) and self.page < pages:
                 self.page = self.page + 1
                 self.position = (1+(self.row_max*(self.page-1)))
 
@@ -311,7 +309,7 @@ class MenuKernelCUI(object):
 ###############################################################################
     def StartNewKernel(self):
         kid = start_new_kernel()
-        msg = WarningMsg(self)
+        msg = WarningMsg(self.stdscreen)
         msg.Display('Kernel id ' + kid + ' created')
 
 ###############################################################################
@@ -344,5 +342,5 @@ class MenuKernelCUI(object):
 
 ###############################################################################
     def RestartKernel(self):
-        msg = WarningMsg(self)
+        msg = WarningMsg(self.stdscreen)
         msg.Display('Not Implement yet!')

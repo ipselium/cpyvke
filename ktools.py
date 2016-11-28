@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mar. 22 nov. 2016 17:32:10 CET
+# Last Modified : lun. 28 nov. 2016 16:03:21 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -34,7 +34,7 @@ import subprocess
 def start_new_kernel():
     ''' Start a new kernel and return the kernel_id '''
 
-    with open("kernel_create.log", "w") as f:
+    with open("kcreate.log", "w") as f:
         subprocess.Popen(["ipython", "kernel"], stdout=f)
 
     sleep(1)

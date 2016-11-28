@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : ven. 25 nov. 2016 15:23:12 CET
+# Last Modified : ven. 25 nov. 2016 17:39:25 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -156,6 +156,8 @@ class Watcher(Thread):
 ###############################################################################
     def Exec(self, code):
         ''' Execute **code** '''
+
+        value = 'No Value !'
 
         self.kc.execute(code, store_history=False)
 

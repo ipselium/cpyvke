@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuVar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : ven. 25 nov. 2016 17:01:08 CET
+# Last Modified : lun. 28 nov. 2016 16:07:53 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -21,10 +21,13 @@ DESCRIPTION
 ###############################################################################
 import curses
 from curses import panel
-from PlotServer import SendToMPL
 from numpy import array
 
-from CUIWidgets import Inspector, Viewer, WarningMsg, EditSave
+###############################################################################
+# IMPORTS
+###############################################################################
+from inspector import Inspect
+from cwidgets import Viewer, WarningMsg
 
 
 class MenuVarCUI(object):
@@ -44,20 +47,18 @@ class MenuVarCUI(object):
         if CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] == 'module':
             self.varval = CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['value']
             self.varval = self.varval.split("'")[1]
-            self.plot = Inspector(self)
 
         elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] in ('dict', 'list', 'tuple'):
             CUI_self.qreq.put('print ' + self.varname)
             self.varval = CUI_self.qans.get()
             self.varval = eval(self.varval)
-            self.plot = Viewer(self.stdscreen, self.varval, self.varname)
+            self.view = Viewer(self.stdscreen, self.varval, self.varname)
 
         elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] == 'str':
             CUI_self.qreq.put(self.varname)
             self.varval = CUI_self.qans.get()
             self.varval = eval(self.varval)
-            self.plot = Viewer(self.stdscreen, self.varval, self.varname)
-            self.edit = EditSave(self.stdscreen, self.varval, self.varname)
+            self.view = Viewer(self.stdscreen, self.varval, self.varname)
 
         elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] in ('function'):
             self.varval = '[function]'
@@ -69,8 +70,9 @@ class MenuVarCUI(object):
             CUI_self.qreq.put(self.varname)
             self.varval = CUI_self.qans.get()
             self.varval = eval(self.varval)
-            # Init SendToMPL Class
-            self.plot = SendToMPL(self.varval)
+
+        # Init Inspector
+        self.inspect = Inspect(self.varval, self.varname, self.vartype)
 
         # Create Menu List
         self.menu_title = '| ' + self.varname + ' |'
@@ -153,33 +155,24 @@ class MenuVarCUI(object):
         elif self.vartype == 'float':
             return []
 
-        elif self.vartype == 'str':
-            return [('View', 'self.plot.Display()'),
-                    ('Less', "self.edit.Exec('less')"),
-                    ('Edit', "self.edit.Exec('edit')"),
-                    ('Save', "self.edit.Exec('save')")]
-
         elif self.vartype == 'module':
-            return [('Description', "self.plot.Display('Description')"),
-                    ('Help', "self.plot.Display('Help')")]
+            return [('Description', "self.inspect.Display('less', 'Description')"),
+                    ('Help', "self.inspect.Display('less', 'Help')")]
 
-        elif self.vartype == 'list':
-            return [('View', 'self.plot.Display()')]
-
-        elif self.vartype == 'dict':
-            return [('View', 'self.plot.Display()')]
-
-        elif self.vartype == 'tuple':
-            return [('View', 'self.plot.Display()')]
+        elif self.vartype in ('dict', 'tuple', 'str', 'list'):
+            return [('View', 'self.view.Display()'),
+                    ('Less', "self.inspect.Display('less')"),
+                    ('Edit', "self.inspect.Display('vim')"),
+                    ('Save', "self.inspect.Save()")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 1):
-            return [('Plot', 'self.plot.Plot1D()'),
+            return [('Plot', 'self.inspect.Plot1D()'),
                     ('Save', 'self.MenuSave()')]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 2):
-            return [('Plot 2D', 'self.plot.Plot2D()'),
-                    ('Plot (cols)', 'self.plot.Plot1Dcols()'),
-                    ('Plot (lines)', 'self.plot.Plot1Dlines()'),
+            return [('Plot 2D', 'self.inspect.Plot2D()'),
+                    ('Plot (cols)', 'self.inspect.Plot1Dcols()'),
+                    ('Plot (lines)', 'self.inspect.Plot1Dlines()'),
                     ('Save', 'self.MenuSave()')]
         else:
             return []
@@ -188,7 +181,7 @@ class MenuVarCUI(object):
     def MenuSave(self):
 
         # Init Menu
-        save_menu = self.CUI_self.stdscreen.subwin(5, 6, self.menu_height-2, self.screen_width-9)
+        save_menu = self.stdscreen.subwin(5, 6, self.menu_height-2, self.screen_width-9)
         save_menu.attrset(self.cyan_text)    # change border color
         save_menu.border(0)
         save_menu.keypad(1)
@@ -201,9 +194,9 @@ class MenuVarCUI(object):
         # Various variables
         self.menuposition = 0
 
-        save_items = [('txt', "self.plot.SaveVar(self.varname, 'txt')"),
-                      ('npy', "self.plot.SaveVar(self.varname, 'npy')"),
-                      ('npz', "self.plot.SaveVar(self.varname, 'npz')")]
+        save_items = [('txt', "self.inspect.SaveNP(self.varname, 'txt')"),
+                      ('npy', "self.inspect.SaveNP(self.varname, 'npy')"),
+                      ('npz', "self.inspect.SaveNP(self.varname, 'npz')")]
         panel_save.top()        # Push the panel to the bottom of the stack.
         panel_save.show()       # Display the panel (which might have been hidden)
         save_menu.clear()
@@ -228,7 +221,7 @@ class MenuVarCUI(object):
                 if self.menuposition == len(save_items)-1:
                     break
                 else:
-                    Wng = WarningMsg(self.CUI_self)
+                    Wng = WarningMsg(self.stdscreen)
                     try:
                         eval(save_items[self.menuposition][1])
                         Wng.Display('Saved !')
