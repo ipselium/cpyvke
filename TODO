@@ -1,8 +1,6 @@
 TODO :
 
-	- clean CUIWidget/CUIMenuVar
 	- "s" to acces directly to menu save
-	- implement list/dict/tuple/string save
 	- Kernel manager (restart dead kernel ?)
 	- Daemon : Fix bugs !
 	- Resize in external function (to apply resize even in submenus)

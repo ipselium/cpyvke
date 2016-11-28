@@ -3,7 +3,7 @@
 #
 # File Name : CUIMainWin.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : lun. 28 nov. 2016 16:06:58 CET
+# Last Modified : lun. 28 nov. 2016 16:23:18 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -31,9 +31,8 @@ from time import sleep
 ### Personal Libs
 ###############################################################################
 from cvar import MenuVarCUI
-from chelp import MenuHelpCUI, MenuHelpPadCUI
 from ckernel import MenuKernelCUI
-from cwidgets import WarningMsg
+from cwidgets import WarningMsg, MenuHelpPadCUI
 from ctools import format_cell
 
 

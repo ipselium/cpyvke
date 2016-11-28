@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuVar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : lun. 28 nov. 2016 16:07:53 CET
+# Last Modified : lun. 28 nov. 2016 16:46:10 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -31,44 +31,43 @@ from cwidgets import Viewer, WarningMsg
 
 
 class MenuVarCUI(object):
-    def __init__(self, CUI_self):
+    def __init__(self, parent):
         ''' Init MenuCUI Class '''
 
-        self.CUI_self = CUI_self
-        self.cyan_text = CUI_self.cyan_text
-        self.stdscreen = CUI_self.stdscreen
+        self.cyan_text = parent.cyan_text
+        self.stdscreen = parent.stdscreen
 
         # Variables properties
-        self.varname = CUI_self.strings[CUI_self.position-1]
-        self.vartype = CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type']
-        self.screen_width = CUI_self.screen_width
+        self.varname = parent.strings[parent.position-1]
+        self.vartype = parent.variables[parent.strings[parent.position-1]]['type']
+        self.screen_width = parent.screen_width
 
         # Get variable value
-        if CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] == 'module':
-            self.varval = CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['value']
+        if parent.variables[parent.strings[parent.position-1]]['type'] == 'module':
+            self.varval = parent.variables[parent.strings[parent.position-1]]['value']
             self.varval = self.varval.split("'")[1]
 
-        elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] in ('dict', 'list', 'tuple'):
-            CUI_self.qreq.put('print ' + self.varname)
-            self.varval = CUI_self.qans.get()
+        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('dict', 'list', 'tuple'):
+            parent.qreq.put('print ' + self.varname)
+            self.varval = parent.qans.get()
             self.varval = eval(self.varval)
             self.view = Viewer(self.stdscreen, self.varval, self.varname)
 
-        elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] == 'str':
-            CUI_self.qreq.put(self.varname)
-            self.varval = CUI_self.qans.get()
+        elif parent.variables[parent.strings[parent.position-1]]['type'] == 'str':
+            parent.qreq.put(self.varname)
+            self.varval = parent.qans.get()
             self.varval = eval(self.varval)
             self.view = Viewer(self.stdscreen, self.varval, self.varname)
 
-        elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] in ('function'):
+        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('function'):
             self.varval = '[function]'
 
-        elif CUI_self.variables[CUI_self.strings[CUI_self.position-1]]['type'] in ('file'):
+        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('file'):
             self.varval = '[file]'
 
         else:
-            CUI_self.qreq.put(self.varname)
-            self.varval = CUI_self.qans.get()
+            parent.qreq.put(self.varname)
+            self.varval = parent.qans.get()
             self.varval = eval(self.varval)
 
         # Init Inspector
@@ -149,13 +148,8 @@ class MenuVarCUI(object):
 ###############################################################################
     def CreateMenuLst(self):
         ''' Create the item list for the varmenu  '''
-        if self.vartype == 'int':
-            return []
 
-        elif self.vartype == 'float':
-            return []
-
-        elif self.vartype == 'module':
+        if self.vartype == 'module':
             return [('Description', "self.inspect.Display('less', 'Description')"),
                     ('Help', "self.inspect.Display('less', 'Help')")]
 

@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : lun. 28 nov. 2016 15:57:33 CET
+# Last Modified : lun. 28 nov. 2016 16:24:32 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -29,7 +29,7 @@ import sys
 # Personal imports
 ###############################################################################
 from modinspector import describe
-from CUITools import suspend_curses
+from ctools import suspend_curses
 
 
 def In_Thread(Func):

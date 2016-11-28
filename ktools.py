@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : lun. 28 nov. 2016 16:03:21 CET
+# Last Modified : lun. 28 nov. 2016 16:26:02 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -38,7 +38,7 @@ def start_new_kernel():
         subprocess.Popen(["ipython", "kernel"], stdout=f)
 
     sleep(1)
-    with open("kernel_create.log", "r") as f:
+    with open("kcreate.log", "r") as f:
         stdout = f.read()
 
     return stdout.split('kernel-')[1].split('.json')[0]

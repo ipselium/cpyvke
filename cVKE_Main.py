@@ -3,7 +3,7 @@
 #
 # File Name : cVKE_Main.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : lun. 28 nov. 2016 16:02:00 CET
+# Last Modified : lun. 28 nov. 2016 16:23:50 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -29,7 +29,7 @@ from Queue import Queue
 # Personal Libs
 ###############################################################################
 from kd5 import Watcher
-from CUIMainWin import CUI
+from cmain import CUI
 from ktools import connect_kernel, print_kernel_list
 ###############################################################################
 # PARSE ARGUMENTS
