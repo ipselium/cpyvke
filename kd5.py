@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : ven. 25 nov. 2016 17:39:25 CET
+# Last Modified : mar. 29 nov. 2016 12:17:54 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -23,9 +23,6 @@ from time import sleep
 from threading import Thread
 
 
-###############################################################################
-# Transform whos output to dictionnary
-###############################################################################
 def WhoToDict(string):
     ''' Format output of daemon to a dictionnary '''
 
@@ -40,12 +37,13 @@ def WhoToDict(string):
     return variables
 
 
-###############################################################################
-# WATCHER
-###############################################################################
 class Watcher(Thread):
+    '''
+    Daemon : watch the kernel input and update variable list.
+    The client may also request for the content of a variable.
+    '''
+
     def __init__(self, kc, delay, qstop, qvar, qreq, qans, qkc, ONLY_DAEMON=False):
-        ''' Init Watcher Class '''
 
         # Inputs
         Thread.__init__(self)
@@ -64,7 +62,6 @@ class Watcher(Thread):
         self.variables = self.Exec('whos')
         self.qvar.put(WhoToDict(self.variables))
 
-###############################################################################
     def run(self):
         ''' Run the variable explorer daemon '''
 
@@ -94,7 +91,6 @@ class Watcher(Thread):
 
             sleep(self.delay)
 
-###############################################################################
     def KernelChange(self):
         ''' Watch kernel changes '''
 
@@ -105,7 +101,6 @@ class Watcher(Thread):
             # Send to CUI
             self.SendToCUI()
 
-###############################################################################
     def SendToCUI(self):
         ''' Send variables to CUI '''
 
@@ -114,7 +109,6 @@ class Watcher(Thread):
 
         self.qvar.put(WhoToDict(self.variables))
 
-###############################################################################
     def CheckRequest(self):
         ''' Check if CUI sent a request and answer '''
 
@@ -124,7 +118,6 @@ class Watcher(Thread):
                 text_file.write(value)
             self.qans.put(value)
 
-###############################################################################
     def CheckInput(self):
         ''' Check the iopub msgs available '''
 
@@ -153,7 +146,6 @@ class Watcher(Thread):
 
             self.msg = 1
 
-###############################################################################
     def Exec(self, code):
         ''' Execute **code** '''
 

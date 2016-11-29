@@ -3,7 +3,7 @@
 #
 # File Name : CUIMainWin.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : lun. 28 nov. 2016 16:23:18 CET
+# Last Modified : mar. 29 nov. 2016 13:14:56 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -27,23 +27,18 @@ from math import ceil
 from Queue import Empty
 from curses import panel
 from time import sleep
-###############################################################################
-### Personal Libs
-###############################################################################
+# Personal Libs
 from cvar import MenuVarCUI
 from ckernel import MenuKernelCUI
-from cwidgets import WarningMsg, MenuHelpPadCUI
+from cwidgets import WarningMsg, MenuHelpCUI, SizeWng
 from ctools import format_cell
 
 
-#******************************************************************************
-###############################################################################
-# CURSE USER INTERFACE CLASS ##################################################
-###############################################################################
-#******************************************************************************
 class CUI(Thread):
+    ''' Main window. '''
+
     def __init__(self, kc, cf, qstop, qvar, qreq, qans, qkc, DEBUG=False):
-        ''' Init CUI Class '''
+
         Thread.__init__(self)
         self.kc = kc
         self.cf = cf
@@ -55,35 +50,35 @@ class CUI(Thread):
         self.curse_delay = 5
         self.DEBUG = DEBUG
 
-        ### Init CUI :
+        # Init CUI :
         self.close_signal = 'continue'
         self.stdscreen = curses.initscr()   # Init curses
         self.stdscreen.keypad(1)            #
         self.stdscreen.border(0)            # draw a border around screen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()  # get heigh and width of stdscreen
 
-        ### Curses options
+        # Curses options
         curses.noecho()             # Wont print the input
         curses.cbreak()             #
         curses.curs_set(0)          #
         curses.halfdelay(self.curse_delay)         # How many tenths of a second are waited to refresh stdscreen, from 1 to 255
 
         curses.start_color()        #
-        curses.use_default_colors() # To have transparency : default colors
-        curses.init_pair(1,curses.COLOR_BLACK, curses.COLOR_CYAN)
-        curses.init_pair(2,curses.COLOR_CYAN,-1)
-        curses.init_pair(3,curses.COLOR_RED,-1)
-        curses.init_pair(4,curses.COLOR_GREEN,-1)
+        curses.use_default_colors()  # To have transparency : default colors
+        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
+        curses.init_pair(2, curses.COLOR_CYAN, -1)
+        curses.init_pair(3, curses.COLOR_RED, -1)
+        curses.init_pair(4, curses.COLOR_GREEN, -1)
 
-        ### Define Styles
+        # Define Styles
         self.highlightText = curses.color_pair(1)
         self.cyan_text = curses.color_pair(2)
         self.red_text = curses.color_pair(3)
         self.green_text = curses.color_pair(4)
         self.normalText = curses.A_NORMAL
 
-        ### Min terminal size accepted
-        if self.DEBUG == True:
+        # Min terminal size accepted
+        if self.DEBUG:
             self.term_min_height = 20
             self.term_min_width = 80
             self.kernel_info = 12       # Size of the bottom text area
@@ -97,15 +92,15 @@ class CUI(Thread):
         self.search = None
         self.search_index = 0
 
-        ### Various Texts :
+        # Various Texts :
         self.VarLst_name = "| Variable Explorer |"
 
-        ### Init Variable Box
-        self.row_max = self.screen_height-self.kernel_info #max number of rows
-        self.VarLst = curses.newwin(self.row_max+2, self.screen_width-2, 1, 1 )  # (heigh, width, begin_y, begin_x)
+        # Init Variable Box
+        self.row_max = self.screen_height-self.kernel_info  # max number of rows
+        self.VarLst = curses.newwin(self.row_max+2, self.screen_width-2, 1, 1)  # (heigh, width, begin_y, begin_x)
         self.VarLst.attrset(self.cyan_text)  # Change border color
         self.VarLst.box()
-###############################################################################
+
     def run(self):
         ''' Run daemon '''
         try:
@@ -116,7 +111,7 @@ class CUI(Thread):
             self.ShutdownApp()
         except:
             self.ExitWithError()
-###############################################################################
+
     def UpdateCUI(self):
         ''' Update Curses '''
 
@@ -124,8 +119,9 @@ class CUI(Thread):
         self.ResizeCUI()
 
         # Check if size is enough
-        if self.screen_height < self.term_min_height or self.screen_width < self.term_min_width :
-            self.SizeWng()
+        if self.screen_height < self.term_min_height or self.screen_width < self.term_min_width:
+            SizeWng(self)
+            sleep(0.1)
         else:
             # Get variables from daemon
             self.GetVars()
@@ -136,28 +132,22 @@ class CUI(Thread):
             self.NavigateVarLst()
 
             # Menu Variable
-            if self.pkey == ord( "\n" ) and self.row_num != 0:
+            if self.pkey == ord("\n") and self.row_num != 0:
                 var_menu = MenuVarCUI(self)
                 var_menu.Display()
-                self.stdscreen.erase()
-                self.stdscreen.border(0)
 
             # Menu Help
             if self.pkey == 104:    # -> h
-                help_menu = MenuHelpPadCUI(self.stdscreen)
+                help_menu = MenuHelpCUI(self.stdscreen)
                 help_menu.Display()
-                self.stdscreen.erase()
-                self.stdscreen.border(0)
 
             # Menu KERNEL
             if self.pkey == 99:    # -> c
                 kernel_menu = MenuKernelCUI(self)
                 self.cf, self.kc = kernel_menu.Display()
-                self.stdscreen.erase()
-                self.stdscreen.border(0)
                 # Reset cursor location
                 self.position = 1
-                self.page = int( ceil( self.position / self.row_max ) )
+                self.page = int(ceil(self.position/self.row_max))
 
             # Menu Search
             if self.pkey == 47:    # -> /
@@ -169,8 +159,11 @@ class CUI(Thread):
                     Wmsg.Display('Variable ' + self.search + ' not in kernel')
                     pass
                 else:
-                    self.position = self.search_index +1
-                    self.page = int( ceil( self.position / self.row_max ) )
+                    self.position = self.search_index + 1
+                    self.page = int(ceil(self.position/self.row_max))
+
+            # Update screen size if another menu break because of resizing
+            self.ResizeCUI()
 
             # Erase all windows
             self.VarLst.erase()
@@ -196,12 +189,12 @@ class CUI(Thread):
             # Close menu
             if self.pkey == 113:
                 self.MenuCloseCUI()
-###############################################################################
+
     def SearchVar(self):
         ''' Search an object in the variable list'''
 
         # Init Menu
-        menu_search = self.stdscreen.subwin(self.row_max+2, self.screen_width-2, 1, 1 )
+        menu_search = self.stdscreen.subwin(self.row_max+2, self.screen_width-2, 1, 1)
         menu_search.attrset(self.cyan_text)    # change border color
         menu_search.border(0)
         menu_search.keypad(1)
@@ -225,7 +218,7 @@ class CUI(Thread):
         panel.update_panels()
         curses.doupdate()
         curses.halfdelay(self.curse_delay)  # Relaunch autorefresh !
-###############################################################################
+
     def UpdateVarLst(self):
         ''' Update the list of variables display '''
 
@@ -241,54 +234,73 @@ class CUI(Thread):
                 if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
                     self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell, self.highlightText)
                 else:
-                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell, self.normalText )
+                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell, self.normalText)
                 if i == self.row_num:
                     break
 
         self.stdscreen.refresh()
         self.VarLst.refresh()
-###############################################################################
+
     def NavigateVarLst(self):
         ''' Navigation though the variable list'''
 
-        pages = int(ceil(self.row_num/self.row_max))
+        self.pages = int(ceil(self.row_num/self.row_max))
         if self.pkey == curses.KEY_DOWN:
-            if self.page == 1:
-                if (self.position < self.row_max) and (self.position < self.row_num):
-                    self.position = self.position + 1
-                else:
-                    if pages > 1:
-                        self.page = self.page + 1
-                        self.position = 1 + (self.row_max*(self.page-1))
-            elif self.page == pages:
-                if self.position < self.row_num:
-                    self.position = self.position + 1
-            else:
-                if self.position < self.row_max + (self.row_max*(self.page-1)):
-                    self.position = self.position + 1
-                else:
-                    self.page = self.page + 1
-                    self.position = 1 + ( self.row_max * ( self.page - 1 ) )
+            self.NavDown()
         if self.pkey == curses.KEY_UP:
-            if self.page == 1:
-                if self.position > 1:
-                    self.position = self.position - 1
-            else:
-                if self.position > ( 1 + ( self.row_max * ( self.page - 1 ) ) ):
-                    self.position = self.position - 1
-                else:
-                    self.page = self.page - 1
-                    self.position = self.row_max + ( self.row_max * ( self.page - 1 ) )
+            self.NavUp()
         if self.pkey in (curses.KEY_LEFT, 339):
-            if self.page > 1:
-                self.page = self.page - 1
-                self.position = 1 + ( self.row_max * ( self.page - 1 ) )
-
+            self.NavLeft()
         if self.pkey in (curses.KEY_RIGHT, 338):
-            if self.page < pages:
+            self.NavRight()
+
+    def NavUp(self):
+        ''' Navigate Up. '''
+
+        if self.page == 1:
+            if self.position > 1:
+                self.position = self.position - 1
+        else:
+            if self.position > (1+(self.row_max*(self.page-1))):
+                self.position = self.position - 1
+            else:
+                self.page = self.page - 1
+                self.position = self.row_max + (self.row_max*(self.page-1))
+
+    def NavDown(self):
+        ''' Navigate Down. '''
+
+        if self.page == 1:
+            if (self.position < self.row_max) and (self.position < self.row_num):
+                self.position = self.position + 1
+            else:
+                if self.pages > 1:
+                    self.page = self.page + 1
+                    self.position = 1 + (self.row_max*(self.page-1))
+        elif self.page == self.pages:
+            if self.position < self.row_num:
+                self.position = self.position + 1
+        else:
+            if self.position < self.row_max + (self.row_max*(self.page-1)):
+                self.position = self.position + 1
+            else:
                 self.page = self.page + 1
-                self.position = ( 1 + ( self.row_max * ( self.page - 1 ) ) )
-###############################################################################
+                self.position = 1 + (self.row_max * (self.page-1))
+
+    def NavLeft(self):
+        ''' Navigate Left. '''
+
+        if self.page > 1:
+            self.page = self.page - 1
+            self.position = 1 + (self.row_max*(self.page-1))
+
+    def NavRight(self):
+        ''' Navigate Right. '''
+
+        if self.page < self.pages:
+            self.page = self.page + 1
+            self.position = (1+(self.row_max*(self.page-1)))
+
     def GetVars(self):
         ''' Get variable from the daemon '''
 
@@ -297,9 +309,7 @@ class CUI(Thread):
                 self.variables = self.qvar.get()
         except Empty:
             pass
-###############################################################################
-# RESIZE FUNCS ################################################################
-###############################################################################
+
     def ResizeCUI(self):
         ''' Check if terminal is resized and adapt screen '''
 
@@ -313,73 +323,54 @@ class CUI(Thread):
             curses.resizeterm(self.screen_height, self.screen_width)
             self.stdscreen.refresh()
             self.VarLst.refresh()
-###############################################################################
-    def SizeWng(self):
-        ''' Warning about the size of the terminal'''
 
-        self.stdscreen.erase()
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
-        msg_actual = `self.screen_width` + 'x' + `self.screen_height`
-        msg_limit = 'Win must be > ' + `self.term_min_width` + 'x' + `self.term_min_height`
-        try:
-            self.stdscreen.addstr(int(self.screen_height/2), int((self.screen_width-len(msg_limit))/2), msg_limit , curses.A_BOLD | self.red_text)
-            self.stdscreen.addstr(int(self.screen_height/2)+1, int((self.screen_width-len(msg_actual))/2), msg_actual, curses.A_BOLD | self.red_text)
-        except:
-            pass
-        self.stdscreen.border(0)
-        self.stdscreen.refresh()
-###############################################################################
-# TEXT AREAS ##################################################################
-###############################################################################
     def BottomInfo(self):
         ''' Check and display kernel informations '''
 
-        self.stdscreen.addstr( self.screen_height-1, 2, '< Kernel : ', curses.A_BOLD)
+        self.stdscreen.addstr(self.screen_height-1, 2, '< Kernel : ', curses.A_BOLD)
 
-        if self.kc.is_alive() == True:
-            self.stdscreen.addstr( self.screen_height-1, 13, 'connected ', curses.A_BOLD | self.cyan_text)
-            self.stdscreen.addstr( self.screen_height-1, 23, '[' + `self.row_num` + ' obj, id ' + self.cf.split('-')[1].split('.')[0] + '] >', curses.A_BOLD)
+        if self.kc.is_alive():
+            self.stdscreen.addstr(self.screen_height-1, 13, 'connected ', curses.A_BOLD | self.cyan_text)
+            self.stdscreen.addstr(self.screen_height-1, 23, '[' + str(self.row_num) + ' obj, id ' + self.cf.split('-')[1].split('.')[0] + '] >', curses.A_BOLD)
         else:
-            self.stdscreen.addstr( self.screen_height-1, 13, 'disconnected ', curses.A_BOLD | self.red_text)
+            self.stdscreen.addstr(self.screen_height-1, 13, 'disconnected ', curses.A_BOLD | self.red_text)
 
-        self.stdscreen.addstr( self.screen_height-1, self.screen_width-12, '< h:help >', curses.A_BOLD)
-###############################################################################
+        self.stdscreen.addstr(self.screen_height-1, self.screen_width-12, '< h:help >', curses.A_BOLD)
+
     def ProcInfo(self):
         ''' Display process informations '''
 
-        if self.DEBUG == True:
-            self.stdscreen.addstr( self.row_max + 4, 3, 'Process informations :', curses.A_BOLD | self.cyan_text)
-            self.stdscreen.addstr( self.row_max + 5, 5, '+ ' + 'queue stop     : ' + `self.qstop.qsize()`)
-            self.stdscreen.addstr( self.row_max + 6, 5, '+ ' + 'queue variable : ' + `self.qvar.qsize()`)
-            self.stdscreen.addstr( self.row_max + 7, 5, '+ ' + 'queue request  : ' + `self.qreq.qsize()`)
-            self.stdscreen.addstr( self.row_max + 8, 5, '+ ' + 'queue answer   : ' + `self.qans.qsize()`)
-            self.stdscreen.addstr( self.row_max + 9, 5, '+ ' + 'queue kernel   : ' + `self.qkc.qsize()`)
-###############################################################################
+        if self.DEBUG:
+            self.stdscreen.addstr(self.row_max + 4, 3, 'Process informations :', curses.A_BOLD | self.cyan_text)
+            self.stdscreen.addstr(self.row_max + 5, 5, '+ ' + 'queue stop     : ' + str(self.qstop.qsize()))
+            self.stdscreen.addstr(self.row_max + 6, 5, '+ ' + 'queue variable : ' + str(self.qvar.qsize()))
+            self.stdscreen.addstr(self.row_max + 7, 5, '+ ' + 'queue request  : ' + str(self.qreq.qsize()))
+            self.stdscreen.addstr(self.row_max + 8, 5, '+ ' + 'queue answer   : ' + str(self.qans.qsize()))
+            self.stdscreen.addstr(self.row_max + 9, 5, '+ ' + 'queue kernel   : ' + str(self.qkc.qsize()))
+
     def DebugInfo(self):
         ''' Display debug informations '''
 
-        if self.DEBUG == True:
-            self.stdscreen.addstr( self.row_max + 4, int(self.screen_width/2), 'Debug informations :', curses.A_BOLD | self.cyan_text)
-            self.stdscreen.addstr( self.row_max + 5, int(self.screen_width/2) + 2, '+ ' + 'width : ' + `self.screen_width`)
-            self.stdscreen.addstr( self.row_max + 6, int(self.screen_width/2) + 2, '+ ' + 'heigh : ' + `self.screen_height`)
-            self.stdscreen.addstr( self.row_max + 7, int(self.screen_width/2) + 2, '+ ' + 'key : ' + `self.pkey`)
-            self.stdscreen.addstr( self.row_max + 8, int(self.screen_width/2) + 2, '+ ' + 'Search : ' + `self.search`)
-            self.stdscreen.addstr( self.row_max + 9, int(self.screen_width/2) + 2, '+ ' + 'Search Index : ' + `self.search_index`)
-###############################################################################
-# TERMINATE CURSES ############################################################
-###############################################################################
+        if self.DEBUG:
+            self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/2), 'Debug informations :', curses.A_BOLD | self.cyan_text)
+            self.stdscreen.addstr(self.row_max + 5, int(self.screen_width/2) + 2, '+ ' + 'width : ' + str(self.screen_width))
+            self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/2) + 2, '+ ' + 'heigh : ' + str(self.screen_height))
+            self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/2) + 2, '+ ' + 'key : ' + str(self.pkey))
+            self.stdscreen.addstr(self.row_max + 8, int(self.screen_width/2) + 2, '+ ' + 'Search : ' + str(self.search))
+            self.stdscreen.addstr(self.row_max + 9, int(self.screen_width/2) + 2, '+ ' + 'Search Index : ' + str(self.search_index))
+
     def MenuCloseCUI(self):
         ''' Close Menu '''
 
-        ### Init Menu
+        # Init Menu
         cmsg = 'Shutdown kernel (default no) ? [y|n|q]'
         cmsg_width = len(cmsg) + 4
-        menu_close = self.stdscreen.subwin(3, cmsg_width, int(self.screen_height/2), int((self.screen_width-cmsg_width)/2) )
+        menu_close = self.stdscreen.subwin(3, cmsg_width, int(self.screen_height/2), int((self.screen_width-cmsg_width)/2))
         menu_close.attrset(self.cyan_text)    # change border color
         menu_close.border(0)
         menu_close.keypad(1)
 
-        ### Send menu to a panel
+        # Send menu to a panel
         panel_close = panel.new_panel(menu_close)
         panel_close.top()        # Push the panel to the bottom of the stack.
 
@@ -388,10 +379,10 @@ class CUI(Thread):
         menu_close.refresh()
         curses.doupdate()
 
-        ### Wait for yes or no
+        # Wait for yes or no
         self.stdscreen.nodelay(False)
         self.pkey = -1
-        while self.pkey not in (121, 110, 113, 89, 78, 27, ord( "\n" )):
+        while self.pkey not in (121, 110, 113, 89, 78, 27, ord("\n")):
             self.pkey = self.stdscreen.getch()
             sleep(0.1)
 
@@ -402,22 +393,22 @@ class CUI(Thread):
         curses.doupdate()
         self.stdscreen.refresh()
 
-        if self.pkey in (110, 78, ord( "\n" )):
+        if self.pkey in (110, 78, ord("\n")):
             self.close_signal = 'close'
         elif self.pkey in (121, 89):
             self.close_signal = 'shutdown'
-        elif self.pkey in (113, 27): # escape this menu
+        elif self.pkey in (113, 27):  # escape this menu
             self.close_signal = 'continue'
-###############################################################################
+
     def ShutdownApp(self):
         ''' Shutdown CUI, Daemon, and kernel '''
 
         curses.endwin()
 
         if self.close_signal == 'close':
-            print 'Exiting ! Closing kernel connexion...'
+            print('Exiting ! Closing kernel connexion...')
         elif self.close_signal == 'shutdown':
-            print 'Exiting ! Shuting down kernel...'
+            print('Exiting ! Shuting down kernel...')
             self.kc.shutdown()
 
         self.KillAllFigures()
@@ -425,20 +416,20 @@ class CUI(Thread):
         if self.qstop.qsize() > 0:
             self.qstop.queue.clear()
         self.qstop.put(True)
-###############################################################################
+
     def KillAllFigures(self):
-        ''' Kill all figures (running in differents processes) '''
+        ''' Kill all figures (running in different processes) '''
 
         import multiprocessing
 
         if len(multiprocessing.active_children()) == 1:
-            print `len(multiprocessing.active_children())` + ' figures killed'
+            print(str(len(multiprocessing.active_children())) + ' figures killed')
         elif len(multiprocessing.active_children()) > 1:
-            print `len(multiprocessing.active_children())` + ' figure killed'
+            print(str(len(multiprocessing.active_children())) + ' figure killed')
 
         for child in multiprocessing.active_children():
             child.terminate()
-###############################################################################
+
     def ExitWithError(self):
         ''' If error, send terminate signal to daemon and resore terminal to
             sane state '''
@@ -452,8 +443,3 @@ class CUI(Thread):
         curses.nocbreak()
         curses.endwin()
         traceback.print_exc()           # Print the exception
-#******************************************************************************
-###############################################################################
-# END CURSE USER INTERFACE CLASS ##############################################
-###############################################################################
-#******************************************************************************

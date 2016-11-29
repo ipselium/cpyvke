@@ -3,7 +3,7 @@
 #
 # File Name : CUIWidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : lun. 28 nov. 2016 16:22:02 CET
+# Last Modified : mar. 29 nov. 2016 11:56:53 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -22,16 +22,16 @@ DESCRIPTION
 import curses
 from curses import panel
 from time import sleep
-###############################################################################
 # Personal Libs
-###############################################################################
 from ctools import dump
 
 
 ###############################################################################
-###############################################################################
+# Class and Methods
 ###############################################################################
 class Viewer(object):
+    ''' Display variable content in a pad. '''
+
     def __init__(self, stdscreen, varval, varname):
 
         # Init Values
@@ -59,9 +59,8 @@ class Viewer(object):
         self.menu_viewer.border(0)
         self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title))/2), self.menu_title, curses.A_BOLD)
 
-###############################################################################
     def Display(self):
-        ''' '''
+        ''' Create pad to display variable content. '''
 
         menukey = -1
         pady = max(self.pad_height, self.screen_height - 2)
@@ -89,15 +88,16 @@ class Viewer(object):
 
             menukey = self.menu_viewer.getch()
 
+            if menukey == curses.KEY_RESIZE:
+                break
+
         self.menu_viewer.erase()
 
 
-###############################################################################
-###############################################################################
-###############################################################################
 class WarningMsg(object):
+    ''' Display a message. '''
+
     def __init__(self, stdscreen):
-        ''' Init WarningMsg Class '''
 
         self.stdscreen = stdscreen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
@@ -109,7 +109,7 @@ class WarningMsg(object):
         self.red_text = curses.color_pair(3)
 
     def Display(self, wng_msg):
-        ''' Display ** wng_msg ** '''
+        ''' Display **wng_msg** in a panel. '''
 
         # Init Menu
         wng_width = len(wng_msg) + 2
@@ -135,64 +135,10 @@ class WarningMsg(object):
         curses.doupdate()
 
 
-###############################################################################
-###############################################################################
-###############################################################################
 class MenuHelpCUI(object):
+    ''' Display help in a pad. '''
+
     def __init__(self, stdscreen):
-        ''' Init MenuCUI Class '''
-
-        # Init Values
-        self.stdscreen = stdscreen
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
-
-        # Init Menu
-        self.menu_help = self.stdscreen.subwin(0, 0)
-        self.menu_help.keypad(1)
-        self.panel_help = panel.new_panel(self.menu_help)
-        self.panel_help.hide()
-        panel.update_panels()
-
-        self.menu_title = '| Help |'
-
-    ############################################################################
-    def Display(self):
-        ''' '''
-
-        self.panel_help.top()
-        self.panel_help.show()
-        self.menu_help.clear()
-
-        menukey = -1
-        while menukey not in (27, 113):
-            self.menu_help.border(0)
-            self.menu_help.addstr(0, int((self.screen_width - len(self.menu_title))/2), self.menu_title, curses.A_BOLD)
-            self.menu_help.addstr(2, 3, 'Bindings :', curses.A_BOLD)
-            self.menu_help.addstr(3, 5, '(h) Help')
-            self.menu_help.addstr(4, 5, '(q|ESC) Previous menu/quit')
-            self.menu_help.addstr(5, 5, '(c) Kernel Menu')
-            self.menu_help.addstr(6, 5, '(/) Search in variable explorer')
-            self.menu_help.addstr(7, 5, '(↓) Next line')
-            self.menu_help.addstr(8, 5, '(↑) Previous line')
-            self.menu_help.addstr(9, 5, '(→) Next page')
-            self.menu_help.addstr(10, 5, '(←) Previous page')
-
-            self.menu_help.refresh()
-            curses.doupdate()
-            menukey = self.menu_help.getch()
-
-        self.menu_help.clear()
-        self.panel_help.hide()
-        panel.update_panels()
-        curses.doupdate()
-
-
-###############################################################################
-###############################################################################
-###############################################################################
-class MenuHelpPadCUI(object):
-    def __init__(self, stdscreen):
-        ''' Init MenuCUI Class '''
 
         # Init Values
         self.stdscreen = stdscreen
@@ -214,19 +160,17 @@ class MenuHelpPadCUI(object):
         self.menu_help.addstr(5, 3, '(ENTER) Selected item menu')
         self.menu_help.addstr(6, 3, '(q|ESC) Previous menu/quit')
         self.menu_help.addstr(7, 3, '(c) Kernel Menu')
-        self.menu_help.addstr(8, 3, '(s) Save Menu')
-        self.menu_help.addstr(9, 3, '(/) Search in variable explorer')
-        self.menu_help.addstr(10, 3, '(↓) Next line')
-        self.menu_help.addstr(11, 3, '(↑) Previous line')
-        self.menu_help.addstr(12, 3, '(→|↡) Next page')
-        self.menu_help.addstr(13, 3, '(←|↟) Previous page')
+        self.menu_help.addstr(8, 3, '(/) Search in variable explorer')
+        self.menu_help.addstr(9, 3, '(↓) Next line')
+        self.menu_help.addstr(10, 3, '(↑) Previous line')
+        self.menu_help.addstr(11, 3, '(→|↡) Next page')
+        self.menu_help.addstr(12, 3, '(←|↟) Previous page')
 
         self.menu_help.border(0)
         self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title))/2), self.menu_title, curses.A_BOLD)
 
-    ############################################################################
     def Display(self):
-        ''' '''
+        ''' Display pad. '''
 
         menukey = -1
         pady = max(self.nb_items, self.screen_height - 4)
@@ -246,4 +190,24 @@ class MenuHelpPadCUI(object):
 
             menukey = self.menu_help.getch()
 
+            if menukey == curses.KEY_RESIZE:
+                break
+
         self.menu_help.erase()
+
+
+def SizeWng(self):
+    ''' Blank screen and display a warning if size of the terminal is too small. '''
+
+    self.stdscreen.erase()
+    self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
+    msg_actual = str(self.screen_width) + 'x' + str(self.screen_height)
+    msg_limit = 'Win must be > ' + str(self.term_min_width) + 'x' + str(self.term_min_height)
+    try:
+        self.stdscreen.addstr(int(self.screen_height/2), int((self.screen_width-len(msg_limit))/2), msg_limit, curses.A_BOLD | self.red_text)
+        self.stdscreen.addstr(int(self.screen_height/2)+1, int((self.screen_width-len(msg_actual))/2), msg_actual, curses.A_BOLD | self.red_text)
+    except:
+        pass
+    self.stdscreen.border(0)
+    self.stdscreen.refresh()
+    return self.screen_width, self.screen_height

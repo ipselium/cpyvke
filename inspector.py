@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : lun. 28 nov. 2016 16:24:32 CET
+# Last Modified : mar. 29 nov. 2016 12:13:26 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -24,10 +24,7 @@ from numpy import shape, save, savetxt, savez_compressed
 from multiprocessing import Process
 import subprocess
 import sys
-
-###############################################################################
 # Personal imports
-###############################################################################
 from modinspector import describe
 from ctools import suspend_curses
 
@@ -41,13 +38,10 @@ def In_Thread(Func):
     return run
 
 
-###############################################################################
-# Inspector
-###############################################################################
 class Inspect(object):
+    ''' Plot/Display variable. '''
 
     def __init__(self, varval, varname, vartype):
-        ''' Init SendToMPL CLASS '''
 
         self.varval = varval
         self.vartype = vartype
@@ -55,7 +49,7 @@ class Inspect(object):
 
     @In_Thread
     def Plot2D(self):
-        ''' '''
+        ''' Plot 2D variable. '''
 
         figure()
         imshow(self.varval)
@@ -63,7 +57,7 @@ class Inspect(object):
 
     @In_Thread
     def Plot1D(self):
-        ''' Plot 1D variable '''
+        ''' Plot 1D variable. '''
 
         figure()
         plot(self.varval)
@@ -136,8 +130,9 @@ class Inspect(object):
             subprocess.call(['rm', filename])
 
 
-# Module inspector
 def manual(module, filename):
+    ''' Display help of a module. '''
+
     sys.stdout = open(filename, 'w')
     print(help(module))
 

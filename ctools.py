@@ -3,7 +3,7 @@
 #
 # File Name : CUITools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : lun. 28 nov. 2016 15:57:12 CET
+# Last Modified : mar. 29 nov. 2016 12:05:20 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -22,8 +22,9 @@ import curses
 
 
 ###############################################################################
-# FORMAT CELL
+# Class and Methods
 ###############################################################################
+
 def format_cell(variables, string, max_width):
     ''' Format cells for display '''
 
@@ -57,9 +58,8 @@ def format_cell(variables, string, max_width):
     return name[0:max_width] + val[0:max_width] + typ[0:max_width]
 
 
-###############################################################################
 def dump(obj, nested_level=0, output=[]):
-    ''' '''
+    ''' Format dict, list and tuples variables for displaying. '''
 
     if nested_level == 0:
         output = []
@@ -98,7 +98,6 @@ def dump(obj, nested_level=0, output=[]):
     return output
 
 
-###############################################################################
 class suspend_curses():
     """Context Manager to temporarily leave curses mode"""
 

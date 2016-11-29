@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuKernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : lun. 28 nov. 2016 16:06:13 CET
+# Last Modified : mar. 29 nov. 2016 12:58:43 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -36,26 +36,26 @@ from cwidgets import WarningMsg
 ###############################################################################
 ###############################################################################
 class MenuKernelCUI(object):
-    def __init__(self, CUI_self):
-        ''' Init Kernel menu Class '''
+    ''' Kernel list window. '''
+
+    def __init__(self, parent):
 
         # Queue for kernel changes
-        self.qkc = CUI_self.qkc
-        self.kc = CUI_self.kc
+        self.qkc = parent.qkc
+        self.kc = parent.kc
 
         # Define Styles
         curses.init_pair(10, curses.COLOR_BLACK, curses.COLOR_RED)
         self.highlightText = curses.color_pair(10)
-        self.normalText = CUI_self.normalText
-        self.cyan_text = CUI_self.cyan_text
-        self.red_text = CUI_self.red_text
-        self.green_text = CUI_self.green_text
+        self.normalText = parent.normalText
+        self.cyan_text = parent.cyan_text
+        self.red_text = parent.red_text
+        self.green_text = parent.green_text
 
-        self.stdscreen = CUI_self.stdscreen
-        self.screen_width = CUI_self.screen_width
-        self.screen_height = CUI_self.screen_height
-        self.kernel_info = CUI_self.kernel_info
-        self.cf = CUI_self.cf
+        self.stdscreen = parent.stdscreen
+        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
+        self.kernel_info = parent.kernel_info
+        self.cf = parent.cf
         # Init Menu
         self.menu_title = '| Kernel Manager |'
 
@@ -74,9 +74,8 @@ class MenuKernelCUI(object):
         self.panel_kernel.hide()
         panel.update_panels()
 
-    ############################################################################
     def Display(self):
-        ''' Run '''
+        ''' Display the kernel explorer. '''
 
         self.panel_kernel.top()     # Push the panel to the bottom of the stack.
         self.panel_kernel.show()    # Display the panel
@@ -84,7 +83,6 @@ class MenuKernelCUI(object):
 
         self.pkey = -1
         while self.pkey != 113:
-
             # Get variables from daemon
             self.cf = self.kc.connection_file
             self.lst = kernel_list(self.cf)
@@ -118,13 +116,15 @@ class MenuKernelCUI(object):
             if self.new_kernel_connection:  # Close menu if new connect
                 break
 
+            if self.pkey == curses.KEY_RESIZE:
+                break
+
         self.KernelLst.clear()
         self.panel_kernel.hide()
         panel.update_panels()
         curses.doupdate()
         return self.cf, self.kc
 
-###############################################################################
     def UpdateKernelLst(self):
         ''' Update the kernel list '''
 
@@ -158,49 +158,64 @@ class MenuKernelCUI(object):
         self.stdscreen.refresh()
         self.KernelLst.refresh()
 
-###############################################################################
     def NavigateKernelLst(self):
         ''' Navigation though the kernel list'''
 
-        pages = int(ceil(self.row_num/self.row_max))
+        self.pages = int(ceil(self.row_num/self.row_max))
         if self.pkey == curses.KEY_DOWN:
-            if self.page == 1:
-                if (self.position < self.row_max) and (self.position < self.row_num):
-                    self.position = self.position + 1
-                else:
-                    if pages > 1:
-                        self.page = self.page + 1
-                        self.position = 1+(self.row_max*(self.page-1))
-            elif self.page == pages:
-                if self.position < self.row_num:
-                    self.position = self.position + 1
+            self.NavDown()
+        if self.pkey == curses.KEY_UP:
+            self.NavUp()
+        if self.pkey in (curses.KEY_LEFT, 339) and self.page > 1:
+            self.NavLeft()
+        if self.pkey in (curses.KEY_RIGHT, 338) and self.page < self.pages:
+            self.NavRight()
+
+    def NavRight(self):
+        ''' Navigate Right. '''
+
+        self.page = self.page + 1
+        self.position = (1+(self.row_max*(self.page-1)))
+
+    def NavLeft(self):
+        ''' Navigate Left. '''
+
+        self.page = self.page - 1
+        self.position = 1+(self.row_max*(self.page-1))
+
+    def NavUp(self):
+        ''' Navigate Up. '''
+
+        if self.page == 1:
+            if self.position > 1:
+                self.position = self.position - 1
+        else:
+            if self.position > (1+(self.row_max*(self.page-1))):
+                self.position = self.position - 1
             else:
-                if self.position < self.row_max+(self.row_max*(self.page-1)):
-                    self.position = self.position + 1
-                else:
+                self.page = self.page - 1
+                self.position = self.row_max+(self.row_max*(self.page-1))
+
+    def NavDown(self):
+        ''' Navigate Down. '''
+
+        if self.page == 1:
+            if (self.position < self.row_max) and (self.position < self.row_num):
+                self.position = self.position + 1
+            else:
+                if self.pages > 1:
                     self.page = self.page + 1
                     self.position = 1+(self.row_max*(self.page-1))
-        if self.pkey == curses.KEY_UP:
-            if self.page == 1:
-                if self.position > 1:
-                    self.position = self.position - 1
+        elif self.page == self.pages:
+            if self.position < self.row_num:
+                self.position = self.position + 1
+        else:
+            if self.position < self.row_max+(self.row_max*(self.page-1)):
+                self.position = self.position + 1
             else:
-                if self.position > (1+(self.row_max*(self.page-1))):
-                    self.position = self.position - 1
-                else:
-                    self.page = self.page - 1
-                    self.position = self.row_max+(self.row_max*(self.page-1))
-        if self.pkey in (curses.KEY_LEFT, 339) and self.page > 1:
-                self.page = self.page - 1
+                self.page = self.page + 1
                 self.position = 1+(self.row_max*(self.page-1))
 
-        if self.pkey in (curses.KEY_RIGHT, 338) and self.page < pages:
-                self.page = self.page + 1
-                self.position = (1+(self.row_max*(self.page-1)))
-
-###############################################################################
-# Submenus
-###############################################################################
     def SubMenuKernel(self):
         ''' Init kernel list submenu '''
 
@@ -231,7 +246,6 @@ class MenuKernelCUI(object):
         # Submenu
         self.DisplaySubMenuKernel()
 
-    ############################################################################
     def CreateSubMenuKernel(self):
         ''' Create the item list for the kernel submenu  '''
 
@@ -253,7 +267,6 @@ class MenuKernelCUI(object):
         else:
             return []
 
-    ############################################################################
     def DisplaySubMenuKernel(self):
         ''' Display the kernel submenu '''
 
@@ -294,7 +307,6 @@ class MenuKernelCUI(object):
         panel.update_panels()
         curses.doupdate()
 
-###############################################################################
     def NavigateSubMenuKernel(self, n):
         ''' Navigate through the kernel submenu '''
 
@@ -304,32 +316,35 @@ class MenuKernelCUI(object):
         elif self.menuposition >= len(self.kernel_submenu_lst):
             self.menuposition = len(self.kernel_submenu_lst)-1
 
-###############################################################################
-# Proceed operations on kernels
-###############################################################################
     def StartNewKernel(self):
+        ''' Create a new kernel. '''
+
         kid = start_new_kernel()
         msg = WarningMsg(self.stdscreen)
         msg.Display('Kernel id ' + kid + ' created')
 
-###############################################################################
     def ShutdownKernel(self):
+        ''' Kill kernel. '''
+
         shutdown_kernel(self.selected[0])
 
-###############################################################################
     def RemoveKernelJson(self):
+        ''' Remove connection file of died kernel. '''
+
         os.remove(self.selected[0])
         self.position = 1  # Reinit cursor location
 
-###############################################################################
     def RemoveAllDiedKernelJson(self):
+        ''' Remove connection files of all died kernels. '''
+
         for json_path, status in self.lst:
             if status == '[Died]':
                 os.remove(json_path)
         self.position = 1  # Reinit cursor location
 
-###############################################################################
     def ConnectKernel(self):
+        ''' Connect to a kernel. '''
+
         km, self.kc = connect_kernel(self.selected[0])
         self.qkc.put(self.kc)
 
@@ -340,7 +355,8 @@ class MenuKernelCUI(object):
         # New connection FLAG
         self.new_kernel_connection = True
 
-###############################################################################
     def RestartKernel(self):
+        ''' Restart a died kernel. '''
+
         msg = WarningMsg(self.stdscreen)
         msg.Display('Not Implement yet!')

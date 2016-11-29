@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuVar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : lun. 28 nov. 2016 16:46:10 CET
+# Last Modified : mar. 29 nov. 2016 12:59:52 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -22,17 +22,19 @@ DESCRIPTION
 import curses
 from curses import panel
 from numpy import array
-
-###############################################################################
-# IMPORTS
-###############################################################################
+# Personal
 from inspector import Inspect
 from cwidgets import Viewer, WarningMsg
 
 
+###############################################################################
+# Class and Methods
+###############################################################################
+
 class MenuVarCUI(object):
+    ''' Class to handle variable menus. '''
+
     def __init__(self, parent):
-        ''' Init MenuCUI Class '''
 
         self.cyan_text = parent.cyan_text
         self.stdscreen = parent.stdscreen
@@ -98,9 +100,9 @@ class MenuVarCUI(object):
         # Various variables
         self.menuposition = 0
 
-###############################################################################
     def Display(self):
-        ''' '''
+        ''' Display general menu in a panel. '''
+
         self.panel_menu.top()        # Push the panel to the bottom of the stack
         self.panel_menu.show()       # Display the panel
         self.menu.clear()
@@ -132,22 +134,25 @@ class MenuVarCUI(object):
             elif menukey == curses.KEY_DOWN:
                 self.Navigate(1)
 
+            if menukey == curses.KEY_RESIZE:
+                break
+
         self.menu.clear()
         self.panel_menu.hide()
         panel.update_panels()
         curses.doupdate()
 
-###############################################################################
     def Navigate(self, n):
+        ''' Navigate through the general menu. '''
+
         self.menuposition += n
         if self.menuposition < 0:
             self.menuposition = 0
         elif self.menuposition >= len(self.menu_lst):
             self.menuposition = len(self.menu_lst)-1
 
-###############################################################################
     def CreateMenuLst(self):
-        ''' Create the item list for the varmenu  '''
+        ''' Create the item list for the general menu. '''
 
         if self.vartype == 'module':
             return [('Description', "self.inspect.Display('less', 'Description')"),
@@ -171,8 +176,8 @@ class MenuVarCUI(object):
         else:
             return []
 
-###############################################################################
     def MenuSave(self):
+        ''' Create the save menu. '''
 
         # Init Menu
         save_menu = self.stdscreen.subwin(5, 6, self.menu_height-2, self.screen_width-9)
@@ -229,6 +234,9 @@ class MenuVarCUI(object):
 
             elif menukey == curses.KEY_DOWN:
                 self.Navigate(1)
+
+            if menukey == curses.KEY_RESIZE:
+                break
 
         save_menu.clear()
         panel_save.hide()

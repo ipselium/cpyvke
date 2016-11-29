@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : lun. 28 nov. 2016 16:26:02 CET
+# Last Modified : mar. 29 nov. 2016 12:15:16 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -26,11 +26,6 @@ import os
 import subprocess
 
 
-# ------------------------------------------------------------------------------
-################################################################################
-# Definitions
-################################################################################
-# ------------------------------------------------------------------------------
 def start_new_kernel():
     ''' Start a new kernel and return the kernel_id '''
 
@@ -44,9 +39,9 @@ def start_new_kernel():
     return stdout.split('kernel-')[1].split('.json')[0]
 
 
-###############################################################################
 def is_runing(cf):
-    ''' Check if kernel is alive '''
+    ''' Check if kernel is alive. '''
+
     kc = BlockingKernelClient()
     kc.load_connection_file(cf)
     kc.execute('whos', store_history=False)
@@ -58,17 +53,16 @@ def is_runing(cf):
         return True
 
 
-###############################################################################
 def kernel_list(cf=None):
-    ''' List of connection files '''
+    ''' List of connection files. '''
+
     path = '/run/user/1000/jupyter/'
     lst = [(path + item, '[Alive]' if is_runing(path + item) else '[Died]') for item in os.listdir(path)]
     return [(cf, '[Connected]') if cf in item else item for item in lst]
 
 
-###############################################################################
 def print_kernel_list():
-    ''' '''
+    ''' Display kernel list. '''
     klst = kernel_list()
     print('---------------| List of available kernels |---------------')
 
@@ -84,9 +78,8 @@ def print_kernel_list():
     print('-----------------------------------------------------------')
 
 
-###############################################################################
 def connect_kernel(cf):
-    ''' Connect a kernel '''
+    ''' Connect a kernel. '''
 
     if is_runing(cf) is True:
         kc = BlockingKernelClient(connection_file=cf)
@@ -107,8 +100,8 @@ def connect_kernel(cf):
     return km, kc
 
 
-###############################################################################
 def shutdown_kernel(cf):
-    ''' Shutdown a kernel based on its connection file '''
+    ''' Shutdown a kernel based on its connection file. '''
+
     km, kc = connect_kernel(cf)
     kc.shutdown()
