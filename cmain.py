@@ -3,7 +3,7 @@
 #
 # File Name : CUIMainWin.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mar. 29 nov. 2016 13:14:56 CET
+# Last Modified : mar. 29 nov. 2016 16:10:51 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -31,7 +31,7 @@ from time import sleep
 from cvar import MenuVarCUI
 from ckernel import MenuKernelCUI
 from cwidgets import WarningMsg, MenuHelpCUI, SizeWng
-from ctools import format_cell
+from ctools import FormatCell, TypeSort, FilterVarLst
 
 
 class CUI(Thread):
@@ -92,8 +92,10 @@ class CUI(Thread):
         self.search = None
         self.search_index = 0
 
-        # Various Texts :
+        # Various Variables :
         self.VarLst_name = "| Variable Explorer |"
+        self.VarLst_wng = ""
+        self.sort_mq = 'name'
 
         # Init Variable Box
         self.row_max = self.screen_height-self.kernel_info  # max number of rows
@@ -123,10 +125,12 @@ class CUI(Thread):
             SizeWng(self)
             sleep(0.1)
         else:
+
             # Get variables from daemon
             self.GetVars()
-            self.strings = sorted(self.variables.keys())
-            self.row_num = len(self.strings)
+
+            # Arange variable list
+            self.ArangeVarLst()
 
             # Navigate in the variable list window
             self.NavigateVarLst()
@@ -190,6 +194,72 @@ class CUI(Thread):
             if self.pkey == 113:
                 self.MenuCloseCUI()
 
+    def ArangeVarLst(self):
+        ''' Organize/Arange variable list. '''
+
+        if self.sort_mq == 'name':
+            self.strings = sorted(self.variables.keys())
+
+        elif self.sort_mq == 'type':
+            self.strings = TypeSort(self.variables)
+
+        elif self.sort_mq == 'filtered':
+            self.strings = FilterVarLst(self.variables, self.filter)
+            self.VarLst_wng = '<| Filter : ' + str(self.filter) + ' (' + str(len(self.strings)) + ' obj.) |>'
+
+        # Sort variable by name/type
+        if self.pkey == 115:
+            if self.sort_mq == 'name':    # -> s
+                self.sort_mq = 'type'
+            elif self.sort_mq == 'type':
+                self.sort_mq = 'name'
+
+        # Filter variables
+        if self.pkey == 108:    # -> l
+            self.FilterVar()
+            self.sort_mq = 'filtered'
+            self.position = 1
+            self.page = int(ceil(self.position/self.row_max))
+
+        # Reinit
+        if self.pkey == 117:
+            self.sort_mq = 'name'
+            self.VarLst_wng = ''
+            self.position = 1
+            self.page = int(ceil(self.position/self.row_max))
+
+        # Update number of columns
+        self.row_num = len(self.strings)
+
+    def FilterVar(self):
+        ''' Apply filter for the variable list'''
+
+        # Init Menu
+        menu_filter = self.stdscreen.subwin(self.row_max+2, self.screen_width-2, 1, 1)
+        menu_filter.attrset(self.cyan_text)    # change border color
+        menu_filter.border(0)
+        menu_filter.keypad(1)
+
+        # Send menu to a panel
+        panel_filter = panel.new_panel(menu_filter)
+        panel.update_panels()
+
+        panel_filter.top()        # Push the panel to the bottom of the stack.
+        panel_filter.show()       # Display the panel (which might have been hidden)
+        menu_filter.clear()
+        menu_filter.border(0)
+        menu_filter.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), self.VarLst_name, curses.A_BOLD | self.cyan_text)
+
+        curses.echo()
+        menu_filter.addstr(2, 3, "Filter :", curses.A_BOLD)
+        self.filter = menu_filter.getstr(2, 14, 20)
+        curses.noecho()
+
+        panel_filter.hide()
+        panel.update_panels()
+        curses.doupdate()
+        curses.halfdelay(self.curse_delay)  # Relaunch autorefresh !
+
     def SearchVar(self):
         ''' Search an object in the variable list'''
 
@@ -230,7 +300,7 @@ class CUI(Thread):
                 self.VarLst.addstr(1, 1, "No Variable in kernel", self.highlightText)
 
             else:
-                cell = format_cell(self.variables, self.strings[i-1], self.screen_width)
+                cell = FormatCell(self.variables, self.strings[i-1], self.screen_width)
                 if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
                     self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell, self.highlightText)
                 else:
@@ -238,6 +308,7 @@ class CUI(Thread):
                 if i == self.row_num:
                     break
 
+        self.VarLst.addstr(self.row_max+1, int((self.screen_width-len(self.VarLst_wng))/2), self.VarLst_wng, curses.A_NORMAL | self.cyan_text)
         self.stdscreen.refresh()
         self.VarLst.refresh()
 
@@ -331,7 +402,7 @@ class CUI(Thread):
 
         if self.kc.is_alive():
             self.stdscreen.addstr(self.screen_height-1, 13, 'connected ', curses.A_BOLD | self.cyan_text)
-            self.stdscreen.addstr(self.screen_height-1, 23, '[' + str(self.row_num) + ' obj, id ' + self.cf.split('-')[1].split('.')[0] + '] >', curses.A_BOLD)
+            self.stdscreen.addstr(self.screen_height-1, 23, '[' + str(len(self.variables.keys())) + ' obj, id ' + self.cf.split('-')[1].split('.')[0] + '] >', curses.A_BOLD)
         else:
             self.stdscreen.addstr(self.screen_height-1, 13, 'disconnected ', curses.A_BOLD | self.red_text)
 
@@ -357,7 +428,7 @@ class CUI(Thread):
             self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/2) + 2, '+ ' + 'heigh : ' + str(self.screen_height))
             self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/2) + 2, '+ ' + 'key : ' + str(self.pkey))
             self.stdscreen.addstr(self.row_max + 8, int(self.screen_width/2) + 2, '+ ' + 'Search : ' + str(self.search))
-            self.stdscreen.addstr(self.row_max + 9, int(self.screen_width/2) + 2, '+ ' + 'Search Index : ' + str(self.search_index))
+            self.stdscreen.addstr(self.row_max + 9, int(self.screen_width/2) + 2, '+ ' + 'Sort : ' + str(self.sort_mq))
 
     def MenuCloseCUI(self):
         ''' Close Menu '''

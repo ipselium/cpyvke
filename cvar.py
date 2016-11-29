@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuVar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mar. 29 nov. 2016 12:59:52 CET
+# Last Modified : mar. 29 nov. 2016 16:18:58 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -61,16 +61,13 @@ class MenuVarCUI(object):
             self.varval = eval(self.varval)
             self.view = Viewer(self.stdscreen, self.varval, self.varname)
 
-        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('function'):
-            self.varval = '[function]'
-
-        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('file'):
-            self.varval = '[file]'
-
-        else:
+        elif parent.variables[parent.strings[parent.position-1]]['type'] == 'ndarray':
             parent.qreq.put(self.varname)
             self.varval = parent.qans.get()
             self.varval = eval(self.varval)
+
+        else:
+            self.varval = '[Not Impl.]'
 
         # Init Inspector
         self.inspect = Inspect(self.varval, self.varname, self.vartype)

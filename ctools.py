@@ -3,7 +3,7 @@
 #
 # File Name : CUITools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : mar. 29 nov. 2016 12:05:20 CET
+# Last Modified : mar. 29 nov. 2016 16:02:23 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -25,7 +25,32 @@ import curses
 # Class and Methods
 ###############################################################################
 
-def format_cell(variables, string, max_width):
+def FilterVarLst(lst, filter):
+    ''' Filter variable list (name|type). '''
+
+    filtered = []
+    for key in lst.keys():
+        if filter in lst[key]['type'] or filter in key:
+            filtered.append(key)
+
+    return sorted(filtered)
+
+
+def TypeSort(lst):
+    ''' Sort variable by type. '''
+
+    from operator import itemgetter
+
+    types = []
+    for key in lst.keys():
+        types.append([key, lst[key]['type']])
+
+    types.sort(key=itemgetter(1))
+
+    return [item[0] for item in types]
+
+
+def FormatCell(variables, string, max_width):
     ''' Format cells for display '''
 
     max_width = int((max_width-5)/3)

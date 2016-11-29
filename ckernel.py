@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuKernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 29 nov. 2016 12:58:43 CET
+# Last Modified : mar. 29 nov. 2016 13:21:36 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -33,8 +33,9 @@ from cwidgets import WarningMsg
 
 
 ###############################################################################
+# Classes and Methods
 ###############################################################################
-###############################################################################
+
 class MenuKernelCUI(object):
     ''' Kernel list window. '''
 

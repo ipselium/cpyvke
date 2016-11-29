@@ -3,7 +3,7 @@
 #
 # File Name : CUIWidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mar. 29 nov. 2016 11:56:53 CET
+# Last Modified : mar. 29 nov. 2016 15:56:29 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -159,12 +159,15 @@ class MenuHelpCUI(object):
         self.menu_help.addstr(4, 3, '(h) This Help !')
         self.menu_help.addstr(5, 3, '(ENTER) Selected item menu')
         self.menu_help.addstr(6, 3, '(q|ESC) Previous menu/quit')
-        self.menu_help.addstr(7, 3, '(c) Kernel Menu')
-        self.menu_help.addstr(8, 3, '(/) Search in variable explorer')
-        self.menu_help.addstr(9, 3, '(↓) Next line')
-        self.menu_help.addstr(10, 3, '(↑) Previous line')
-        self.menu_help.addstr(11, 3, '(→|↡) Next page')
-        self.menu_help.addstr(12, 3, '(←|↟) Previous page')
+        self.menu_help.addstr(7, 3, '(s) Sort by name/type')
+        self.menu_help.addstr(8, 3, '(l) Limit display to keyword')
+        self.menu_help.addstr(9, 3, '(u) Undo limit')
+        self.menu_help.addstr(10, 3, '(c) Kernel Menu')
+        self.menu_help.addstr(11, 3, '(/) Search in variable explorer')
+        self.menu_help.addstr(12, 3, '(↓) Next line')
+        self.menu_help.addstr(13, 3, '(↑) Previous line')
+        self.menu_help.addstr(14, 3, '(→|↡) Next page')
+        self.menu_help.addstr(15, 3, '(←|↟) Previous page')
 
         self.menu_help.border(0)
         self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title))/2), self.menu_title, curses.A_BOLD)
