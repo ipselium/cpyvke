@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mar. 29 nov. 2016 12:15:16 CET
+# Last Modified : mer. 30 nov. 2016 11:30:38 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -21,20 +21,23 @@ DESCRIPTION
 ###############################################################################
 from jupyter_client import BlockingKernelClient, manager
 from Queue import Empty
-from time import sleep
+import time
 import os
 import subprocess
 
 
-def start_new_kernel():
+def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/"):
     ''' Start a new kernel and return the kernel_id '''
 
-    with open("kcreate.log", "w") as f:
+    with open(LogDir + 'LastKernel', "w") as f:
         subprocess.Popen(["ipython", "kernel"], stdout=f)
 
-    sleep(1)
-    with open("kcreate.log", "r") as f:
+    time.sleep(1)
+    with open(LogDir + 'LastKernel', "r") as f:
         stdout = f.read()
+
+    with open(LogDir + 'cpyvke.log', 'a') as f:
+        f.write(time.strftime("[%D :: %H:%M:%S] ::  Create ::") + stdout.split('\n')[-2] + '\n')
 
     return stdout.split('kernel-')[1].split('.json')[0]
 

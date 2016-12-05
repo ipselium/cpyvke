@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuKernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 29 nov. 2016 13:21:36 CET
+# Last Modified : lun. 05 déc. 2016 23:48:54 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -46,12 +46,13 @@ class MenuKernelCUI(object):
         self.kc = parent.kc
 
         # Define Styles
-        curses.init_pair(10, curses.COLOR_BLACK, curses.COLOR_RED)
-        self.highlightText = curses.color_pair(10)
-        self.normalText = parent.normalText
-        self.cyan_text = parent.cyan_text
-        self.red_text = parent.red_text
-        self.green_text = parent.green_text
+        self.c_kern_txt = parent.c_kern_txt
+        self.c_kern_bdr = parent.c_kern_bdr
+        self.c_kern_ttl = parent.c_kern_ttl
+        self.c_kern_hh = parent.c_kern_hh
+        self.c_kern_co = parent.c_kern_co
+        self.c_kern_al = parent.c_kern_al
+        self.c_kern_di = parent.c_kern_di
 
         self.stdscreen = parent.stdscreen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
@@ -70,10 +71,10 @@ class MenuKernelCUI(object):
 
         self.KernelLst = self.stdscreen.subwin(self.row_max+2, self.screen_width-2, 1, 1)
         self.KernelLst.keypad(1)
-        self.KernelLst.attrset(self.red_text)  # Change border color
+        self.KernelLst.bkgd(self.c_kern_txt)
+        self.KernelLst.attrset(self.c_kern_bdr | curses.A_BOLD)  # Change border color
         self.panel_kernel = panel.new_panel(self.KernelLst)
         self.panel_kernel.hide()
-        panel.update_panels()
 
     def Display(self):
         ''' Display the kernel explorer. '''
@@ -106,7 +107,6 @@ class MenuKernelCUI(object):
 
             # Update display
             self.KernelLst.refresh()
-            curses.doupdate()
 
             # Get pressed key
             self.pkey = self.stdscreen.getch()
@@ -122,37 +122,35 @@ class MenuKernelCUI(object):
 
         self.KernelLst.clear()
         self.panel_kernel.hide()
-        panel.update_panels()
-        curses.doupdate()
         return self.cf, self.kc
 
     def UpdateKernelLst(self):
         ''' Update the kernel list '''
 
-        self.KernelLst.addstr(0, int((self.screen_width-len(self.menu_title))/2), self.menu_title, curses.A_BOLD | self.red_text)
+        self.KernelLst.addstr(0, int((self.screen_width-len(self.menu_title))/2), self.menu_title, curses.A_BOLD | self.c_kern_ttl)
 
         for i in range(1+(self.row_max*(self.page-1)), self.row_max+1+(self.row_max*(self.page-1))):
 
             if self.row_num == 0:
-                self.KernelLst.addstr(1, 1, "No kernel available", self.highlightText)
+                self.KernelLst.addstr(1, 1, "No kernel available", self.c_kern_hh | curses.A_BOLD)
 
             else:
                 if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
-                    self.KernelLst.addstr(i, 2, self.lst[i-1][0], curses.A_BOLD)
+                    self.KernelLst.addstr(i, 2, self.lst[i-1][0].ljust(self.screen_width-5), self.c_kern_hh | curses.A_BOLD)
                     if str(self.lst[i-1][1]) == "[Died]":
-                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.red_text)
+                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.c_kern_di)
                     elif str(self.lst[i-1][1]) == "[Alive]":
-                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.cyan_text)
+                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.c_kern_al)
                     elif str(self.lst[i-1][1]) == "[Connected]":
-                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.green_text)
+                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.c_kern_co)
                 else:
-                    self.KernelLst.addstr(i, 2,  self.lst[i-1][0], curses.A_DIM)
+                    self.KernelLst.addstr(i, 2,  self.lst[i-1][0].ljust(self.screen_width-5), self.c_kern_txt | curses.A_DIM)
                     if str(self.lst[i-1][1]) == "[Died]":
-                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.red_text)
+                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.c_kern_di)
                     elif str(self.lst[i-1][1]) == "[Alive]":
-                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.cyan_text)
+                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.c_kern_al)
                     elif str(self.lst[i-1][1]) == "[Connected]":
-                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.green_text)
+                        self.KernelLst.addstr(i, self.screen_width-15, str(self.lst[i-1][1]), curses.A_BOLD | self.c_kern_co)
                 if i == self.row_num:
                     break
 
@@ -232,12 +230,12 @@ class MenuKernelCUI(object):
         self.kernel_submenu_width = max(self.kernel_submenu_width, len(self.kernel_submenu_title)) + 5
         self.kernel_submenu_height = len(self.kernel_submenu_lst) + 2
 
-        # Init Menu
-        self.kernel_submenu = self.stdscreen.subwin(self.kernel_submenu_height, self.kernel_submenu_width, 2, self.screen_width-self.kernel_submenu_width-2)
-        self.kernel_submenu.attrset(self.cyan_text)    # change border color
-        self.kernel_submenu.border(0)
-        self.kernel_submenu.attrset(self.red_text)  # Change border color
-        self.kernel_submenu.keypad(1)
+	# Init Menu
+	self.kernel_submenu = self.stdscreen.subwin(self.kernel_submenu_height, self.kernel_submenu_width, 2, self.screen_width-self.kernel_submenu_width-2)
+	self.kernel_submenu.border(0)
+	self.kernel_submenu.bkgd(self.c_kern_txt)
+	self.kernel_submenu.attrset(self.c_kern_bdr | curses.A_BOLD)  # Change border color
+	self.kernel_submenu.keypad(1)
 
         # Send menu to a panel
         self.panel_kernel_submenu = panel.new_panel(self.kernel_submenu)
@@ -278,16 +276,15 @@ class MenuKernelCUI(object):
         menukey = -1
         while menukey not in (27, 113):
             self.kernel_submenu.border(0)
-            self.kernel_submenu.addstr(0, int((self.kernel_submenu_width-len(self.kernel_submenu_title))/2), self.kernel_submenu_title, curses.A_BOLD | self.red_text)
+            self.kernel_submenu.addstr(0, int((self.kernel_submenu_width-len(self.kernel_submenu_title))/2), self.kernel_submenu_title, curses.A_BOLD | self.c_kern_ttl)
             self.kernel_submenu.refresh()
-            curses.doupdate()
 
             # Create entries
             for index, item in enumerate(self.kernel_submenu_lst):
                 if index == self.menuposition:
-                    mode = curses.A_REVERSE
+                    mode = self.c_kern_hh | curses.A_BOLD
                 else:
-                    mode = curses.A_NORMAL
+                    mode = self.c_kern_txt | curses.A_DIM
 
                 self.kernel_submenu.addstr(1+index, 1, item[0], mode)
 
@@ -305,8 +302,6 @@ class MenuKernelCUI(object):
 
         self.kernel_submenu.clear()
         self.panel_kernel_submenu.hide()
-        panel.update_panels()
-        curses.doupdate()
 
     def NavigateSubMenuKernel(self, n):
         ''' Navigate through the kernel submenu '''
@@ -328,11 +323,14 @@ class MenuKernelCUI(object):
         ''' Kill kernel. '''
 
         shutdown_kernel(self.selected[0])
+        self.position = 1
+        self.page = 1
 
     def RemoveKernelJson(self):
         ''' Remove connection file of died kernel. '''
 
         os.remove(self.selected[0])
+        self.page = 1
         self.position = 1  # Reinit cursor location
 
     def RemoveAllDiedKernelJson(self):
@@ -341,6 +339,7 @@ class MenuKernelCUI(object):
         for json_path, status in self.lst:
             if status == '[Died]':
                 os.remove(json_path)
+        self.page = 1
         self.position = 1  # Reinit cursor location
 
     def ConnectKernel(self):

@@ -3,7 +3,7 @@
 #
 # File Name : CUIMenuVar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mar. 29 nov. 2016 16:18:58 CET
+# Last Modified : mar. 06 déc. 2016 00:28:50 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -22,6 +22,7 @@ DESCRIPTION
 import curses
 from curses import panel
 from numpy import array
+import time
 # Personal
 from inspector import Inspect
 from cwidgets import Viewer, WarningMsg
@@ -36,8 +37,13 @@ class MenuVarCUI(object):
 
     def __init__(self, parent):
 
-        self.cyan_text = parent.cyan_text
         self.stdscreen = parent.stdscreen
+        self.c_exp_txt = curses.color_pair(21)
+        self.c_exp_bdr = curses.color_pair(22)
+        self.c_exp_ttl = curses.color_pair(23)
+        self.c_exp_hh = curses.color_pair(24)
+        self.SaveDir = parent.Config['path']['save-dir']
+        self.LogDir = parent.LogDir
 
         # Variables properties
         self.varname = parent.strings[parent.position-1]
@@ -85,14 +91,14 @@ class MenuVarCUI(object):
 
         # Init Menu
         self.menu = self.stdscreen.subwin(self.menu_height, self.menu_width, 2, self.screen_width-self.menu_width-2)
-        self.menu.attrset(self.cyan_text)    # change border color
+        self.menu.bkgd(self.c_exp_txt)
+        self.menu.attrset(self.c_exp_bdr | curses.A_BOLD)  # Change border color
         self.menu.border(0)
         self.menu.keypad(1)
 
         # Send menu to a panel
         self.panel_menu = panel.new_panel(self.menu)
         self.panel_menu.hide()       # Hide the panel. Doesnt delete the object
-        panel.update_panels()
 
         # Various variables
         self.menuposition = 0
@@ -107,14 +113,13 @@ class MenuVarCUI(object):
         menukey = -1
         while menukey not in (27, 113):
             self.menu.border(0)
-            self.menu.addstr(0, int((self.menu_width-len(self.menu_title))/2), self.menu_title, curses.A_BOLD | self.cyan_text)
+            self.menu.addstr(0, int((self.menu_width-len(self.menu_title))/2), self.menu_title, self.c_exp_ttl | curses.A_BOLD)
             self.menu.refresh()
-            curses.doupdate()
             for index, item in enumerate(self.menu_lst):
                 if index == self.menuposition:
-                    mode = curses.A_REVERSE
+                    mode = self.c_exp_hh | curses.A_BOLD
                 else:
-                    mode = curses.A_NORMAL
+                    mode = self.c_exp_txt | curses.A_DIM
 
                 msg = item[0]
                 self.menu.addstr(1+index, 1, msg, mode)
@@ -122,31 +127,39 @@ class MenuVarCUI(object):
             menukey = self.menu.getch()
 
             if menukey in [curses.KEY_ENTER, ord('\n')]:
-                eval(self.menu_lst[self.menuposition][1])
-                break
+                Wng = WarningMsg(self.stdscreen)
+                try:
+                    eval(self.menu_lst[self.menuposition][1])
+                    if self.menu_lst[self.menuposition][0] == 'Save':
+                        Wng.Display('Saved !')
+                except Exception, err:
+                    if self.menu_lst[self.menuposition][0] == 'Save':
+                        Wng.Display('Not saved !')
+                    with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                        f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                else:
+                    break
 
             elif menukey == curses.KEY_UP:
-                self.Navigate(-1)
+                self.Navigate(-1, len(self.menu_lst))
 
             elif menukey == curses.KEY_DOWN:
-                self.Navigate(1)
+                self.Navigate(1, len(self.menu_lst))
 
             if menukey == curses.KEY_RESIZE:
                 break
 
         self.menu.clear()
         self.panel_menu.hide()
-        panel.update_panels()
-        curses.doupdate()
 
-    def Navigate(self, n):
+    def Navigate(self, n, size):
         ''' Navigate through the general menu. '''
 
         self.menuposition += n
         if self.menuposition < 0:
             self.menuposition = 0
-        elif self.menuposition >= len(self.menu_lst):
-            self.menuposition = len(self.menu_lst)-1
+        elif self.menuposition >= size:
+            self.menuposition = size-1
 
     def CreateMenuLst(self):
         ''' Create the item list for the general menu. '''
@@ -159,7 +172,7 @@ class MenuVarCUI(object):
             return [('View', 'self.view.Display()'),
                     ('Less', "self.inspect.Display('less')"),
                     ('Edit', "self.inspect.Display('vim')"),
-                    ('Save', "self.inspect.Save()")]
+                    ('Save', "self.inspect.Save(self.SaveDir)")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 1):
             return [('Plot', 'self.inspect.Plot1D()'),
@@ -178,21 +191,21 @@ class MenuVarCUI(object):
 
         # Init Menu
         save_menu = self.stdscreen.subwin(5, 6, self.menu_height-2, self.screen_width-9)
-        save_menu.attrset(self.cyan_text)    # change border color
+        save_menu.bkgd(self.c_exp_txt)
+        save_menu.attrset(self.c_exp_bdr | curses.A_BOLD)  # Change border color
         save_menu.border(0)
         save_menu.keypad(1)
 
         # Send menu to a panel
         panel_save = panel.new_panel(save_menu)
         panel_save.hide()
-        panel.update_panels()
 
         # Various variables
         self.menuposition = 0
 
-        save_items = [('txt', "self.inspect.SaveNP(self.varname, 'txt')"),
-                      ('npy', "self.inspect.SaveNP(self.varname, 'npy')"),
-                      ('npz', "self.inspect.SaveNP(self.varname, 'npz')")]
+        save_lst = [('txt', "self.inspect.SaveNP(self.varname, self.SaveDir, 'txt')"),
+                    ('npy', "self.inspect.SaveNP(self.varname, self.SaveDir, 'npy')"),
+                    ('npz', "self.inspect.SaveNP(self.varname, self.SaveDir, 'npz')")]
         panel_save.top()        # Push the panel to the bottom of the stack.
         panel_save.show()       # Display the panel (which might have been hidden)
         save_menu.clear()
@@ -201,12 +214,11 @@ class MenuVarCUI(object):
         while menukey not in (27, 113):
             save_menu.border(0)
             save_menu.refresh()
-            curses.doupdate()
-            for index, item in enumerate(save_items):
+            for index, item in enumerate(save_lst):
                 if index == self.menuposition:
-                    mode = curses.A_REVERSE
+                    mode = self.c_exp_hh | curses.A_BOLD
                 else:
-                    mode = curses.A_NORMAL
+                    mode = self.c_exp_txt | curses.A_DIM
 
                 msg = item[0]
                 save_menu.addstr(1+index, 1, msg, mode)
@@ -214,28 +226,25 @@ class MenuVarCUI(object):
             menukey = save_menu.getch()
 
             if menukey in [curses.KEY_ENTER, ord('\n')]:
-                if self.menuposition == len(save_items)-1:
-                    break
+                Wng = WarningMsg(self.stdscreen)
+                try:
+                    eval(save_lst[self.menuposition][1])
+                    Wng.Display('Saved !')
+                except Exception, err:
+                    Wng.Display('Not saved !')
+                    with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                        f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
                 else:
-                    Wng = WarningMsg(self.stdscreen)
-                    try:
-                        eval(save_items[self.menuposition][1])
-                        Wng.Display('Saved !')
-                    except:
-                        Wng.Display('Not saved !')
-                    else:
-                        break
+                    break
 
             elif menukey == curses.KEY_UP:
-                self.Navigate(-1)
+                self.Navigate(-1, len(save_lst))
 
             elif menukey == curses.KEY_DOWN:
-                self.Navigate(1)
+                self.Navigate(1, len(save_lst))
 
             if menukey == curses.KEY_RESIZE:
                 break
 
         save_menu.clear()
         panel_save.hide()
-        panel.update_panels()
-        curses.doupdate()

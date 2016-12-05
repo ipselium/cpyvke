@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : mar. 29 nov. 2016 12:13:26 CET
+# Last Modified : lun. 05 déc. 2016 19:31:47 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -81,22 +81,22 @@ class Inspect(object):
             plot(self.varval[i, :])
         show()
 
-    def SaveNP(self, varname, METHOD='npy'):
+    def SaveNP(self, varname, SaveDir, METHOD='npy'):
         ''' Save numpy variable to file '''
 
         if METHOD == 'txt':
-            savetxt('SaveFiles/' + varname + '.txt', self.varval)
+            savetxt(SaveDir + varname + '.txt', self.varval)
 
         if METHOD == 'npy':
-            save('SaveFiles/' + varname, self.varval)
+            save(SaveDir + varname, self.varval)
 
         if METHOD == 'npz':
-            savez_compressed('SaveFiles/' + varname, var=self.varval)
+            savez_compressed(SaveDir + varname, var=self.varval)
 
-    def Save(self):
+    def Save(self, SaveDir):
         ''' Save variable to text file '''
 
-        filename = 'SaveFiles/' + self.varname
+        filename = SaveDir + self.varname
 
         if self.vartype != 'str':
             self.varval = str(self.varval)
