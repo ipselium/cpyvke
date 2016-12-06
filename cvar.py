@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mar. 06 déc. 2016 09:58:28 CET
+# Last Modified : mar. 06 déc. 2016 14:29:02 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -21,12 +21,18 @@ DESCRIPTION
 ###############################################################################
 import curses
 from curses import panel
-from numpy import array
+from numpy import load
 import time
+import os
 # Personal
 from inspector import Inspect
 from cwidgets import Viewer, WarningMsg
 
+
+def ToFile(filename, var):
+    with open(filename, 'w') as f:
+        for item in var:
+            f.write("%s\n" % item)
 
 ###############################################################################
 # Class and Methods
@@ -68,9 +74,20 @@ class MenuVar(object):
             self.view = Viewer(self.stdscreen, self.varval, self.varname)
 
         elif parent.variables[parent.strings[parent.position-1]]['type'] == 'ndarray':
-            parent.qreq.put(self.varname)
-            self.varval = parent.qans.get()
-            self.varval = eval(self.varval)
+            filename = '/tmp/tmp_' + self.varname
+            parent.qreq.put("np.save('" + filename + "', " + self.varname + ')')
+            sab = ['|', '/', '-', '\\', '|', '/', '-', '\\']
+            i = 0
+            while os.path.exists(filename + '.npy') is False:
+                time.sleep(0.1)
+                self.stdscreen.addstr(parent.position - (parent.page-1)*parent.row_max + 1, 2, sab[i], self.c_exp_ttl | curses.A_BOLD)
+                self.stdscreen.refresh()
+                if i < 6:
+                    i += 1
+                else:
+                    i = 0
+            self.varval = load(filename + '.npy')
+            os.remove(filename + '.npy')
 
         else:
             self.varval = '[Not Impl.]'
