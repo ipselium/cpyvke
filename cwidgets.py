@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# File Name : CUIWidgets.py
+# File Name : cwidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mar. 06 déc. 2016 00:42:22 CET
+# Last Modified : mar. 06 déc. 2016 09:59:33 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -137,7 +137,7 @@ class WarningMsg(object):
         panel_wng.hide()
 
 
-class MenuHelpCUI(object):
+class Help(object):
     ''' Display help in a pad. '''
 
     def __init__(self, stdscreen):
@@ -205,20 +205,3 @@ class MenuHelpCUI(object):
                 break
 
         self.menu_help.erase()
-
-
-def SizeWng(self):
-    ''' Blank screen and display a warning if size of the terminal is too small. '''
-
-    self.stdscreen.erase()
-    self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
-    msg_actual = str(self.screen_width) + 'x' + str(self.screen_height)
-    msg_limit = 'Win must be > ' + str(self.term_min_width) + 'x' + str(self.term_min_height)
-    try:
-        self.stdscreen.addstr(int(self.screen_height/2), int((self.screen_width-len(msg_limit))/2), msg_limit, self.c_warn.txt)
-        self.stdscreen.addstr(int(self.screen_height/2)+1, int((self.screen_width-len(msg_actual))/2), msg_actual, self.c_warn_txt)
-    except:
-        pass
-    self.stdscreen.border(0)
-    self.stdscreen.refresh()
-    return self.screen_width, self.screen_height

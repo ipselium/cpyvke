@@ -3,7 +3,7 @@
 #
 # File Name : cVKE_Main.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : lun. 05 déc. 2016 12:48:30 CET
+# Last Modified : mar. 06 déc. 2016 10:00:34 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -28,7 +28,7 @@ from jupyter_client import find_connection_file
 from Queue import Queue
 # Personal Libs
 from kd5 import Watcher
-from cmain import CUI
+from cmain import MainWin
 from ktools import connect_kernel, print_kernel_list
 from config import cfg_setup
 
@@ -56,7 +56,7 @@ parser.add_argument("-r", "--refresh_delay", help="Refresh delay of the daemon [
 args = parser.parse_args()
 
 if args.only_cui and args.only_daemon:
-    print('Error :\tCannot run only daemon AND only CUI !\n\tExiting...')
+    print('Error :\tCannot run only daemon AND only Curses !\n\tExiting...')
 
 elif args.list_kernels:
         print_kernel_list()
@@ -104,7 +104,7 @@ else:
         # Create threads
         thread1 = Watcher(kc, args.refresh_delay, qstop, qvar, qreq, qans, qkc, args.only_daemon)
         if args.only_daemon is False:
-            thread2 = CUI(kc, cf, qstop, qvar, qreq, qans, qkc, Config, args.debug)
+            thread2 = MainWin(kc, cf, qstop, qvar, qreq, qans, qkc, Config, args.debug)
 
         # Start them
         thread1.start()

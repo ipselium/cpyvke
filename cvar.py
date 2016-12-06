@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# File Name : CUIMenuVar.py
+# File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mar. 06 déc. 2016 00:28:50 CET
+# Last Modified : mar. 06 déc. 2016 09:58:28 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -32,7 +32,7 @@ from cwidgets import Viewer, WarningMsg
 # Class and Methods
 ###############################################################################
 
-class MenuVarCUI(object):
+class MenuVar(object):
     ''' Class to handle variable menus. '''
 
     def __init__(self, parent):
@@ -132,7 +132,7 @@ class MenuVarCUI(object):
                     eval(self.menu_lst[self.menuposition][1])
                     if self.menu_lst[self.menuposition][0] == 'Save':
                         Wng.Display('Saved !')
-                except Exception, err:
+                except Exception as err:
                     if self.menu_lst[self.menuposition][0] == 'Save':
                         Wng.Display('Not saved !')
                     with open(self.LogDir + 'cpyvke.log', 'a') as f:
@@ -230,7 +230,7 @@ class MenuVarCUI(object):
                 try:
                     eval(save_lst[self.menuposition][1])
                     Wng.Display('Saved !')
-                except Exception, err:
+                except Exception as err:
                     Wng.Display('Not saved !')
                     with open(self.LogDir + 'cpyvke.log', 'a') as f:
                         f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')

@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# File Name : CUIMainWin.py
+# File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mar. 06 déc. 2016 00:49:30 CET
+# Last Modified : mar. 06 déc. 2016 09:58:03 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -29,13 +29,13 @@ from curses import panel
 import time
 import os
 # Personal Libs
-from cvar import MenuVarCUI
-from ckernel import MenuKernelCUI
-from cwidgets import WarningMsg, MenuHelpCUI, SizeWng
+from cvar import MenuVar
+from ckernel import MenuKernel
+from cwidgets import WarningMsg, Help
 from ctools import FormatCell, TypeSort, FilterVarLst
 
 
-class CUI(Thread):
+class MainWin(Thread):
     ''' Main window. '''
 
     def __init__(self, kc, cf, qstop, qvar, qreq, qans, qkc, Config, DEBUG=False):
@@ -118,7 +118,7 @@ class CUI(Thread):
             wgtxt_bg = self.EvalColor(wgtxt[1])
             wgbdr_fg = self.EvalColor(wgbdr[0])
             wgbdr_bg = self.EvalColor(wgbdr[1])
-        except Exception, err:
+        except Exception as err:
             wgtxt_fg = curses.COLOR_RED
             wgtxt_bg = -1
             wgbdr_fg = curses.COLOR_RED
@@ -140,7 +140,7 @@ class CUI(Thread):
             xpttl_bg = self.EvalColor(xpttl[1])
             xphh_fg = self.EvalColor(xphh[0])
             xphh_bg = self.EvalColor(xphh[1])
-        except Exception, err:
+        except Exception as err:
             xptxt_fg = curses.COLOR_WHITE
             xptxt_bg = -1
             xpbdr_fg = curses.COLOR_CYAN
@@ -166,7 +166,7 @@ class CUI(Thread):
             mnttl_bg = self.EvalColor(mnttl[1])
             mnhh_fg = self.EvalColor(mnhh[0])
             mnhh_bg = self.EvalColor(mnhh[1])
-        except Exception, err:
+        except Exception as err:
             mntxt_fg = curses.COLOR_WHITE
             mntxt_bg = -1
             mnbdr_fg = curses.COLOR_WHITE
@@ -201,7 +201,7 @@ class CUI(Thread):
             kndi_bg = self.EvalColor(kndi[1])
             knal_fg = self.EvalColor(knal[0])
             knal_bg = self.EvalColor(knal[1])
-        except Exception, err:
+        except Exception as err:
             kntxt_fg = curses.COLOR_RED
             kntxt_bg = -1
             knbdr_fg = curses.COLOR_RED
@@ -279,21 +279,21 @@ class CUI(Thread):
             self.GetVars()    # Init Variables
             self.pkey = -1    # Init pressed Key
             while self.close_signal == 'continue':
-                self.UpdateCUI()
+                self.UpdateCurses()
             self.ShutdownApp()
         except:
             self.ExitWithError()
 
-    def UpdateCUI(self):
+    def UpdateCurses(self):
         ''' Update Curses '''
 
         # Listen to resize and adapt Curses
-        self.ResizeCUI()
+        self.ResizeCurses()
 
         # Check if size is enough
         if self.screen_height < self.term_min_height or self.screen_width < self.term_min_width:
-            SizeWng(self)
-            time.sleep(0.1)
+            self.SizeWng()
+            time.sleep(0.5)
         else:
 
             # Get variables from daemon
@@ -307,17 +307,17 @@ class CUI(Thread):
 
             # Menu Variable
             if self.pkey == ord("\n") and self.row_num != 0:
-                var_menu = MenuVarCUI(self)
+                var_menu = MenuVar(self)
                 var_menu.Display()
 
             # Menu Help
             if self.pkey == 104:    # -> h
-                help_menu = MenuHelpCUI(self.stdscreen)
+                help_menu = Help(self.stdscreen)
                 help_menu.Display()
 
             # Menu KERNEL
             if self.pkey == 99:    # -> c
-                kernel_menu = MenuKernelCUI(self)
+                kernel_menu = MenuKernel(self)
                 self.cf, self.kc = kernel_menu.Display()
                 # Reset cursor location
                 self.position = 1
@@ -337,7 +337,7 @@ class CUI(Thread):
                     self.page = int(ceil(self.position/self.row_max))
 
             # Update screen size if another menu break because of resizing
-            self.ResizeCUI()
+            self.ResizeCurses()
 
             # Update all static panels
             self.UpdateStatic()
@@ -347,7 +347,7 @@ class CUI(Thread):
 
             # Close menu
             if self.pkey == 113:
-                self.MenuCloseCUI()
+                self.MenuClose()
 
     def ArangeVarLst(self):
         ''' Organize/Arange variable list. '''
@@ -552,7 +552,7 @@ class CUI(Thread):
         except Empty:
             pass
 
-    def ResizeCUI(self):
+    def ResizeCurses(self):
         ''' Check if terminal is resized and adapt screen '''
 
         resize = curses.is_term_resized(self.screen_height, self.screen_width)
@@ -565,6 +565,22 @@ class CUI(Thread):
             curses.resizeterm(self.screen_height, self.screen_width)
             self.stdscreen.refresh()
             self.VarLst.refresh()
+
+    def SizeWng(self):
+        ''' Blank screen and display a warning if size of the terminal is too small. '''
+
+        self.stdscreen.erase()
+        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
+        msg_actual = str(self.screen_width) + 'x' + str(self.screen_height)
+        msg_limit = 'Win must be > ' + str(self.term_min_width) + 'x' + str(self.term_min_height)
+        try:
+            self.stdscreen.addstr(int(self.screen_height/2), int((self.screen_width-len(msg_limit))/2), msg_limit, self.c_warn_txt | curses.A_BOLD)
+            self.stdscreen.addstr(int(self.screen_height/2)+1, int((self.screen_width-len(msg_actual))/2), msg_actual, self.c_warn_txt | curses.A_BOLD)
+        except Exception as err:
+            with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+        self.stdscreen.border(0)
+        self.stdscreen.refresh()
 
     def BottomInfo(self):
         ''' Check and display kernel informations '''
@@ -600,7 +616,7 @@ class CUI(Thread):
         self.stdscreen.addstr(self.row_max + 9, int(self.screen_width/2) + 2, '+ ' + 'Sort : ' + str(self.mk_varlst), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 10, int(self.screen_width/2) + 2, '+ ' + 'Color : ' + str(curses.COLOR_BLACK), curses.A_DIM | self.c_main_txt)
 
-    def MenuCloseCUI(self):
+    def MenuClose(self):
         ''' Close Menu '''
 
         # Init Menu

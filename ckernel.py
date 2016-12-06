@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# File Name : CUIMenuKernel.py
+# File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : lun. 05 déc. 2016 23:48:54 CET
+# Last Modified : mar. 06 déc. 2016 09:59:06 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -36,7 +36,7 @@ from cwidgets import WarningMsg
 # Classes and Methods
 ###############################################################################
 
-class MenuKernelCUI(object):
+class MenuKernel(object):
     ''' Kernel list window. '''
 
     def __init__(self, parent):
@@ -230,12 +230,12 @@ class MenuKernelCUI(object):
         self.kernel_submenu_width = max(self.kernel_submenu_width, len(self.kernel_submenu_title)) + 5
         self.kernel_submenu_height = len(self.kernel_submenu_lst) + 2
 
-	# Init Menu
-	self.kernel_submenu = self.stdscreen.subwin(self.kernel_submenu_height, self.kernel_submenu_width, 2, self.screen_width-self.kernel_submenu_width-2)
-	self.kernel_submenu.border(0)
-	self.kernel_submenu.bkgd(self.c_kern_txt)
-	self.kernel_submenu.attrset(self.c_kern_bdr | curses.A_BOLD)  # Change border color
-	self.kernel_submenu.keypad(1)
+        # Init Menu
+        self.kernel_submenu = self.stdscreen.subwin(self.kernel_submenu_height, self.kernel_submenu_width, 2, self.screen_width-self.kernel_submenu_width-2)
+        self.kernel_submenu.border(0)
+        self.kernel_submenu.bkgd(self.c_kern_txt)
+        self.kernel_submenu.attrset(self.c_kern_bdr | curses.A_BOLD)  # Change border color
+        self.kernel_submenu.keypad(1)
 
         # Send menu to a panel
         self.panel_kernel_submenu = panel.new_panel(self.kernel_submenu)
