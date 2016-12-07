@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mar. 06 déc. 2016 09:58:03 CET
+# Last Modified : mer. 07 déc. 2016 17:46:33 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -86,7 +86,7 @@ class MainWin(Thread):
         self.search_index = 0
 
         # Various Variables :
-        self.VarLst_name = "| Variable Explorer |"
+        self.VarLst_name = "Variable Explorer"
         self.VarLst_wng = ""
         self.mk_varlst = 'name'
 
@@ -102,6 +102,13 @@ class MainWin(Thread):
         if color == 'transparent':
             curses.use_default_colors()
             return -1
+        elif color.isdigit():
+            if curses.COLORS > 8:
+                return int(color)
+            else:
+                with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                    f.write(time.strftime("[%D :: %H:%M:%S] ::  Error :: TERM accept only 8 colors") + '\n')
+                return  eval('curses.COLOR_UNDEFINED')
         else:
             return eval('curses.COLOR_' + color.upper())
 
@@ -109,6 +116,7 @@ class MainWin(Thread):
         ''' Initialize colors. '''
 
         curses.start_color()        #
+        curses.setupterm()
 
         # Define warning color
         wgtxt = self.Config['wg']['txt'].replace(' ', '').split(',')
@@ -123,6 +131,32 @@ class MainWin(Thread):
             wgtxt_bg = -1
             wgbdr_fg = curses.COLOR_RED
             wgbdr_bg = -1
+            with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+
+        # Define bar color
+        brkn = self.Config['br']['kn'].replace(' ', '').split(',')
+        brhlp = self.Config['br']['hlp'].replace(' ', '').split(',')
+        brco = self.Config['br']['co'].replace(' ', '').split(',')
+        brdco = self.Config['br']['dco'].replace(' ', '').split(',')
+        try:
+            brkn_fg = self.EvalColor(brkn[0])
+            brkn_bg = self.EvalColor(brkn[1])
+            brhlp_fg = self.EvalColor(brhlp[0])
+            brhlp_bg = self.EvalColor(brhlp[1])
+            brco_fg = self.EvalColor(brco[0])
+            brco_bg = self.EvalColor(brco[1])
+            brdco_fg = self.EvalColor(brdco[0])
+            brdco_bg = self.EvalColor(brdco[1])
+        except Exception as err:
+            brkn_fg = curses.COLOR_WHITE
+            brkn_bg = -1
+            brhlp_fg = curses.COLOR_WHITE
+            brhlp_bg = -1
+            brco_fg = curses.COLOR_GREEN
+            brco_bg = -1
+            brdco_fg = curses.COLOR_RED
+            brdco_bg = -1
             with open(self.LogDir + 'cpyvke.log', 'a') as f:
                 f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
@@ -227,12 +261,19 @@ class MainWin(Thread):
         curses.init_pair(12, mnbdr_fg, mnbdr_bg)
         curses.init_pair(13, mnttl_fg, mnttl_bg)
         curses.init_pair(14, mnhh_fg, mnhh_bg)
-        curses.init_pair(14, mnhh_fg, mnhh_bg)
+        if mnttl_bg != -1:
+            curses.init_pair(15, mnttl_bg, mnbdr_bg)
+        else:
+            curses.init_pair(15, mnbdr_fg, mnbdr_bg)
 
         curses.init_pair(21, xptxt_fg, xptxt_bg)
         curses.init_pair(22, xpbdr_fg, xpbdr_bg)
         curses.init_pair(23, xpttl_fg, xpttl_bg)
         curses.init_pair(24, xphh_fg, xphh_bg)
+        if xpttl_bg != -1:
+            curses.init_pair(25, xpttl_bg, xpbdr_bg)
+        else:
+            curses.init_pair(25, xpbdr_fg, xpbdr_bg)
 
         curses.init_pair(31, kntxt_fg, kntxt_bg)
         curses.init_pair(32, knbdr_fg, knbdr_bg)
@@ -241,6 +282,38 @@ class MainWin(Thread):
         curses.init_pair(35, knco_fg, knco_bg)
         curses.init_pair(36, knal_fg, knal_bg)
         curses.init_pair(37, kndi_fg, kndi_bg)
+        if knttl_bg != -1:
+            curses.init_pair(38, knttl_bg, knbdr_bg)
+        else:
+            curses.init_pair(38, knbdr_fg, knbdr_bg)
+
+        curses.init_pair(41, brkn_fg, brkn_bg)
+        curses.init_pair(42, brhlp_fg, brhlp_bg)
+        curses.init_pair(43, brco_fg, brco_bg)
+        curses.init_pair(44, brdco_fg, brdco_bg)
+        curses.init_pair(47, mnbdr_fg, brkn_bg)
+
+        if brdco_bg != -1:
+            curses.init_pair(40, brdco_bg, mnbdr_bg)
+        else:
+            curses.init_pair(40, mnbdr_fg, mnbdr_bg)
+
+        if brco_bg != -1:
+            curses.init_pair(49, brco_bg, brkn_bg)
+        else:
+            curses.init_pair(49, mnbdr_fg, brkn_bg)
+
+        if brkn_bg != -1:
+            curses.init_pair(45, brkn_bg, mnbdr_bg)
+            curses.init_pair(48, brkn_bg, brco_bg)
+        else:
+            curses.init_pair(45, mnbdr_fg, mnbdr_bg)
+            curses.init_pair(48, mnbdr_fg, brco_bg)
+
+        if brhlp_bg != -1:
+            curses.init_pair(46, brhlp_bg, mnbdr_bg)
+        else:
+            curses.init_pair(46, mnbdr_fg, mnbdr_bg)
 
         self.c_warn_txt = curses.color_pair(1)
         self.c_warn_bdr = curses.color_pair(2)
@@ -248,7 +321,8 @@ class MainWin(Thread):
         self.c_main_txt = curses.color_pair(11)
         self.c_main_bdr = curses.color_pair(12)
         self.c_main_ttl = curses.color_pair(13)
-        if mnhh_fg == 0: # Black
+        self.c_main_pwf = curses.color_pair(15)
+        if mnhh_fg == 0:  # Black
             self.c_main_hh = curses.color_pair(14)
         else:
             self.c_main_hh = curses.color_pair(14) | curses.A_BOLD
@@ -256,6 +330,7 @@ class MainWin(Thread):
         self.c_exp_txt = curses.color_pair(21)
         self.c_exp_bdr = curses.color_pair(22)
         self.c_exp_ttl = curses.color_pair(23)
+        self.c_exp_pwf = curses.color_pair(25)
         if xphh_fg == 0:
             self.c_exp_hh = curses.color_pair(24)
         else:
@@ -264,14 +339,25 @@ class MainWin(Thread):
         self.c_kern_txt = curses.color_pair(31)
         self.c_kern_bdr = curses.color_pair(32)
         self.c_kern_ttl = curses.color_pair(33)
-        self.c_kern_hh = curses.color_pair(34)
         self.c_kern_co = curses.color_pair(35)
         self.c_kern_al = curses.color_pair(36)
         self.c_kern_di = curses.color_pair(37)
+        self.c_kern_pwf = curses.color_pair(38)
         if knhh_fg == 0:
-            self.c_kn_hh = curses.color_pair(34)
+            self.c_kern_hh = curses.color_pair(34)
         else:
-            self.c_kn_hh = curses.color_pair(34) | curses.A_BOLD
+            self.c_kern_hh = curses.color_pair(34) | curses.A_BOLD
+
+        self.c_bar_kn = curses.color_pair(41)
+        self.c_bar_hlp = curses.color_pair(42)
+        self.c_bar_co = curses.color_pair(43)
+        self.c_bar_dco = curses.color_pair(44)
+        self.c_bar_kn_pwf = curses.color_pair(45)
+        self.c_bar_hlp_pwf = curses.color_pair(46)
+        self.c_bar_kn_pwfi = curses.color_pair(47)
+        self.c_bar_kn_pwfk = curses.color_pair(48)
+        self.c_bar_kn_pwfc = curses.color_pair(49)
+        self.c_bar_kn_pwfd = curses.color_pair(40)
 
     def run(self):
         ''' Run daemon '''
@@ -307,12 +393,18 @@ class MainWin(Thread):
 
             # Menu Variable
             if self.pkey == ord("\n") and self.row_num != 0:
+                # First Update VarLst (avoid bug)
+                self.VarLst.border(0)
+                self.UpdateVarLst()
+                self.stdscreen.refresh()
+                self.VarLst.refresh()
+                # MenuVar
                 var_menu = MenuVar(self)
                 var_menu.Display()
 
             # Menu Help
             if self.pkey == 104:    # -> h
-                help_menu = Help(self.stdscreen)
+                help_menu = Help(self)
                 help_menu.Display()
 
             # Menu KERNEL
@@ -360,7 +452,7 @@ class MainWin(Thread):
 
         elif self.mk_varlst == 'filter':
             self.strings = FilterVarLst(self.variables, self.filter)
-            self.VarLst_wng = '< Filter : ' + str(self.filter) + ' (' + str(len(self.strings)) + ' obj.) >'
+            self.VarLst_wng = 'Filter : ' + str(self.filter) + ' (' + str(len(self.strings)) + ' obj.)'
 
         # Sort variable by name/type
         if self.pkey == 115:
@@ -402,7 +494,12 @@ class MainWin(Thread):
         menu_filter.bkgd(self.c_exp_txt)
         menu_filter.attrset(self.c_exp_bdr | curses.A_BOLD)  # Change border color
         menu_filter.border(0)
-        menu_filter.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
+        if self.Config['font']['pw-font'] == 'True':
+            menu_filter.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '', self.c_exp_pwf)
+            menu_filter.addstr(self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
+            menu_filter.addstr('', self.c_exp_pwf)
+        else:
+            menu_filter.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
 
         curses.echo()
         menu_filter.addstr(2, 3, "Filter :", curses.A_BOLD | self.c_exp_txt)
@@ -428,8 +525,12 @@ class MainWin(Thread):
         menu_search.bkgd(self.c_exp_txt)
         menu_search.attrset(self.c_exp_bdr | curses.A_BOLD)  # Change border color
         menu_search.border(0)
-
-        menu_search.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
+        if self.Config['font']['pw-font'] == 'True':
+            menu_search.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '', self.c_exp_pwf)
+            menu_search.addstr(self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
+            menu_search.addstr('', self.c_exp_pwf)
+        else:
+            menu_search.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
 
         curses.echo()
         menu_search.addstr(2, 3, "Search Variable :", curses.A_BOLD | self.c_exp_txt)
@@ -465,8 +566,15 @@ class MainWin(Thread):
     def UpdateVarLst(self):
         ''' Update the list of variables display '''
 
-        self.VarLst.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
+        # Title
+        if self.Config['font']['pw-font'] == 'True':
+            self.VarLst.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '', self.c_exp_pwf | curses.A_BOLD)
+            self.VarLst.addstr(self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
+            self.VarLst.addstr('', self.c_exp_pwf | curses.A_BOLD)
+        else:
+            self.VarLst.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
 
+        # VarLst
         for i in range(1+(self.row_max*(self.page-1)), self.row_max+1 + (self.row_max*(self.page-1))):
 
             if self.row_num == 0:
@@ -481,7 +589,13 @@ class MainWin(Thread):
                 if i == self.row_num:
                     break
 
-        self.VarLst.addstr(self.row_max+1, int((self.screen_width-len(self.VarLst_wng))/2), self.VarLst_wng, curses.A_DIM | self.c_exp_ttl)
+        # Bottom info
+        if self.Config['font']['pw-font'] == 'True' and len(self.VarLst_wng) > 0:
+            self.VarLst.addstr(self.row_max+1, int((self.screen_width-len(self.VarLst_wng))/2), '', self.c_exp_pwf)
+            self.VarLst.addstr(self.VarLst_wng, self.c_exp_ttl | curses.A_BOLD)
+            self.VarLst.addstr('',  self.c_exp_pwf | curses.A_BOLD)
+        elif len(self.VarLst_wng) > 0:
+            self.VarLst.addstr(self.row_max+1, int((self.screen_width-len(self.VarLst_wng))/2), '< ' + self.VarLst_wng + ' >', curses.A_DIM | self.c_exp_ttl)
 
     def NavigateVarLst(self):
         ''' Navigation though the variable list'''
@@ -585,20 +699,48 @@ class MainWin(Thread):
     def BottomInfo(self):
         ''' Check and display kernel informations '''
 
-        self.stdscreen.addstr(self.screen_height-1, 2, '< Kernel : ', self.c_main_ttl | curses.A_BOLD)
+        kernel_info_id = 'id. ' + self.cf.split('-')[1].split('.')[0] + ' '
+        kernel_info_obj = str(len(self.variables.keys())) + ' obj.'
 
-        if self.kc.is_alive():
-            self.stdscreen.addstr(self.screen_height-1, 13, 'connected ', self.c_kern_al | curses.A_BOLD)
-            self.stdscreen.addstr(self.screen_height-1, 23, '[' + str(len(self.variables.keys())) + ' obj, id ' + self.cf.split('-')[1].split('.')[0] + '] >', self.c_main_ttl | curses.A_BOLD)
+        # Kernel Info
+        if self.Config['font']['pw-font'] == 'True':
+            self.stdscreen.addstr(self.screen_height-1, 2, '', self.c_bar_kn_pwfi | curses.A_BOLD)
+            self.stdscreen.addstr(' Kernel ', self.c_bar_kn)
+            self.stdscreen.addstr('', self.c_bar_kn_pwfk | curses.A_BOLD)
+            if self.kc.is_alive():
+                self.stdscreen.addstr(' connected ', self.c_bar_co | curses.A_BOLD)
+                self.stdscreen.addstr(' ', self.c_bar_kn_pwfc | curses.A_BOLD)
+                self.stdscreen.addstr(kernel_info_id, self.c_bar_kn)
+                self.stdscreen.addstr(' ', self.c_bar_kn | curses.A_BOLD)
+                self.stdscreen.addstr(kernel_info_obj, self.c_bar_kn)
+                self.stdscreen.addstr('', self.c_bar_kn_pwf | curses.A_BOLD)
+            else:
+                self.stdscreen.addstr(' disconnected ', self.c_bar_dco | curses.A_BOLD)
+                self.stdscreen.addstr('', self.c_bar_kn_pwfd | curses.A_BOLD)
+
         else:
-            self.stdscreen.addstr(self.screen_height-1, 13, 'disconnected ', self.c_warn_txt | curses.A_BOLD)
+            self.stdscreen.addstr(self.screen_height-1, 2, '< Kernel : ', self.c_bar_kn | curses.A_BOLD)
+            if self.kc.is_alive():
+                self.stdscreen.addstr('connected', self.c_bar_co | curses.A_BOLD)
+                self.stdscreen.addstr(' [' + kernel_info_id + kernel_info_obj + ']', self.c_bar_kn | curses.A_BOLD)
+            else:
+                self.stdscreen.addstr('disconnected ', self.c_bar_dco | curses.A_BOLD)
+            self.stdscreen.addstr(' >', self.c_bar_kn | curses.A_BOLD)
 
-        self.stdscreen.addstr(self.screen_height-1, self.screen_width-12, '< h:help >', self.c_main_ttl | curses.A_BOLD)
+        # Help
+        if self.Config['font']['pw-font'] == 'True':
+            self.stdscreen.addstr(self.screen_height-1, self.screen_width-12, '', self.c_bar_hlp_pwf | curses.A_BOLD)
+            self.stdscreen.addstr(' h:help ', self.c_bar_hlp | curses.A_BOLD)
+            self.stdscreen.addstr('', self.c_bar_hlp_pwf | curses.A_BOLD)
+        else:
+            self.stdscreen.addstr(self.screen_height-1, self.screen_width-12, '< h:help >', self.c_bar_hlp | curses.A_BOLD)
 
     def ProcInfo(self):
         ''' Display process informations '''
 
-        self.stdscreen.addstr(self.row_max + 4, 3, 'Process informations :', self.c_main_ttl | curses.A_BOLD)
+        self.stdscreen.addstr(self.row_max + 4, 3, ' Process informations ', self.c_main_ttl | curses.A_BOLD)
+        if self.Config['font']['pw-font'] == 'True':
+            self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
         self.stdscreen.addstr(self.row_max + 5, 5, '+ ' + 'queue stop     : ' + str(self.qstop.qsize()), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 6, 5, '+ ' + 'queue variable : ' + str(self.qvar.qsize()), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 7, 5, '+ ' + 'queue request  : ' + str(self.qreq.qsize()), curses.A_DIM | self.c_main_txt)
@@ -608,13 +750,15 @@ class MainWin(Thread):
     def DebugInfo(self):
         ''' Display debug informations '''
 
-        self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/2), 'Debug informations :', self.c_main_ttl | curses.A_BOLD)
+        self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/2), ' Debug informations ', self.c_main_ttl | curses.A_BOLD)
+        if self.Config['font']['pw-font'] == 'True':
+            self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
         self.stdscreen.addstr(self.row_max + 5, int(self.screen_width/2) + 2, '+ ' + 'width : ' + str(self.screen_width), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/2) + 2, '+ ' + 'heigh : ' + str(self.screen_height), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/2) + 2, '+ ' + 'key : ' + str(self.pkey), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 8, int(self.screen_width/2) + 2, '+ ' + 'Search : ' + str(self.search), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 9, int(self.screen_width/2) + 2, '+ ' + 'Sort : ' + str(self.mk_varlst), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 10, int(self.screen_width/2) + 2, '+ ' + 'Color : ' + str(curses.COLOR_BLACK), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 10, int(self.screen_width/2) + 2, '+ ' + 'Color : ' + str(curses.COLORS), curses.A_DIM | self.c_main_txt)
 
     def MenuClose(self):
         ''' Close Menu '''

@@ -3,7 +3,7 @@
 #
 # File Name : cwidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mar. 06 déc. 2016 09:59:33 CET
+# Last Modified : mer. 07 déc. 2016 16:40:55 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -32,18 +32,20 @@ from ctools import dump
 class Viewer(object):
     ''' Display variable content in a pad. '''
 
-    def __init__(self, stdscreen, varval, varname):
+    def __init__(self, parent):
 
         # Init Values
-        self.stdscreen = stdscreen
-        self.varval = varval
-        self.varname = varname
+        self.stdscreen = parent.stdscreen
+        self.varval = parent.varval
+        self.varname = parent.varname
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
-        self.menu_title = '| ' + self.varname + ' |'
-        self.c_exp_txt = curses.color_pair(21)
-        self.c_exp_bdr = curses.color_pair(22)
-        self.c_exp_ttl = curses.color_pair(23)
-        self.c_exp_hh = curses.color_pair(24)
+        self.menu_title = ' ' + self.varname + ' '
+        self.Config = parent.Config
+        self.c_exp_txt = parent.c_exp_txt
+        self.c_exp_bdr = parent.c_exp_bdr
+        self.c_exp_ttl = parent.c_exp_ttl
+        self.c_exp_hh = parent.c_exp_hh
+        self.c_exp_pwf = parent.c_exp_pwf
 
         # Format variable
         if type(self.varval) is str:
@@ -52,7 +54,7 @@ class Viewer(object):
             dumped = dump(self.varval)
 
         # Init Menu
-        self.pad_width = max(len(self.menu_title), max([len(elem) for elem in dumped])) + 4
+        self.pad_width = max(len(self.menu_title), max([len(elem) for elem in dumped])) + 8
         self.pad_height = len(dumped) + 2
         self.menu_viewer = curses.newpad(self.pad_height, self.pad_width)
         self.padpos = 0
@@ -63,7 +65,12 @@ class Viewer(object):
         self.menu_viewer.bkgd(self.c_exp_txt)
         self.menu_viewer.attrset(self.c_exp_bdr | curses.A_BOLD)  # Change border color
         self.menu_viewer.border(0)
-        self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title))/2), self.menu_title, self.c_exp_ttl | curses.A_BOLD)
+        if self.Config['font']['pw-font'] == 'True':
+            self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '', self.c_exp_pwf | curses.A_BOLD)
+            self.menu_viewer.addstr(self.menu_title, self.c_exp_ttl | curses.A_BOLD)
+            self.menu_viewer.addstr('', self.c_exp_pwf | curses.A_BOLD)
+        else:
+            self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '|' + self.menu_title + '|', self.c_exp_ttl | curses.A_BOLD)
 
     def Display(self):
         ''' Create pad to display variable content. '''
@@ -140,16 +147,18 @@ class WarningMsg(object):
 class Help(object):
     ''' Display help in a pad. '''
 
-    def __init__(self, stdscreen):
+    def __init__(self, parent):
 
         # Init Values
-        self.stdscreen = stdscreen
+        self.stdscreen = parent.stdscreen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
+        self.Config = parent.Config
 
         # Init Menu
         self.c_main_txt = curses.color_pair(11)
         self.c_main_bdr = curses.color_pair(12)
         self.c_main_ttl = curses.color_pair(13)
+        self.c_main_pwf = curses.color_pair(15)
 
         self.padpos = 0
 
@@ -162,7 +171,7 @@ class Help(object):
         self.menu_help.bkgd(self.c_main_txt)
         self.menu_help.attrset(self.c_main_bdr | curses.A_BOLD)  # Change border color
 
-        self.menu_title = '| Help |'
+        self.menu_title = ' Help '
         self.menu_help.addstr(2, 2, 'Bindings :', curses.A_BOLD)
         self.menu_help.addstr(4, 3, '(h) This Help !', self.c_main_txt | curses.A_DIM)
         self.menu_help.addstr(5, 3, '(ENTER) Selected item menu', self.c_main_txt | curses.A_DIM)
@@ -176,9 +185,14 @@ class Help(object):
         self.menu_help.addstr(13, 3, '(↑) Previous line', self.c_main_txt | curses.A_DIM)
         self.menu_help.addstr(14, 3, '(→|↡) Next page', self.c_main_txt | curses.A_DIM)
         self.menu_help.addstr(15, 3, '(←|↟) Previous page', self.c_main_txt | curses.A_DIM)
-
         self.menu_help.border(0)
-        self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title))/2), self.menu_title, self.c_main_ttl | curses.A_BOLD)
+
+        if self.Config['font']['pw-font'] == 'True':
+            self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '', self.c_main_pwf | curses.A_BOLD)
+            self.menu_help.addstr(self.menu_title, self.c_main_ttl | curses.A_BOLD)
+            self.menu_help.addstr('', self.c_main_pwf | curses.A_BOLD)
+        else:
+            self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '|' + self.menu_title + '|', self.c_main_ttl | curses.A_BOLD)
 
     def Display(self):
         ''' Display pad. '''

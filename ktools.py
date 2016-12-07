@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mer. 30 nov. 2016 11:30:38 CET
+# Last Modified : mar. 06 déc. 2016 21:22:52 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -96,11 +96,17 @@ def connect_kernel(cf):
         # Kernel Client
         kc = km.blocking_client()
 
-    # init communication
-    kc.execute("import numpy as np", store_history=False)
-    kc.execute("np.set_printoptions(threshold='nan')", store_history=False)
+    init_kernel(kc)
 
     return km, kc
+
+
+def init_kernel(kc):
+    ''' init communication. '''
+
+    kc.execute("import numpy as np", store_history=False)
+    kc.execute("np.set_printoptions(threshold='nan')", store_history=False)
+    kc.execute("import json", store_history=False)
 
 
 def shutdown_kernel(cf):

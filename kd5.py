@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mar. 29 nov. 2016 12:17:54 CET
+# Last Modified : mar. 06 déc. 2016 21:24:59 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -21,6 +21,7 @@ DESCRIPTION
 ###############################################################################
 from time import sleep
 from threading import Thread
+from ktools import init_kernel
 
 
 def WhoToDict(string):
@@ -133,6 +134,7 @@ class Watcher(Thread):
             # Wait for answer when execute reset
             if data['msg_type'] == 'execute_input':
                 if data['content']['code'] == 'reset':
+                    init_kernel(self.kc)
                     data = self.kc.get_iopub_msg()
 
             # Wait for end execution (script)

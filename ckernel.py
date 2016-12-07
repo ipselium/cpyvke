@@ -3,7 +3,7 @@
 #
 # File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 06 déc. 2016 09:59:06 CET
+# Last Modified : mer. 07 déc. 2016 16:04:28 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -46,6 +46,7 @@ class MenuKernel(object):
         self.kc = parent.kc
 
         # Define Styles
+        self.Config = parent.Config
         self.c_kern_txt = parent.c_kern_txt
         self.c_kern_bdr = parent.c_kern_bdr
         self.c_kern_ttl = parent.c_kern_ttl
@@ -53,13 +54,14 @@ class MenuKernel(object):
         self.c_kern_co = parent.c_kern_co
         self.c_kern_al = parent.c_kern_al
         self.c_kern_di = parent.c_kern_di
+        self.c_kern_pwf = parent.c_kern_pwf
 
         self.stdscreen = parent.stdscreen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
         self.kernel_info = parent.kernel_info
         self.cf = parent.cf
         # Init Menu
-        self.menu_title = '| Kernel Manager |'
+        self.menu_title = ' Kernel Manager '
 
         # Init constants
         self.new_kernel_connection = False
@@ -127,7 +129,12 @@ class MenuKernel(object):
     def UpdateKernelLst(self):
         ''' Update the kernel list '''
 
-        self.KernelLst.addstr(0, int((self.screen_width-len(self.menu_title))/2), self.menu_title, curses.A_BOLD | self.c_kern_ttl)
+        if self.Config['font']['pw-font'] == 'True':
+            self.KernelLst.addstr(0, int((self.screen_width-len(self.menu_title))/2), '', curses.A_BOLD | self.c_kern_pwf)
+            self.KernelLst.addstr(self.menu_title, curses.A_BOLD | self.c_kern_ttl)
+            self.KernelLst.addstr('', curses.A_BOLD | self.c_kern_pwf)
+        else:
+            self.KernelLst.addstr(0, int((self.screen_width-len(self.menu_title))/2), '|' + self.menu_title + '|', curses.A_BOLD | self.c_kern_ttl)
 
         for i in range(1+(self.row_max*(self.page-1)), self.row_max+1+(self.row_max*(self.page-1))):
 
@@ -223,11 +230,11 @@ class MenuKernel(object):
 
         # Various variables
         self.menuposition = 0
-        self.kernel_submenu_title = '| ' + self.selected[0].split('-')[1].split('.')[0] + ' |'
+        self.kernel_submenu_title = ' ' + self.selected[0].split('-')[1].split('.')[0] + ' '
 
         # Menu dimensions
         self.kernel_submenu_width = len(max([self.kernel_submenu_lst[i][0] for i in range(len(self.kernel_submenu_lst))], key=len))
-        self.kernel_submenu_width = max(self.kernel_submenu_width, len(self.kernel_submenu_title)) + 5
+        self.kernel_submenu_width = max(self.kernel_submenu_width, len(self.kernel_submenu_title)) + 4
         self.kernel_submenu_height = len(self.kernel_submenu_lst) + 2
 
         # Init Menu
@@ -276,7 +283,14 @@ class MenuKernel(object):
         menukey = -1
         while menukey not in (27, 113):
             self.kernel_submenu.border(0)
-            self.kernel_submenu.addstr(0, int((self.kernel_submenu_width-len(self.kernel_submenu_title))/2), self.kernel_submenu_title, curses.A_BOLD | self.c_kern_ttl)
+
+            if self.Config['font']['pw-font'] == 'True':
+                self.kernel_submenu.addstr(0, int((self.kernel_submenu_width-len(self.kernel_submenu_title) - 2)/2), '', curses.A_BOLD | self.c_kern_pwf)
+                self.kernel_submenu.addstr(self.kernel_submenu_title, curses.A_BOLD | self.c_kern_ttl)
+                self.kernel_submenu.addstr('', curses.A_BOLD | self.c_kern_pwf)
+            else:
+                self.kernel_submenu.addstr(0, int((self.kernel_submenu_width-len(self.kernel_submenu_title) - 2)/2), '|' + self.kernel_submenu_title + '|', curses.A_BOLD | self.c_kern_ttl)
+
             self.kernel_submenu.refresh()
 
             # Create entries

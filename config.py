@@ -3,7 +3,7 @@
 #
 # File Name : cfg_test.py
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : mar. 06 déc. 2016 00:32:34 CET
+# Last Modified : mer. 07 déc. 2016 13:17:41 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -24,6 +24,7 @@ import sys
 import os
 import time
 
+
 def CheckDir(dir):
     ''' Check if dir exists. If not, create it.'''
 
@@ -31,6 +32,7 @@ def CheckDir(dir):
         os.makedirs(dir)
         print("Create directory : " + str(dir))
         time.sleep(0.5)
+
 
 class cfg_setup(object):
     ''' Handle configuration file. '''
@@ -59,32 +61,42 @@ class cfg_setup(object):
         ''' Write configuration file. '''
 
         self.cfg.add_section('main colors')
-        self.cfg.set('main colors', 'title-color', 'white, transparent')
-        self.cfg.set('main colors', 'text-color', 'white, transparent')
-        self.cfg.set('main colors', 'highlight-color', 'black, cyan')
-        self.cfg.set('main colors', 'border-color', 'white, transparent')
+        self.cfg.set('main colors', 'title', 'white, transparent')
+        self.cfg.set('main colors', 'text', 'white, transparent')
+        self.cfg.set('main colors', 'highlight', 'black, cyan')
+        self.cfg.set('main colors', 'border', 'white, transparent')
 
         self.cfg.add_section('explorer colors')
-        self.cfg.set('explorer colors', 'title-color', 'cyan, transparent')
-        self.cfg.set('explorer colors', 'text-color', 'white, transparent')
-        self.cfg.set('explorer colors', 'highlight-color', 'black, cyan')
-        self.cfg.set('explorer colors', 'border-color', 'cyan, transparent')
+        self.cfg.set('explorer colors', 'title', 'cyan, transparent')
+        self.cfg.set('explorer colors', 'text', 'white, transparent')
+        self.cfg.set('explorer colors', 'highlight', 'black, cyan')
+        self.cfg.set('explorer colors', 'border', 'cyan, transparent')
 
         self.cfg.add_section('kernel colors')
-        self.cfg.set('kernel colors', 'title-color', 'red, transparent')
-        self.cfg.set('kernel colors', 'text-color', 'white, transparent')
-        self.cfg.set('kernel colors', 'highlight-color', 'white, transparent')
-        self.cfg.set('kernel colors', 'border-color', 'red, transparent')
-        self.cfg.set('kernel colors', 'connected-color', 'green, transparent')
-        self.cfg.set('kernel colors', 'died-color', 'red, transparent')
-        self.cfg.set('kernel colors', 'alive-color', 'cyan, transparent')
+        self.cfg.set('kernel colors', 'title', 'red, transparent')
+        self.cfg.set('kernel colors', 'text', 'white, transparent')
+        self.cfg.set('kernel colors', 'highlight', 'white, transparent')
+        self.cfg.set('kernel colors', 'border', 'red, transparent')
+        self.cfg.set('kernel colors', 'connected', 'green, transparent')
+        self.cfg.set('kernel colors', 'died', 'red, transparent')
+        self.cfg.set('kernel colors', 'alive', 'cyan, transparent')
+
+        self.cfg.add_section('bar colors')
+        self.cfg.set('bar colors', 'kernel', 'white, transparent')
+        self.cfg.set('bar colors', 'connected', 'green, transparent')
+        self.cfg.set('bar colors', 'disconnected', 'red, transparent')
+        self.cfg.set('bar colors', 'help', 'white, transparent')
 
         self.cfg.add_section('warning colors')
-        self.cfg.set('warning colors', 'text-color', 'red, transparent')
-        self.cfg.set('warning colors', 'border-color', 'red, transparent')
+        self.cfg.set('warning colors', 'text', 'red, transparent')
+        self.cfg.set('warning colors', 'border', 'red, transparent')
 
         self.cfg.add_section('path')
         self.cfg.set('path', 'save-dir', '$HOME/.cpyvke/save/')
+
+        self.cfg.add_section('font')
+        self.cfg.set('font', 'powerline-font', 'False')
+
         with open(self.path + 'cpyvke.conf', 'wb') as configfile:
             self.cfg.write(configfile)
 
@@ -118,41 +130,78 @@ class cfg_setup(object):
             else:
                 self.SaveDir = self.path + 'save/'
 
+            # FONT
+            if self.cfg.has_section('font'):
+                # SaveDir
+                if self.cfg.has_option('font', 'powerline-font'):
+                    pwf = self.cfg.get('font', 'powerline-font')
+                else:
+                    pwf = 'False'
+            else:
+                pwf = 'False'
+
             # WARNING COLORS
             if self.cfg.has_section('warning colors'):
-                if self.cfg.has_option('warning colors', 'text-color'):
-                    wg_txt = self.cfg.get('warning colors', 'text-color')
+                if self.cfg.has_option('warning colors', 'text'):
+                    wg_txt = self.cfg.get('warning colors', 'text')
                 else:
                     wg_txt = "red, transparent"
 
-                if self.cfg.has_option('warning colors', 'border-color'):
-                    wg_bdr = self.cfg.get('warning colors', 'border-color')
+                if self.cfg.has_option('warning colors', 'border'):
+                    wg_bdr = self.cfg.get('warning colors', 'border')
                 else:
                     wg_bdr = "red, transparent"
             else:
                 wg_txt = "red, transparent"
                 wg_bdr = "red, transparent"
 
+            # BAR COLORS
+            if self.cfg.has_section('bar colors'):
+                if self.cfg.has_option('bar colors', 'kernel'):
+                    br_kn = self.cfg.get('bar colors', 'kernel')
+                else:
+                    br_kn = "white, transparent"
+
+                if self.cfg.has_option('bar colors', 'help'):
+                    br_hlp = self.cfg.get('bar colors', 'help')
+                else:
+                    br_hlp = "white, transparent"
+
+                if self.cfg.has_option('bar colors', 'connected'):
+                    br_co = self.cfg.get('bar colors', 'connected')
+                else:
+                    br_co = "green, transparent"
+
+                if self.cfg.has_option('bar colors', 'disconnected'):
+                    br_dco = self.cfg.get('bar colors', 'disconnected')
+                else:
+                    br_dco = "red, transparent"
+
+            else:
+                br_kn = "white, transparent"
+                br_hlp = "white, transparent"
+                br_co = "green, transparent"
+                br_dco = "red, transparent"
 
             # MAIN COLORS
             if self.cfg.has_section('main colors'):
-                if self.cfg.has_option('main colors', 'text-color'):
-                    main_txt = self.cfg.get('main colors', 'text-color')
+                if self.cfg.has_option('main colors', 'text'):
+                    main_txt = self.cfg.get('main colors', 'text')
                 else:
                     main_txt = "white, transparent"
 
-                if self.cfg.has_option('main colors', 'border-color'):
-                    main_bdr = self.cfg.get('main colors', 'border-color')
+                if self.cfg.has_option('main colors', 'border'):
+                    main_bdr = self.cfg.get('main colors', 'border')
                 else:
                     main_bdr = "white, transparent"
 
-                if self.cfg.has_option('main colors', 'title-color'):
-                    main_ttl = self.cfg.get('main colors', 'title-color')
+                if self.cfg.has_option('main colors', 'title'):
+                    main_ttl = self.cfg.get('main colors', 'title')
                 else:
                     main_ttl = "white, transparent"
 
-                if self.cfg.has_option('main colors', 'highlight-color'):
-                    main_hh = self.cfg.get('main colors', 'highlight-color')
+                if self.cfg.has_option('main colors', 'highlight'):
+                    main_hh = self.cfg.get('main colors', 'highlight')
                 else:
                     main_hh = "black, cyan"
 
@@ -164,23 +213,23 @@ class cfg_setup(object):
 
             # EXPLORER COLORS
             if self.cfg.has_section('explorer colors'):
-                if self.cfg.has_option('explorer colors', 'text-color'):
-                    exp_txt = self.cfg.get('explorer colors', 'text-color')
+                if self.cfg.has_option('explorer colors', 'text'):
+                    exp_txt = self.cfg.get('explorer colors', 'text')
                 else:
                     exp_txt = "white, transparent"
 
-                if self.cfg.has_option('explorer colors', 'border-color'):
-                    exp_bdr = self.cfg.get('explorer colors', 'border-color')
+                if self.cfg.has_option('explorer colors', 'border'):
+                    exp_bdr = self.cfg.get('explorer colors', 'border')
                 else:
                     exp_bdr = "white, transparent"
 
-                if self.cfg.has_option('explorer colors', 'title-color'):
-                    exp_ttl = self.cfg.get('explorer colors', 'title-color')
+                if self.cfg.has_option('explorer colors', 'title'):
+                    exp_ttl = self.cfg.get('explorer colors', 'title')
                 else:
                     exp_ttl = "white, transparent"
 
-                if self.cfg.has_option('explorer colors', 'highlight-color'):
-                    exp_hh = self.cfg.get('explorer colors', 'highlight-color')
+                if self.cfg.has_option('explorer colors', 'highlight'):
+                    exp_hh = self.cfg.get('explorer colors', 'highlight')
                 else:
                     exp_hh = "black, cyan"
 
@@ -192,38 +241,38 @@ class cfg_setup(object):
 
             # KERNEL COLORS
             if self.cfg.has_section('kernel colors'):
-                if self.cfg.has_option('kernel colors', 'text-color'):
-                    kn_txt = self.cfg.get('kernel colors', 'text-color')
+                if self.cfg.has_option('kernel colors', 'text'):
+                    kn_txt = self.cfg.get('kernel colors', 'text')
                 else:
                     kn_txt = "white, transparent"
 
-                if self.cfg.has_option('kernel colors', 'border-color'):
-                    kn_bdr = self.cfg.get('kernel colors', 'border-color')
+                if self.cfg.has_option('kernel colors', 'border'):
+                    kn_bdr = self.cfg.get('kernel colors', 'border')
                 else:
                     kn_bdr = "white, transparent"
 
-                if self.cfg.has_option('kernel colors', 'title-color'):
-                    kn_ttl = self.cfg.get('kernel colors', 'title-color')
+                if self.cfg.has_option('kernel colors', 'title'):
+                    kn_ttl = self.cfg.get('kernel colors', 'title')
                 else:
                     kn_ttl = "white, transparent"
 
-                if self.cfg.has_option('kernel colors', 'highlight-color'):
-                    kn_hh = self.cfg.get('kernel colors', 'highlight-color')
+                if self.cfg.has_option('kernel colors', 'highlight'):
+                    kn_hh = self.cfg.get('kernel colors', 'highlight')
                 else:
                     kn_hh = "black, red"
 
-                if self.cfg.has_option('kernel colors', 'connected-color'):
-                    kn_co = self.cfg.get('kernel colors', 'connected-color')
+                if self.cfg.has_option('kernel colors', 'connected'):
+                    kn_co = self.cfg.get('kernel colors', 'connected')
                 else:
                     kn_co = "green, transparent"
 
-                if self.cfg.has_option('kernel colors', 'alive-color'):
-                    kn_al = self.cfg.get('kernel colors', 'alive-color')
+                if self.cfg.has_option('kernel colors', 'alive'):
+                    kn_al = self.cfg.get('kernel colors', 'alive')
                 else:
                     kn_al = "cyan, transparent"
 
-                if self.cfg.has_option('kernel colors', 'died-color'):
-                    kn_di = self.cfg.get('kernel colors', 'died-color')
+                if self.cfg.has_option('kernel colors', 'died'):
+                    kn_di = self.cfg.get('kernel colors', 'died')
                 else:
                     kn_di = "red, transparent"
 
@@ -237,30 +286,36 @@ class cfg_setup(object):
                 kn_di = "red, transparent"
 
             # Colors :
-            self.Config = {'mn': {'txt' : main_txt,
-                                           'bdr' : main_bdr,
-                                           'ttl' : main_ttl,
-                                           'hh' : main_hh},
-                           'xp': {'txt' : exp_txt,
-                                               'bdr' : exp_bdr,
-                                               'ttl' : exp_ttl,
-                                               'hh' : exp_hh},
-                           'kn': {'txt' : kn_txt,
-                                             'bdr' : kn_bdr,
-                                             'ttl' : kn_ttl,
-                                             'hh' : kn_hh,
-                                             'co' : kn_co,
-                                             'di' : kn_di,
-                                             'al' : kn_al},
-                           'wg': {'txt' : wg_txt,
-                                              'bdr' : wg_bdr},
-                           'path': {'save-dir' : self.SaveDir}}
+            self.Config = {'mn': {'txt': main_txt,
+                                  'bdr': main_bdr,
+                                  'ttl': main_ttl,
+                                  'hh': main_hh},
+                           'xp': {'txt': exp_txt,
+                                  'bdr': exp_bdr,
+                                  'ttl': exp_ttl,
+                                  'hh': exp_hh},
+                           'kn': {'txt': kn_txt,
+                                  'bdr': kn_bdr,
+                                  'ttl': kn_ttl,
+                                  'hh': kn_hh,
+                                  'co': kn_co,
+                                  'di': kn_di,
+                                  'al': kn_al},
+                           'wg': {'txt': wg_txt,
+                                  'bdr': wg_bdr},
+                           'br': {'kn': br_kn,
+                                  'hlp': br_hlp,
+                                  'co': br_co,
+                                  'dco': br_dco},
+                           'path': {'save-dir': self.SaveDir},
+                           'font': {'pw-font': pwf}}
+
             # Init save Directory
             self.InitSaveDir()
 
             return self.Config
 
-        except ConfigParser.Error, err:
+        except ConfigParser.Error as err:
             print('Bad cfg file : ', err)
             sys.exit(1)
 
