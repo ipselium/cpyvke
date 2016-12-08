@@ -3,7 +3,7 @@
 #
 # File Name : cwidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : jeu. 08 déc. 2016 10:32:57 CET
+# Last Modified : jeu. 08 déc. 2016 12:56:32 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -21,7 +21,7 @@ DESCRIPTION
 ###############################################################################
 import curses
 from curses import panel
-import time
+from time import sleep
 # Personal Libs
 from ctools import dump
 
@@ -139,7 +139,7 @@ class WarningMsg(object):
         menu_wng.addstr(1, 1, wng_msg, self.c_warn_txt)
         panel_wng.show()       # Display the panel (which might have been hidden)
         menu_wng.refresh()
-        time.sleep(1)
+        sleep(1)
 
         # Erase the panel
         menu_wng.clear()

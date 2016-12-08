@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : jeu. 08 déc. 2016 12:24:41 CET
+# Last Modified : jeu. 08 déc. 2016 15:38:14 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -21,7 +21,7 @@ DESCRIPTION
 ###############################################################################
 from time import sleep
 import threading
-from ktools import init_kernel
+from ktools import init_kernel, ProcInfo
 
 
 def WhoToDict(string):
@@ -52,7 +52,7 @@ class Watcher(threading.Thread):
         self._stop = threading.Event()
         self.kc = kc
         self.delay = delay
-        self.qvar = qvar
+        self.qvar = qvar    # Use Socker instead ?
         self.qreq = qreq
         self.qkc = qkc
         self.ONLY_DAEMON = ONLY_DAEMON
@@ -66,7 +66,12 @@ class Watcher(threading.Thread):
     def run(self):
         ''' Run the variable explorer daemon '''
 
+        mem = 0
         while True:
+
+            # Memory usage
+            if self.ONLY_DAEMON:
+                mem = ProcInfo(mem)
 
             # Check in new entries in kernel
             self.CheckInput()
@@ -94,6 +99,7 @@ class Watcher(threading.Thread):
 
         if self.qkc.qsize() > 0:
             self.kc = self.qkc.get(timeout=0)
+            init_kernel(self.kc)
             # Force update
             self.variables = self.Exec('whos')
             # Send to CUI
@@ -112,8 +118,6 @@ class Watcher(threading.Thread):
 
         if self.qreq.qsize() > 0:
             value = self.Exec(self.qreq.get())
-            with open("debug.txt", "w") as text_file:
-                text_file.write(value)
 
     def CheckInput(self):
         ''' Check the iopub msgs available '''
@@ -176,3 +180,23 @@ class Watcher(threading.Thread):
         self.msg = 0
 
         return value
+
+if __name__ == "__main__":
+
+    from ktools import connect_kernel
+    from jupyter_client import find_connection_file
+    from Queue import Queue
+
+    delay = 0.5
+    cf = find_connection_file('27146')
+    km, kc = connect_kernel(cf)
+
+    qvar = Queue()
+    qreq = Queue()
+    qkc = Queue()
+
+    WK = Watcher(kc, delay, qvar, qreq, qkc, True)
+    WK.start()
+    WK.join()
+
+

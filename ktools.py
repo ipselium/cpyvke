@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : jeu. 08 déc. 2016 09:21:18 CET
+# Last Modified : jeu. 08 déc. 2016 15:35:09 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -21,9 +21,19 @@ DESCRIPTION
 ###############################################################################
 from jupyter_client import BlockingKernelClient, manager
 from Queue import Empty
-import time
+from time import sleep, strftime
 import os
 import subprocess
+import psutil
+
+
+def ProcInfo(init=0):
+    pid = os.getpid()
+    py = psutil.Process(pid)
+    mem = py.memory_percent()  # py.memory_info()[0]/2.**30
+    if init != mem:
+        print('Memory :', mem)  # memory use in GB...I think
+    return mem
 
 
 def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/"):
@@ -32,12 +42,12 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/"):
     with open(LogDir + 'LastKernel', "w") as f:
         subprocess.Popen(["ipython", "kernel"], stdout=f)
 
-    time.sleep(1)
+    sleep(1)
     with open(LogDir + 'LastKernel', "r") as f:
         stdout = f.read()
 
     with open(LogDir + 'cpyvke.log', 'a') as f:
-        f.write(time.strftime("[%D :: %H:%M:%S] ::  Create ::") + stdout.split('\n')[-2] + '\n')
+        f.write(strftime("[%D :: %H:%M:%S] ::  Create ::") + stdout.split('\n')[-2] + '\n')
 
     return stdout.split('kernel-')[1].split('.json')[0]
 

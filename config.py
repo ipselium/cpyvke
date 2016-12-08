@@ -3,7 +3,7 @@
 #
 # File Name : cfg_test.py
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : mer. 07 déc. 2016 13:17:41 CET
+# Last Modified : jeu. 08 déc. 2016 12:54:20 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -22,7 +22,7 @@ DESCRIPTION
 import ConfigParser
 import sys
 import os
-import time
+from time import sleep
 
 
 def CheckDir(dir):
@@ -31,7 +31,7 @@ def CheckDir(dir):
     if os.path.isdir(dir) is False:
         os.makedirs(dir)
         print("Create directory : " + str(dir))
-        time.sleep(0.5)
+        sleep(0.5)
 
 
 class cfg_setup(object):
@@ -46,7 +46,7 @@ class cfg_setup(object):
         if os.path.exists(self.path) is False:
             os.makedirs(self.path)
             print("Create configuration directory : " + str(self.path))
-            time.sleep(0.5)
+            sleep(0.5)
 
     def InitCfg(self):
         ''' Check if cpyvke.conf exists. If not create it. '''
@@ -54,7 +54,7 @@ class cfg_setup(object):
         if os.path.exists(self.path + 'cpyvke.conf') is False:
             open(self.path + 'cpyvke.conf', 'a').close()
             print("Create configuration file : " + str(self.path + 'cpyvke.conf'))
-            time.sleep(0.5)
+            sleep(0.5)
             self.WriteConfig()
 
     def WriteConfig(self):
@@ -106,7 +106,7 @@ class cfg_setup(object):
         if os.path.exists(self.SaveDir) is False:
             os.makedirs(self.SaveDir)
             print("Create save directory : " + str(self.SaveDir))
-            time.sleep(0.5)
+            sleep(0.5)
 
     def RunCfg(self):
         ''' Run configuration. '''

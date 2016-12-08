@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : jeu. 08 déc. 2016 12:22:59 CET
+# Last Modified : jeu. 08 déc. 2016 12:53:20 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -26,7 +26,7 @@ import traceback
 from math import ceil
 from Queue import Empty
 from curses import panel
-import time
+from time import strftime, sleep
 import os
 # Personal Libs
 from cvar import MenuVar
@@ -108,7 +108,7 @@ class MainWin(threading.Thread):
                 return int(color)
             else:
                 with open(self.LogFile, 'a') as f:
-                    f.write(time.strftime("[%D :: %H:%M:%S] ::  Error :: TERM accept only 8 colors") + '\n')
+                    f.write(strftime("[%D :: %H:%M:%S] ::  Error :: TERM accept only 8 colors") + '\n')
                 return eval('curses.COLOR_UNDEFINED')
         else:
             return eval('curses.COLOR_' + color.upper())
@@ -133,7 +133,7 @@ class MainWin(threading.Thread):
             wgbdr_fg = curses.COLOR_RED
             wgbdr_bg = -1
             with open(self.LogFile, 'a') as f:
-                f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define bar color
         brkn = self.Config['br']['kn'].replace(' ', '').split(',')
@@ -159,7 +159,7 @@ class MainWin(threading.Thread):
             brdco_fg = curses.COLOR_RED
             brdco_bg = -1
             with open(self.LogFile, 'a') as f:
-                f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define explorer color
         xptxt = self.Config['xp']['txt'].replace(' ', '').split(',')
@@ -185,7 +185,7 @@ class MainWin(threading.Thread):
             xphh_fg = curses.COLOR_BLACK
             xphh_bg = curses.COLOR_CYAN
             with open(self.LogFile, 'a') as f:
-                f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define main color
         mntxt = self.Config['mn']['txt'].replace(' ', '').split(',')
@@ -211,7 +211,7 @@ class MainWin(threading.Thread):
             mnhh_fg = curses.COLOR_BLACK
             mnhh_bg = curses.COLOR_WHITE
             with open(self.LogFile, 'a') as f:
-                f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define kernel color
         kntxt = self.Config['kn']['txt'].replace(' ', '').split(',')
@@ -252,7 +252,7 @@ class MainWin(threading.Thread):
             kndi_fg = curses.COLOR_RED
             kndi_bg = -1
             with open(self.LogFile, 'a') as f:
-                f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define Pairs
         curses.init_pair(1, wgtxt_fg, wgtxt_bg)
@@ -374,7 +374,7 @@ class MainWin(threading.Thread):
         # Check if size is enough
         if self.screen_height < self.term_min_height or self.screen_width < self.term_min_width:
             self.SizeWng()
-            time.sleep(0.5)
+            sleep(0.5)
         else:
 
             # Get variables from daemon
@@ -694,7 +694,7 @@ class MainWin(threading.Thread):
             self.stdscreen.addstr(int(self.screen_height/2)+1, int((self.screen_width-len(msg_actual))/2), msg_actual, self.c_warn_txt | curses.A_BOLD)
         except Exception as err:
             with open(self.LogFile, 'a') as f:
-                f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
         self.stdscreen.border(0)
         self.stdscreen.refresh()
 
@@ -761,9 +761,7 @@ class MainWin(threading.Thread):
         ''' Display debug informations '''
 
 
-        WatcherId = [item for item in threading.enumerate() if 'Watcher' in str(item)]
-        WatcherId = threading.enumerate().index(WatcherId[0])
-        ThreadList = [str(item).split(',')[0].split('<')[1].replace('(', ': ') for item in threading.enumerate()]
+        ThreadLst = threading.enumerate()
 
         self.stdscreen.addstr(self.row_max + 4, 2, ' Debug ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
@@ -772,8 +770,7 @@ class MainWin(threading.Thread):
         self.stdscreen.addstr(self.row_max + 6, 3, ' search : ' + str(self.search), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 7, 3, ' limit : ' + str(self.filter), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 8, 3, ' sort : ' + str(self.mk_varlst), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 9, 3, ' thread : ' + str(WatcherId), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 10, 3, ' thread : ' + str(ThreadList), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 9, 3, ' thread : ' + str(len(ThreadLst)), curses.A_DIM | self.c_main_txt)
 
     def MenuClose(self):
         ''' Close Menu '''
@@ -800,7 +797,7 @@ class MainWin(threading.Thread):
         self.pkey = -1
         while self.pkey not in (121, 110, 113, 89, 78, 27, ord("\n")):
             self.pkey = self.stdscreen.getch()
-            time.sleep(0.1)
+            sleep(0.1)
 
         # Erase the panel
         menu_close.clear()

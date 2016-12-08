@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : jeu. 08 déc. 2016 09:43:17 CET
+# Last Modified : jeu. 08 déc. 2016 12:55:49 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -23,7 +23,7 @@ import curses
 import json
 from curses import panel
 from numpy import load
-import time
+from time import sleep, strftime
 import os
 # Personal
 from inspector import Inspect
@@ -41,6 +41,7 @@ class MenuVar(object):
     def __init__(self, parent):
 
         # Init parent
+        self.watcher = parent.watcher
         self.stdscreen = parent.stdscreen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()  # get heigh and width of stdscreen
         self.Config = parent.Config
@@ -74,7 +75,7 @@ class MenuVar(object):
                 Wng.Display('Kernel Busy ! Try again...')
                 self.varval = '[Busy]'
                 with open(self.LogFile, 'a') as f:
-                    f.write(time.strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
+                    f.write(strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
             else:
                 self.view = Viewer(self)
 
@@ -91,7 +92,7 @@ class MenuVar(object):
                 Wng.Display('Kernel Busy ! Try again...')
                 self.varval = '[Busy]'
                 with open(self.LogFile, 'a') as f:
-                    f.write(time.strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
+                    f.write(strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
 
             os.remove(self.filename)
 
@@ -165,7 +166,7 @@ class MenuVar(object):
                     if self.menu_lst[self.menuposition][0] == 'Save':
                         Wng.Display('Not saved !')
                     with open(self.LogFile, 'a') as f:
-                        f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                        f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
                 else:
                     break
 
@@ -211,7 +212,7 @@ class MenuVar(object):
 
         spinner = spinner[19]
         while os.path.exists(self.filename) is False:
-            time.sleep(0.05)
+            sleep(0.05)
             self.stdscreen.addstr(parent.position - (parent.page-1)*parent.row_max + 1, 2, spinner[i], self.c_exp_txt | curses.A_BOLD)
 
             self.stdscreen.refresh()
@@ -306,7 +307,7 @@ class MenuVar(object):
                 except Exception as err:
                     Wng.Display('Not saved !')
                     with open(self.LogFile, 'a') as f:
-                        f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                        f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
                 else:
                     break
 
