@@ -3,7 +3,7 @@
 #
 # File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mer. 07 déc. 2016 16:04:28 CET
+# Last Modified : jeu. 08 déc. 2016 10:22:02 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -29,7 +29,7 @@ from time import sleep
 # Personal Libs
 ###############################################################################
 from ktools import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
-from cwidgets import WarningMsg
+from cwidgets import WarningMsg, Help
 
 
 ###############################################################################
@@ -40,6 +40,8 @@ class MenuKernel(object):
     ''' Kernel list window. '''
 
     def __init__(self, parent):
+
+        self.parent = parent
 
         # Queue for kernel changes
         self.qkc = parent.qkc
@@ -91,6 +93,11 @@ class MenuKernel(object):
             self.cf = self.kc.connection_file
             self.lst = kernel_list(self.cf)
             self.row_num = len(self.lst)
+
+            # Menu Help
+            if self.pkey == 104:    # -> h
+                help_menu = Help(self.parent)
+                help_menu.Display()
 
             # Navigate in the variable list window
             self.NavigateKernelLst()

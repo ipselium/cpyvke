@@ -3,7 +3,7 @@
 #
 # File Name : cwidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mer. 07 déc. 2016 16:40:55 CET
+# Last Modified : jeu. 08 déc. 2016 10:32:57 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -21,7 +21,7 @@ DESCRIPTION
 ###############################################################################
 import curses
 from curses import panel
-from time import sleep
+import time
 # Personal Libs
 from ctools import dump
 
@@ -57,14 +57,16 @@ class Viewer(object):
         self.pad_width = max(len(self.menu_title), max([len(elem) for elem in dumped])) + 8
         self.pad_height = len(dumped) + 2
         self.menu_viewer = curses.newpad(self.pad_height, self.pad_width)
-        self.padpos = 0
         self.menu_viewer.keypad(1)
+        self.menu_viewer.bkgd(self.c_exp_txt)
+        self.menu_viewer.attrset(self.c_exp_bdr | curses.A_BOLD)
+        self.menu_viewer.border(0)
+
+        # Viewer content
         for i in range(len(dumped)):
             self.menu_viewer.addstr(1+i, 1, dumped[i], self.c_exp_txt)
 
-        self.menu_viewer.bkgd(self.c_exp_txt)
-        self.menu_viewer.attrset(self.c_exp_bdr | curses.A_BOLD)  # Change border color
-        self.menu_viewer.border(0)
+        # Viewer title
         if self.Config['font']['pw-font'] == 'True':
             self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '', self.c_exp_pwf | curses.A_BOLD)
             self.menu_viewer.addstr(self.menu_title, self.c_exp_ttl | curses.A_BOLD)
@@ -76,28 +78,28 @@ class Viewer(object):
         ''' Create pad to display variable content. '''
 
         menukey = -1
-        pady = max(self.pad_height, self.screen_height - 2)
-        max_y = pady - (self.screen_height - 2)
+        padpos = 0
+        pady = max(self.pad_height, self.screen_height - 2) - (self.screen_height - 2)
 
         while menukey not in (27, 113):
             if menukey == curses.KEY_DOWN:
-                self.padpos = min(max_y, self.padpos+1)
+                padpos = min(pady, padpos+1)
             elif menukey == curses.KEY_UP:
-                self.padpos = max(0, self.padpos-1)
+                padpos = max(0, padpos-1)
             elif menukey == curses.KEY_RIGHT:
-                self.padpos = min(max_y, self.padpos+5)
+                padpos = min(pady, padpos+5)
             elif menukey == curses.KEY_LEFT:
-                self.padpos = max(0, self.padpos-5)
+                padpos = max(0, padpos-5)
             elif menukey == curses.KEY_NPAGE:
-                self.padpos = min(max_y, self.padpos+10)
+                padpos = min(pady, padpos+10)
             elif menukey == curses.KEY_PPAGE:
-                self.padpos = max(0, self.padpos-10)
+                padpos = max(0,  padpos-10)
             elif menukey == 262:
-                self.padpos = 0
+                padpos = 0
             elif menukey == 360:
-                self.padpos = max_y
+                padpos = pady
 
-            self.menu_viewer.refresh(self.padpos, 0, 1, 1, self.screen_height-2, self.screen_width-2)
+            self.menu_viewer.refresh(padpos, 0, 1, 1, self.screen_height-2, self.screen_width-2)
 
             menukey = self.menu_viewer.getch()
 
@@ -137,7 +139,7 @@ class WarningMsg(object):
         menu_wng.addstr(1, 1, wng_msg, self.c_warn_txt)
         panel_wng.show()       # Display the panel (which might have been hidden)
         menu_wng.refresh()
-        sleep(1)
+        time.sleep(1)
 
         # Erase the panel
         menu_wng.clear()
@@ -153,15 +155,12 @@ class Help(object):
         self.stdscreen = parent.stdscreen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
         self.Config = parent.Config
+        self.c_main_txt = parent.c_main_txt
+        self.c_main_bdr = parent.c_main_bdr
+        self.c_main_ttl = parent.c_main_ttl
+        self.c_main_pwf = parent.c_main_pwf
 
         # Init Menu
-        self.c_main_txt = curses.color_pair(11)
-        self.c_main_bdr = curses.color_pair(12)
-        self.c_main_ttl = curses.color_pair(13)
-        self.c_main_pwf = curses.color_pair(15)
-
-        self.padpos = 0
-
         self.nb_items = 14
         self.pad_width = 38
         self.pad_height = self.nb_items+2
@@ -169,8 +168,9 @@ class Help(object):
         self.menu_help = curses.newpad(self.pad_height, self.pad_width)
         self.menu_help.keypad(1)
         self.menu_help.bkgd(self.c_main_txt)
-        self.menu_help.attrset(self.c_main_bdr | curses.A_BOLD)  # Change border color
+        self.menu_help.attrset(self.c_main_bdr | curses.A_BOLD)
 
+        # Help Content
         self.menu_title = ' Help '
         self.menu_help.addstr(2, 2, 'Bindings :', curses.A_BOLD)
         self.menu_help.addstr(4, 3, '(h) This Help !', self.c_main_txt | curses.A_DIM)
@@ -187,6 +187,7 @@ class Help(object):
         self.menu_help.addstr(15, 3, '(←|↟) Previous page', self.c_main_txt | curses.A_DIM)
         self.menu_help.border(0)
 
+        # Help Title
         if self.Config['font']['pw-font'] == 'True':
             self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '', self.c_main_pwf | curses.A_BOLD)
             self.menu_help.addstr(self.menu_title, self.c_main_ttl | curses.A_BOLD)
@@ -198,20 +199,28 @@ class Help(object):
         ''' Display pad. '''
 
         menukey = -1
-        pady = max(self.nb_items, self.screen_height - 4)
-        max_y = pady - (self.screen_height - 4)
+        padpos = 0
+        pady = max(self.nb_items, self.screen_height - 4) - (self.screen_height - 4)
 
         while menukey not in (27, 113):
             if menukey == curses.KEY_DOWN:
-                self.padpos = min(max_y, self.padpos+1)
+                padpos = min(pady, padpos+1)
             elif menukey == curses.KEY_UP:
-                self.padpos = max(0, self.padpos-1)
-            elif menukey in (curses.KEY_NPAGE, curses.KEY_RIGHT):
-                self.padpos = min(max_y, self.padpos+5)
-            elif menukey in (curses.KEY_PPAGE, curses.KEY_LEFT):
-                self.padpos = max(0, self.padpos-5)
+                padpos = max(0, padpos-1)
+            elif menukey == curses.KEY_RIGHT:
+                padpos = min(pady, padpos+5)
+            elif menukey == curses.KEY_LEFT:
+                padpos = max(0, padpos-5)
+            elif menukey == curses.KEY_NPAGE:
+                padpos = min(pady, padpos+10)
+            elif menukey == curses.KEY_PPAGE:
+                padpos = max(0,  padpos-10)
+            elif menukey == 262:
+                padpos = 0
+            elif menukey == 360:
+                padpos = pady
 
-            self.menu_help.refresh(self.padpos, 0, 1, 1, self.screen_height-2, self.pad_width)
+            self.menu_help.refresh(padpos, 0, 1, 1, self.screen_height-2, self.pad_width)
 
             menukey = self.menu_help.getch()
 

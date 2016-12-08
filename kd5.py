@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mar. 06 déc. 2016 21:24:59 CET
+# Last Modified : jeu. 08 déc. 2016 12:24:41 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -20,7 +20,7 @@ DESCRIPTION
 # IMPORTS
 ###############################################################################
 from time import sleep
-from threading import Thread
+import threading
 from ktools import init_kernel
 
 
@@ -38,22 +38,22 @@ def WhoToDict(string):
     return variables
 
 
-class Watcher(Thread):
+class Watcher(threading.Thread):
     '''
     Daemon : watch the kernel input and update variable list.
     The client may also request for the content of a variable.
     '''
 
-    def __init__(self, kc, delay, qstop, qvar, qreq, qans, qkc, ONLY_DAEMON=False):
+    def __init__(self, kc, delay, qvar, qreq, qkc, ONLY_DAEMON=False):
 
         # Inputs
-        Thread.__init__(self)
+        threading.Thread.__init__(self)
+        threading.Thread.daemon = True
+        self._stop = threading.Event()
         self.kc = kc
         self.delay = delay
-        self.qstop = qstop
         self.qvar = qvar
         self.qreq = qreq
-        self.qans = qans
         self.qkc = qkc
         self.ONLY_DAEMON = ONLY_DAEMON
 
@@ -84,11 +84,8 @@ class Watcher(Thread):
             self.KernelChange()
 
             # Terminate daemon
-            if self.qstop.qsize() > 0:
-                stop = self.qstop.get(timeout=0)
-                if stop:
-                    self.kc.stop_channels()
-                    break
+            if self._stop.isSet():
+                break
 
             sleep(self.delay)
 
@@ -117,7 +114,6 @@ class Watcher(Thread):
             value = self.Exec(self.qreq.get())
             with open("debug.txt", "w") as text_file:
                 text_file.write(value)
-            self.qans.put(value)
 
     def CheckInput(self):
         ''' Check the iopub msgs available '''
@@ -147,6 +143,11 @@ class Watcher(Thread):
                 data = self.kc.get_iopub_msg()
 
             self.msg = 1
+
+    def stop(self):
+        ''' Stop thread. '''
+
+        self._stop.set()
 
     def Exec(self, code):
         ''' Execute **code** '''

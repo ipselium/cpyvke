@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 07 déc. 2016 17:46:33 CET
+# Last Modified : jeu. 08 déc. 2016 12:22:59 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -20,7 +20,7 @@ DESCRIPTION
 # IMPORTS
 ###############################################################################
 from __future__ import division  # You don't need this in Python3
-from threading import Thread
+import threading
 import curses
 import traceback
 from math import ceil
@@ -35,29 +35,28 @@ from cwidgets import WarningMsg, Help
 from ctools import FormatCell, TypeSort, FilterVarLst
 
 
-class MainWin(Thread):
+class MainWin(threading.Thread):
     ''' Main window. '''
 
-    def __init__(self, kc, cf, qstop, qvar, qreq, qans, qkc, Config, DEBUG=False):
+    def __init__(self, watcher, kc, cf, qvar, qreq, qkc, Config, DEBUG=False):
 
-        Thread.__init__(self)
+        threading.Thread.__init__(self)
+        self.watcher = watcher
         self.kc = kc
         self.cf = cf
-        self.qstop = qstop
         self.qvar = qvar
         self.qreq = qreq
-        self.qans = qans
         self.qkc = qkc
         self.curse_delay = 5
         self.Config = Config
         self.DEBUG = DEBUG
-        self.LogDir = os.path.expanduser("~") + "/.cpyvke/"
+        self.LogFile = os.path.expanduser("~") + "/.cpyvke/cpykve.log"
         # Init CUI :
         self.close_signal = 'continue'
         self.stdscreen = curses.initscr()   # Init curses
         self.stdscreen.keypad(1)            #
         self.stdscreen.border(0)            # draw a border around screen
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()  # get heigh and width of stdscreen
+        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
 
         # Curses options
         curses.noecho()             # Wont print the input
@@ -67,6 +66,7 @@ class MainWin(Thread):
 
         # Colors
         self.InitColors()
+        self.ColorDef()
         self.stdscreen.bkgd(self.c_main_txt)
         self.stdscreen.attrset(self.c_main_bdr | curses.A_BOLD)  # Change border color
 
@@ -83,6 +83,7 @@ class MainWin(Thread):
         self.position = 1
         self.page = 1
         self.search = None
+        self.filter = None
         self.search_index = 0
 
         # Various Variables :
@@ -106,9 +107,9 @@ class MainWin(Thread):
             if curses.COLORS > 8:
                 return int(color)
             else:
-                with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                with open(self.LogFile, 'a') as f:
                     f.write(time.strftime("[%D :: %H:%M:%S] ::  Error :: TERM accept only 8 colors") + '\n')
-                return  eval('curses.COLOR_UNDEFINED')
+                return eval('curses.COLOR_UNDEFINED')
         else:
             return eval('curses.COLOR_' + color.upper())
 
@@ -131,7 +132,7 @@ class MainWin(Thread):
             wgtxt_bg = -1
             wgbdr_fg = curses.COLOR_RED
             wgbdr_bg = -1
-            with open(self.LogDir + 'cpyvke.log', 'a') as f:
+            with open(self.LogFile, 'a') as f:
                 f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define bar color
@@ -157,7 +158,7 @@ class MainWin(Thread):
             brco_bg = -1
             brdco_fg = curses.COLOR_RED
             brdco_bg = -1
-            with open(self.LogDir + 'cpyvke.log', 'a') as f:
+            with open(self.LogFile, 'a') as f:
                 f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define explorer color
@@ -183,7 +184,7 @@ class MainWin(Thread):
             xpttl_bg = -1
             xphh_fg = curses.COLOR_BLACK
             xphh_bg = curses.COLOR_CYAN
-            with open(self.LogDir + 'cpyvke.log', 'a') as f:
+            with open(self.LogFile, 'a') as f:
                 f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define main color
@@ -209,7 +210,7 @@ class MainWin(Thread):
             mnttl_bg = -1
             mnhh_fg = curses.COLOR_BLACK
             mnhh_bg = curses.COLOR_WHITE
-            with open(self.LogDir + 'cpyvke.log', 'a') as f:
+            with open(self.LogFile, 'a') as f:
                 f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
         # Define kernel color
@@ -250,10 +251,10 @@ class MainWin(Thread):
             knal_bg = -1
             kndi_fg = curses.COLOR_RED
             kndi_bg = -1
-            with open(self.LogDir + 'cpyvke.log', 'a') as f:
+            with open(self.LogFile, 'a') as f:
                 f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
 
-        # Define Styles
+        # Define Pairs
         curses.init_pair(1, wgtxt_fg, wgtxt_bg)
         curses.init_pair(2, wgbdr_fg, wgbdr_bg)
 
@@ -315,38 +316,32 @@ class MainWin(Thread):
         else:
             curses.init_pair(46, mnbdr_fg, mnbdr_bg)
 
+    def ColorDef(self):
+        ''' Color variables. '''
+
         self.c_warn_txt = curses.color_pair(1)
         self.c_warn_bdr = curses.color_pair(2)
 
         self.c_main_txt = curses.color_pair(11)
         self.c_main_bdr = curses.color_pair(12)
         self.c_main_ttl = curses.color_pair(13)
+        self.c_main_hh = curses.color_pair(14)
         self.c_main_pwf = curses.color_pair(15)
-        if mnhh_fg == 0:  # Black
-            self.c_main_hh = curses.color_pair(14)
-        else:
-            self.c_main_hh = curses.color_pair(14) | curses.A_BOLD
 
         self.c_exp_txt = curses.color_pair(21)
         self.c_exp_bdr = curses.color_pair(22)
         self.c_exp_ttl = curses.color_pair(23)
+        self.c_exp_hh = curses.color_pair(24)
         self.c_exp_pwf = curses.color_pair(25)
-        if xphh_fg == 0:
-            self.c_exp_hh = curses.color_pair(24)
-        else:
-            self.c_exp_hh = curses.color_pair(24) | curses.A_BOLD
 
         self.c_kern_txt = curses.color_pair(31)
         self.c_kern_bdr = curses.color_pair(32)
         self.c_kern_ttl = curses.color_pair(33)
+        self.c_kern_hh = curses.color_pair(34)
         self.c_kern_co = curses.color_pair(35)
         self.c_kern_al = curses.color_pair(36)
         self.c_kern_di = curses.color_pair(37)
         self.c_kern_pwf = curses.color_pair(38)
-        if knhh_fg == 0:
-            self.c_kern_hh = curses.color_pair(34)
-        else:
-            self.c_kern_hh = curses.color_pair(34) | curses.A_BOLD
 
         self.c_bar_kn = curses.color_pair(41)
         self.c_bar_hlp = curses.color_pair(42)
@@ -553,15 +548,16 @@ class MainWin(Thread):
 
         # Update all windows (virtually)
         if self.DEBUG:
-            self.ProcInfo()         # Display infos about the process
+            self.QueueInfo()         # Display infos about the process
+            self.TermInfo()         # Display infos about the process
             self.DebugInfo()        # Display debug infos
 
         self.UpdateVarLst()     # Update variables list
 
         # Update display
+        self.BottomInfo()      # Display infos about kernel at bottom
         self.stdscreen.refresh()
         self.VarLst.refresh()
-        self.BottomInfo()      # Display infos about kernel at bottom
 
     def UpdateVarLst(self):
         ''' Update the list of variables display '''
@@ -609,6 +605,12 @@ class MainWin(Thread):
             self.NavLeft()
         if self.pkey in (curses.KEY_RIGHT, 338):
             self.NavRight()
+        if self.pkey == 262:
+            self.position = 1
+            self.page = 1
+        if self.pkey == 360:
+            self.position = self.row_num
+            self.page = self.pages
 
     def NavUp(self):
         ''' Navigate Up. '''
@@ -691,7 +693,7 @@ class MainWin(Thread):
             self.stdscreen.addstr(int(self.screen_height/2), int((self.screen_width-len(msg_limit))/2), msg_limit, self.c_warn_txt | curses.A_BOLD)
             self.stdscreen.addstr(int(self.screen_height/2)+1, int((self.screen_width-len(msg_actual))/2), msg_actual, self.c_warn_txt | curses.A_BOLD)
         except Exception as err:
-            with open(self.LogDir + 'cpyvke.log', 'a') as f:
+            with open(self.LogFile, 'a') as f:
                 f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
         self.stdscreen.border(0)
         self.stdscreen.refresh()
@@ -735,30 +737,43 @@ class MainWin(Thread):
         else:
             self.stdscreen.addstr(self.screen_height-1, self.screen_width-12, '< h:help >', self.c_bar_hlp | curses.A_BOLD)
 
-    def ProcInfo(self):
-        ''' Display process informations '''
+    def QueueInfo(self):
+        ''' Display queue informations '''
 
-        self.stdscreen.addstr(self.row_max + 4, 3, ' Process informations ', self.c_main_ttl | curses.A_BOLD)
+        self.stdscreen.addstr(self.row_max + 4, int(2*self.screen_width/3), ' Queue ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscreen.addstr(self.row_max + 5, 5, '+ ' + 'queue stop     : ' + str(self.qstop.qsize()), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 6, 5, '+ ' + 'queue variable : ' + str(self.qvar.qsize()), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 7, 5, '+ ' + 'queue request  : ' + str(self.qreq.qsize()), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 8, 5, '+ ' + 'queue answer   : ' + str(self.qans.qsize()), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 9, 5, '+ ' + 'queue kernel   : ' + str(self.qkc.qsize()), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 5, int(2*self.screen_width/3) + 1, ' variable : ' + str(self.qvar.qsize()), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 6, int(2*self.screen_width/3) + 1, ' request  : ' + str(self.qreq.qsize()), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 7, int(2*self.screen_width/3) + 1, ' kernel   : ' + str(self.qkc.qsize()), curses.A_DIM | self.c_main_txt)
+
+    def TermInfo(self):
+        ''' Display terminal informations '''
+
+        self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/3), ' Terminal ', self.c_main_ttl | curses.A_BOLD)
+        if self.Config['font']['pw-font'] == 'True':
+            self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
+        self.stdscreen.addstr(self.row_max + 5, int(self.screen_width/3) + 1 , ' width : ' + str(self.screen_width), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/3) + 1 , ' heigh : ' + str(self.screen_height), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/3) + 1 , ' color : ' + str(curses.COLORS), curses.A_DIM | self.c_main_txt)
 
     def DebugInfo(self):
         ''' Display debug informations '''
 
-        self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/2), ' Debug informations ', self.c_main_ttl | curses.A_BOLD)
+
+        WatcherId = [item for item in threading.enumerate() if 'Watcher' in str(item)]
+        WatcherId = threading.enumerate().index(WatcherId[0])
+        ThreadList = [str(item).split(',')[0].split('<')[1].replace('(', ': ') for item in threading.enumerate()]
+
+        self.stdscreen.addstr(self.row_max + 4, 2, ' Debug ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscreen.addstr(self.row_max + 5, int(self.screen_width/2) + 2, '+ ' + 'width : ' + str(self.screen_width), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/2) + 2, '+ ' + 'heigh : ' + str(self.screen_height), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/2) + 2, '+ ' + 'key : ' + str(self.pkey), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 8, int(self.screen_width/2) + 2, '+ ' + 'Search : ' + str(self.search), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 9, int(self.screen_width/2) + 2, '+ ' + 'Sort : ' + str(self.mk_varlst), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 10, int(self.screen_width/2) + 2, '+ ' + 'Color : ' + str(curses.COLORS), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 5, 3, ' key : ' + str(self.pkey), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 6, 3, ' search : ' + str(self.search), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 7, 3, ' limit : ' + str(self.filter), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 8, 3, ' sort : ' + str(self.mk_varlst), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 9, 3, ' thread : ' + str(WatcherId), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 10, 3, ' thread : ' + str(ThreadList), curses.A_DIM | self.c_main_txt)
 
     def MenuClose(self):
         ''' Close Menu '''
@@ -810,11 +825,8 @@ class MainWin(Thread):
             print('Exiting ! Shuting down kernel...')
             self.kc.shutdown()
 
-        self.KillAllFigures()
-
-        if self.qstop.qsize() > 0:
-            self.qstop.queue.clear()
-        self.qstop.put(True)
+        self.KillAllFigures()   # Stop all figure subprocesses
+        self.watcher.stop()     # Stop watcher
 
     def KillAllFigures(self):
         ''' Kill all figures (running in different processes) '''
@@ -833,12 +845,10 @@ class MainWin(Thread):
         ''' If error, send terminate signal to daemon and resore terminal to
             sane state '''
 
-        if self.qstop.qsize() > 0:
-            self.qstop.queue.clear()
-        self.qstop.put(True)
-
+        self.close_signal = 'close'
         self.stdscreen.keypad(0)
         curses.echo()
         curses.nocbreak()
         curses.endwin()
+        self.ShutdownApp()
         traceback.print_exc()           # Print the exception

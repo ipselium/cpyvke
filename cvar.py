@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mer. 07 déc. 2016 16:34:56 CET
+# Last Modified : jeu. 08 déc. 2016 09:43:17 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -30,11 +30,6 @@ from inspector import Inspect
 from cwidgets import Viewer, WarningMsg
 
 
-def ToFile(filename, var):
-    with open(filename, 'w') as f:
-        for item in var:
-            f.write("%s\n" % item)
-
 ###############################################################################
 # Class and Methods
 ###############################################################################
@@ -45,7 +40,9 @@ class MenuVar(object):
 
     def __init__(self, parent):
 
+        # Init parent
         self.stdscreen = parent.stdscreen
+        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()  # get heigh and width of stdscreen
         self.Config = parent.Config
         self.c_exp_txt = curses.color_pair(21)
         self.c_exp_bdr = curses.color_pair(22)
@@ -53,12 +50,11 @@ class MenuVar(object):
         self.c_exp_hh = curses.color_pair(24)
         self.c_exp_pwf = curses.color_pair(25)
         self.SaveDir = parent.Config['path']['save-dir']
-        self.LogDir = parent.LogDir
+        self.LogFile = parent.LogFile
 
         # Variables properties
         self.varname = parent.strings[parent.position-1]
         self.vartype = parent.variables[parent.strings[parent.position-1]]['type']
-        self.screen_width = parent.screen_width
 
         # Get variable value
         if parent.variables[parent.strings[parent.position-1]]['type'] == 'module':
@@ -77,7 +73,7 @@ class MenuVar(object):
                 Wng = WarningMsg(self.stdscreen)
                 Wng.Display('Kernel Busy ! Try again...')
                 self.varval = '[Busy]'
-                with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                with open(self.LogFile, 'a') as f:
                     f.write(time.strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
             else:
                 self.view = Viewer(self)
@@ -94,7 +90,7 @@ class MenuVar(object):
                 Wng = WarningMsg(self.stdscreen)
                 Wng.Display('Kernel Busy ! Try again...')
                 self.varval = '[Busy]'
-                with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                with open(self.LogFile, 'a') as f:
                     f.write(time.strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
 
             os.remove(self.filename)
@@ -136,23 +132,23 @@ class MenuVar(object):
         self.panel_menu.top()        # Push the panel to the bottom of the stack
         self.panel_menu.show()       # Display the panel
         self.menu.clear()
+        self.menu.border(0)
+        if self.Config['font']['pw-font'] == 'True':
+            self.menu.addstr(0, int((self.menu_width-len(self.menu_title) - 4)/2), '', self.c_exp_pwf | curses.A_BOLD)
+            self.menu.addstr(' ' + self.menu_title + ' ', self.c_exp_ttl | curses.A_BOLD)
+            self.menu.addstr('', self.c_exp_pwf | curses.A_BOLD)
+        else:
+            self.menu.addstr(0, int((self.menu_width-len(self.menu_title) - 4)/2), '| ' + self.menu_title + ' |', self.c_exp_ttl | curses.A_BOLD)
 
         menukey = -1
         while menukey not in (27, 113):
-            self.menu.border(0)
-            if self.Config['font']['pw-font'] == 'True':
-                self.menu.addstr(0, int((self.menu_width-len(self.menu_title) - 4)/2), '', self.c_exp_pwf | curses.A_BOLD)
-                self.menu.addstr(' ' + self.menu_title + ' ', self.c_exp_ttl | curses.A_BOLD)
-                self.menu.addstr('', self.c_exp_pwf | curses.A_BOLD)
-            else:
-                self.menu.addstr(0, int((self.menu_width-len(self.menu_title) - 4)/2), '| ' + self.menu_title + ' |', self.c_exp_ttl | curses.A_BOLD)
 
             self.menu.refresh()
             for index, item in enumerate(self.menu_lst):
                 if index == self.menuposition:
-                    mode = self.c_exp_hh | curses.A_BOLD
+                    mode = self.c_exp_hh
                 else:
-                    mode = self.c_exp_txt | curses.A_DIM
+                    mode = self.c_exp_txt
 
                 msg = item[0]
                 self.menu.addstr(1+index, 1, msg, mode)
@@ -168,7 +164,7 @@ class MenuVar(object):
                 except Exception as err:
                     if self.menu_lst[self.menuposition][0] == 'Save':
                         Wng.Display('Not saved !')
-                    with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                    with open(self.LogFile, 'a') as f:
                         f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
                 else:
                     break
@@ -209,18 +205,21 @@ class MenuVar(object):
                    ['◜ ', ' ◝', ' ◞', '◟ '],
                    ['◇', '◈', '◆'],
                    ['⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'],
-                   ['⠁', '⠂', '⠄', '⡀', '⢀', '⠠', '⠐', '⠈']
+                   ['⠁', '⠂', '⠄', '⡀', '⢀', '⠠', '⠐', '⠈'],
+                   ['Searching.', 'Searching..', 'Searching...']
                    ]
 
-        spinner = spinner[-7]
+        spinner = spinner[19]
         while os.path.exists(self.filename) is False:
             time.sleep(0.05)
             self.stdscreen.addstr(parent.position - (parent.page-1)*parent.row_max + 1, 2, spinner[i], self.c_exp_txt | curses.A_BOLD)
+
             self.stdscreen.refresh()
             if i < len(spinner) - 1:
                 i += 1
             else:
                 i = 0
+
         self.stdscreen.refresh()
 
     def Navigate(self, n, size):
@@ -306,7 +305,7 @@ class MenuVar(object):
                     Wng.Display('Saved !')
                 except Exception as err:
                     Wng.Display('Not saved !')
-                    with open(self.LogDir + 'cpyvke.log', 'a') as f:
+                    with open(self.LogFile, 'a') as f:
                         f.write(time.strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
                 else:
                     break
