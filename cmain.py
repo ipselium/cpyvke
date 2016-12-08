@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : jeu. 08 déc. 2016 12:53:20 CET
+# Last Modified : ven. 09 déc. 2016 00:05:24 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -24,33 +24,39 @@ import threading
 import curses
 import traceback
 from math import ceil
-from Queue import Empty
 from curses import panel
 from time import strftime, sleep
 import os
+import socket
+import select
 # Personal Libs
 from cvar import MenuVar
 from ckernel import MenuKernel
 from cwidgets import WarningMsg, Help
 from ctools import FormatCell, TypeSort, FilterVarLst
+from kd5sock import WhoToDict, recv_msg
 
 
 class MainWin(threading.Thread):
     ''' Main window. '''
 
-    def __init__(self, watcher, kc, cf, qvar, qreq, qkc, Config, DEBUG=False):
+    def __init__(self, watcher, kc, cf, Config, DEBUG=False):
 
         threading.Thread.__init__(self)
         self.watcher = watcher
         self.kc = kc
         self.cf = cf
-        self.qvar = qvar
-        self.qreq = qreq
-        self.qkc = qkc
         self.curse_delay = 5
         self.Config = Config
         self.DEBUG = DEBUG
         self.LogFile = os.path.expanduser("~") + "/.cpyvke/cpykve.log"
+
+        # Init connection to daemon
+        hote = "localhost"
+        port = 15555
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((hote, port))
+        self.socket.settimeout(0)
         # Init CUI :
         self.close_signal = 'continue'
         self.stdscreen = curses.initscr()   # Init curses
@@ -662,11 +668,13 @@ class MainWin(threading.Thread):
     def GetVars(self):
         ''' Get variable from the daemon '''
 
+#        r, w, e = select.select([self.socket], [], [], 1.0)
         try:
-            if self.qvar.qsize() > 0:
-                self.variables = self.qvar.get()
-        except Empty:
+            tmp = recv_msg(self.socket)
+        except:
             pass
+        else:
+            self.variables = WhoToDict(tmp)
 
     def ResizeCurses(self):
         ''' Check if terminal is resized and adapt screen '''
@@ -743,9 +751,6 @@ class MainWin(threading.Thread):
         self.stdscreen.addstr(self.row_max + 4, int(2*self.screen_width/3), ' Queue ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscreen.addstr(self.row_max + 5, int(2*self.screen_width/3) + 1, ' variable : ' + str(self.qvar.qsize()), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 6, int(2*self.screen_width/3) + 1, ' request  : ' + str(self.qreq.qsize()), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 7, int(2*self.screen_width/3) + 1, ' kernel   : ' + str(self.qkc.qsize()), curses.A_DIM | self.c_main_txt)
 
     def TermInfo(self):
         ''' Display terminal informations '''
@@ -753,13 +758,12 @@ class MainWin(threading.Thread):
         self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/3), ' Terminal ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscreen.addstr(self.row_max + 5, int(self.screen_width/3) + 1 , ' width : ' + str(self.screen_width), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/3) + 1 , ' heigh : ' + str(self.screen_height), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/3) + 1 , ' color : ' + str(curses.COLORS), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 5, int(self.screen_width/3) + 1, ' width : ' + str(self.screen_width), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/3) + 1, ' heigh : ' + str(self.screen_height), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/3) + 1, ' color : ' + str(curses.COLORS), curses.A_DIM | self.c_main_txt)
 
     def DebugInfo(self):
         ''' Display debug informations '''
-
 
         ThreadLst = threading.enumerate()
 
@@ -822,6 +826,7 @@ class MainWin(threading.Thread):
             print('Exiting ! Shuting down kernel...')
             self.kc.shutdown()
 
+        self.socket.close()
         self.KillAllFigures()   # Stop all figure subprocesses
         self.watcher.stop()     # Stop watcher
 

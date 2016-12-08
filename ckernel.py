@@ -3,7 +3,7 @@
 #
 # File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 08 déc. 2016 10:22:02 CET
+# Last Modified : jeu. 08 déc. 2016 23:34:32 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -42,9 +42,9 @@ class MenuKernel(object):
     def __init__(self, parent):
 
         self.parent = parent
+        self.watcher = parent.watcher
 
         # Queue for kernel changes
-        self.qkc = parent.qkc
         self.kc = parent.kc
 
         # Define Styles
@@ -367,7 +367,7 @@ class MenuKernel(object):
         ''' Connect to a kernel. '''
 
         km, self.kc = connect_kernel(self.selected[0])
-        self.qkc.put(self.kc)
+        self.watcher.RequestKernelChange(self.kc)
 
         # Update kernels
         self.cf = self.kc.connection_file

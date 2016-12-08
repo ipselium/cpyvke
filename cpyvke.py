@@ -3,7 +3,7 @@
 #
 # File Name : cVKE_Main.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : jeu. 08 déc. 2016 12:23:28 CET
+# Last Modified : ven. 09 déc. 2016 00:04:50 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -26,8 +26,9 @@ To downgrade:
 import argparse
 from jupyter_client import find_connection_file
 from Queue import Queue
+import socket
 # Personal Libs
-from kd5 import Watcher
+from kd5sock import Watcher
 from cmain import MainWin
 from ktools import connect_kernel, print_kernel_list
 from config import cfg_setup
@@ -94,15 +95,10 @@ else:
         # Init kernel
         km, kc = connect_kernel(cf)
 
-        # Init Queues
-        qvar = Queue()  # Queue of all Kernel variables
-        qreq = Queue()  # Request value of a single variable
-        qkc = Queue()  # Kernel changes
-
         # Create threads
-        thread1 = Watcher(kc, args.refresh_delay, qvar, qreq, qkc, args.only_daemon)
+        thread1 = Watcher(kc, args.refresh_delay, args.only_daemon)
         if args.only_daemon is False:
-            thread2 = MainWin(thread1, kc, cf, qvar, qreq, qkc, Config, args.debug)
+            thread2 = MainWin(thread1, kc, cf, Config, args.debug)
 
         # Start them
         thread1.start()
