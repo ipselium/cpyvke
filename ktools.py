@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : jeu. 08 déc. 2016 15:35:09 CET
+# Last Modified : lun. 12 déc. 2016 17:35:41 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -20,7 +20,6 @@ DESCRIPTION
 # IMPORTS
 ###############################################################################
 from jupyter_client import BlockingKernelClient, manager
-from Queue import Empty
 from time import sleep, strftime
 import os
 import subprocess
@@ -57,13 +56,22 @@ def is_runing(cf):
 
     kc = BlockingKernelClient()
     kc.load_connection_file(cf)
-    kc.execute('whos', store_history=False)
-    try:
-        kc.get_iopub_msg(timeout=0.1)
-    except Empty:
-        return False
-    else:
+    port = kc.get_connection_info()['iopub_port']
+
+    if check_server(port):
         return True
+    else:
+        return False
+
+
+def check_server(port):
+    ''' Check if a service is listening on port. '''
+
+    addr = [item.laddr for item in psutil.net_connections('inet') if str(port) in str(item.laddr[1])]
+    if addr:
+        return True
+    else:
+        return False
 
 
 def kernel_list(cf=None):

@@ -3,7 +3,7 @@
 #
 # File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 08 déc. 2016 23:34:32 CET
+# Last Modified : mar. 13 déc. 2016 13:40:20 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -30,6 +30,7 @@ from time import sleep
 ###############################################################################
 from ktools import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
 from cwidgets import WarningMsg, Help
+from kd5 import send_msg
 
 
 ###############################################################################
@@ -42,7 +43,7 @@ class MenuKernel(object):
     def __init__(self, parent):
 
         self.parent = parent
-        self.watcher = parent.watcher
+        self.RequestSock = parent.RequestSock
 
         # Queue for kernel changes
         self.kc = parent.kc
@@ -367,13 +368,10 @@ class MenuKernel(object):
         ''' Connect to a kernel. '''
 
         km, self.kc = connect_kernel(self.selected[0])
-        self.watcher.RequestKernelChange(self.kc)
+        send_msg(self.RequestSock, '<cf>' + self.selected[0])
 
-        # Update kernels
+        # Update kernels connection file and set new kernel flag
         self.cf = self.kc.connection_file
-        self.lst = kernel_list(self.cf)
-
-        # New connection FLAG
         self.new_kernel_connection = True
 
     def RestartKernel(self):

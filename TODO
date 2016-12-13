@@ -1,6 +1,6 @@
 TODO :
 
-	- Sort variable (type/name)
+	- Fonction Log CUI
 	- Kernel manager (restart dead kernel ?)
 	- Daemon : Fix bugs !
 	- Option des kernels :

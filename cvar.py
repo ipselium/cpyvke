@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : jeu. 08 déc. 2016 20:24:49 CET
+# Last Modified : mar. 13 déc. 2016 13:41:27 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -23,12 +23,12 @@ import curses
 import json
 from curses import panel
 from numpy import load
-from time import sleep, strftime
+from time import sleep, strftime, time
 import os
 # Personal
 from inspector import Inspect
 from cwidgets import Viewer, WarningMsg
-
+from kd5 import send_msg
 
 ###############################################################################
 # Class and Methods
@@ -41,7 +41,6 @@ class MenuVar(object):
     def __init__(self, parent):
 
         # Init parent
-        self.watcher = parent.watcher
         self.stdscreen = parent.stdscreen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()  # get heigh and width of stdscreen
         self.Config = parent.Config
@@ -52,6 +51,7 @@ class MenuVar(object):
         self.c_exp_pwf = curses.color_pair(25)
         self.SaveDir = parent.Config['path']['save-dir']
         self.LogFile = parent.LogFile
+        self.RequestSock = parent.RequestSock
 
         # Variables properties
         self.varname = parent.strings[parent.position-1]
@@ -65,7 +65,7 @@ class MenuVar(object):
         elif parent.variables[parent.strings[parent.position-1]]['type'] in ('dict', 'list', 'tuple', 'str'):
             self.filename = '/tmp/tmp_' + self.varname
             code = "with open('" + self.filename + "' , 'w') as f:\n\tjson.dump(" + self.varname + ", f)"
-            self.watcher.Request(code)
+            send_msg(self.RequestSock, '<code>' + code)
             self.Wait(parent)
             try:
                 with open(self.filename, 'r') as f:
@@ -78,24 +78,22 @@ class MenuVar(object):
                     f.write(strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
             else:
                 self.view = Viewer(self)
-
-            os.remove(self.filename)
+                os.remove(self.filename)
 
         elif parent.variables[parent.strings[parent.position-1]]['type'] == 'ndarray':
             self.filename = '/tmp/tmp_' + self.varname + '.npy'
             code = "np.save('" + self.filename + "', " + self.varname + ')'
-            self.watcher.Request(code)
+            send_msg(self.RequestSock, '<code>' + code)
             self.Wait(parent)
             try:
                 self.varval = load(self.filename)
+                os.remove(self.filename)
             except Exception as err:
                 Wng = WarningMsg(self.stdscreen)
                 Wng.Display('Kernel Busy ! Try again...')
                 self.varval = '[Busy]'
                 with open(self.LogFile, 'a') as f:
                     f.write(strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
-
-            os.remove(self.filename)
 
         else:
             self.varval = '[Not Impl.]'
@@ -212,6 +210,7 @@ class MenuVar(object):
                    ]
 
         spinner = spinner[19]
+        ti = time()
         while os.path.exists(self.filename) is False:
             sleep(0.05)
             self.stdscreen.addstr(parent.position - (parent.page-1)*parent.row_max + 1, 2, spinner[i], self.c_exp_txt | curses.A_BOLD)
@@ -221,6 +220,9 @@ class MenuVar(object):
                 i += 1
             else:
                 i = 0
+
+            if time() - ti > 3:
+                break
 
         self.stdscreen.refresh()
 
