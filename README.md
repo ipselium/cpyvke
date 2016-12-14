@@ -3,23 +3,26 @@ Curses PYthon Variable and Kernel Explorer
 
 ![A Fancy Client](https://github.com/ipselium/cpyvke/blob/master/docs/screenshot.png)
 
+
+cpyvke is **still in development**
+
 - - -
 
-## kd5 : the Ipython daemon
+## kd5 : the daemon to communicate with IPython kernels
 
 *Communication with ipython kernels.*
 
-* Stream variables list each time a change occurs in the kernel
+* Stream variable list each time a change occurs in the kernel
 * Listen to request from the client
 
 - - -
 
-## cpyvke : the Curse interface
+## cpyvke : the Curses interface
 
 *Variable explorer and kernel manager.*
 
-* Explore variables in your workspace
-* Handle ipython kernel
+* Explore variables in IPython kernels
+* Manage IPython kernels
 
 - - -
 
@@ -27,7 +30,7 @@ Curses PYthon Variable and Kernel Explorer
 
 * Ipython >= 5.1
 * jupyter_client >= 4.4
-* Tested with python 2.7
+* Tested with **python 2.7 only**
 * 256 colors terminal is prefered, but cpyvke also works with 8 colors terminals.
 
 - - -
@@ -52,7 +55,14 @@ The available colors are...
 ### Fonts
 
 cpyvke can also display powerline fonts. You can find them here :
-https://github.com/powerline/fonts
+https://github.com/powerline/fonts.
+
+Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
+
+`[font]`
+
+`powerline-font = True`
+
 
 - - -
 
