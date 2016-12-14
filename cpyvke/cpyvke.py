@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 14 déc. 2016 13:24:22 CET
+# Last Modified : jeu. 15 déc. 2016 00:20:09 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -513,7 +513,7 @@ class MainWin():
         ''' Organize/Arange variable list. '''
 
         if self.mk_sort == 'name':
-            self.strings = sorted(self.variables.keys())
+            self.strings = sorted(list(self.variables))
 
         elif self.mk_sort == 'type':
             self.strings = TypeSort(self.variables)
@@ -783,7 +783,7 @@ class MainWin():
         ''' Check and display kernel informations '''
 
         kernel_info_id = 'kernel ' + self.cf.split('-')[1].split('.')[0] + ' '
-        kernel_info_obj = str(len(self.variables.keys())) + ' obj.'
+        kernel_info_obj = str(len(list(self.variables))) + ' obj.'
 
         # Kernel Info
         if self.Config['font']['pw-font'] == 'True':

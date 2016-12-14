@@ -3,7 +3,7 @@
 #
 # File Name : ctools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : mer. 14 déc. 2016 11:54:42 CET
+# Last Modified : jeu. 15 déc. 2016 00:18:44 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -29,7 +29,7 @@ def FilterVarLst(lst, filter):
     ''' Filter variable list (name|type). '''
 
     filtered = []
-    for key in lst.keys():
+    for key in list(lst):
         if filter in lst[key]['type'] or filter in key:
             filtered.append(key)
 
@@ -42,7 +42,7 @@ def TypeSort(lst):
     from operator import itemgetter
 
     types = []
-    for key in lst.keys():
+    for key in list(lst):
         types.append([key, lst[key]['type']])
 
     types.sort(key=itemgetter(1))

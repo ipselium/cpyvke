@@ -30,8 +30,9 @@ cpyvke is **still in development**
 
 * Ipython >= 5.1
 * jupyter_client >= 4.4
+* 256 colors terminal is preferred, but cpyvke also works with 8 colors terminals.
 * Tested with **python 2.7 only**
-* 256 colors terminal is prefered, but cpyvke also works with 8 colors terminals.
+* python-future : work in progress -> compatibility with **python 3**
 
 - - -
 
@@ -100,7 +101,7 @@ Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
 * bindings:
 	* **h** : help
 	* **s** : sort by name/type
-	* **l** : limit display to varaible matching the given keyword
+	* **l** : limit display to all variable matching the given keyword
 	* **u** : undo limit
 	* **c** : kernel manager
 	* **/** : Search for variable
