@@ -1,13 +1,7 @@
 # cpyvke
 Curses PYthon Variable and Kernel Explorer
 
-![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/basic_menu.png)
-![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/basic_inspect.png)
-![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/basic_kernel.png)
-
-![A Fancy Client](https://github.com/ipselium/cpyvke/blob/master/docs/fancy_menu.png)
-![A Fancy Client](https://github.com/ipselium/cpyvke/blob/master/docs/fancy_inspect.png)
-![A Fancy Client](https://github.com/ipselium/cpyvke/blob/master/docs/fancy_kernel.png)
+![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/array.png)
 
 
 cpyvke is **still in development**
