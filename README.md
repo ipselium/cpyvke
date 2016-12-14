@@ -1,7 +1,7 @@
 # cpyvke
 Curses PYthon Variable and Kernel Explorer
 
-![A Fancy Client](https://github.com/ipselium/cpyvke/docs/screenshot.png)
+![A Fancy Client](https://github.com/ipselium/cpyvke/blob/master/docs/screenshot.png)
 
 - - -
 
@@ -58,6 +58,9 @@ https://github.com/powerline/fonts
 
 ## Installation
 
+`git clone https://github.com/ipselium/cpyvke.git`
+
+`python setup.py install`
 
 - - -
 
@@ -65,7 +68,7 @@ https://github.com/powerline/fonts
 
 ### kd5 : The Daemon
 
-*Usage: python kd5.py {start|stop|restart|list} [INTEGER]*
+*Usage: kd5 {start|stop|restart|list} [INTEGER]*
 
 * start daemon : If no [INTEGER] is provided, a new ipython kernel is created. [INTEGER] is the id of the connection file.
 * stop : stop daemon
@@ -74,7 +77,7 @@ https://github.com/powerline/fonts
 
 ### cpyvke : The client
 
-*Usage: python cpyvke.py [-h] [-L] [-D] [integer]*
+*Usage: cpyvke [-h] [-L] [-D] [integer]*
 
 * positional arguments:
 	* [integer] : Start up with existing kernel. INTEGER is the id of the connection file.
