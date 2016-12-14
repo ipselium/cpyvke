@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 14 déc. 2016 12:31:24 CET
+# Last Modified : mer. 14 déc. 2016 13:24:22 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -977,13 +977,13 @@ def ParseArgs(lockfile, pidfile):
             sys.stderr.write(message % args.integer)
             sys.exit(2)
 
-        cmd = 'python kd5.py start ' + str(args.integer)
-        cf = WithDaemon(pidfile, cmd)
+        cmd = 'kd5 start ' + str(args.integer)
+        cf = WithDaemon(lockfile, pidfile, cmd)
 
     else:
 
-        cmd = 'python kd5.py start'
-        cf = WithDaemon(pidfile, cmd)
+        cmd = 'kd5 start'
+        cf = WithDaemon(lockfile, pidfile, cmd)
 
     return args, cf
 
