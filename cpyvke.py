@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mar. 13 déc. 2016 13:40:02 CET
+# Last Modified : mar. 13 déc. 2016 21:58:36 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -20,7 +20,6 @@ DESCRIPTION
 # IMPORTS
 ###############################################################################
 from __future__ import division  # You don't need this in Python3
-import threading
 import curses
 import traceback
 from math import ceil
@@ -37,12 +36,11 @@ from kd5 import WhoToDict, recv_msg, send_msg
 from ktools import check_server
 
 
-class MainWin(threading.Thread):
+class MainWin():
     ''' Main window. '''
 
     def __init__(self, kc, cf, Config, DEBUG=False):
 
-        threading.Thread.__init__(self)
         self.kc = kc
         self.cf = cf
         self.curse_delay = 10
@@ -75,7 +73,7 @@ class MainWin(threading.Thread):
         self.stdscreen.bkgd(self.c_main_txt)
         self.stdscreen.attrset(self.c_main_bdr | curses.A_BOLD)  # Change border color
 
-        # Min terminal size accepted
+        # Min terminal size allowed
         if self.DEBUG:
             self.term_min_height = 20
             self.term_min_width = 80
@@ -94,7 +92,7 @@ class MainWin(threading.Thread):
         # Various Variables :
         self.VarLst_name = "Variable Explorer"
         self.VarLst_wng = ""
-        self.mk_varlst = 'name'
+        self.mk_sort = 'name'
         self.variables = {}
 
         # Init Variable Box
@@ -507,37 +505,36 @@ class MainWin(threading.Thread):
             if self.pkey == 113:
                 self.MenuClose()
 
-
     def ArangeVarLst(self):
         ''' Organize/Arange variable list. '''
 
-        if self.mk_varlst == 'name':
+        if self.mk_sort == 'name':
             self.strings = sorted(self.variables.keys())
 
-        elif self.mk_varlst == 'type':
+        elif self.mk_sort == 'type':
             self.strings = TypeSort(self.variables)
 
-        elif self.mk_varlst == 'filter':
+        elif self.mk_sort == 'filter':
             self.strings = FilterVarLst(self.variables, self.filter)
             self.VarLst_wng = 'Filter : ' + str(self.filter) + ' (' + str(len(self.strings)) + ' obj.)'
 
         # Sort variable by name/type
         if self.pkey == 115:
-            if self.mk_varlst == 'name':    # -> s
-                self.mk_varlst = 'type'
-            elif self.mk_varlst == 'type':
-                self.mk_varlst = 'name'
+            if self.mk_sort == 'name':    # -> s
+                self.mk_sort = 'type'
+            elif self.mk_sort == 'type':
+                self.mk_sort = 'name'
 
         # Filter variables
         if self.pkey == 108:    # -> l
             self.FilterVar()
-            self.mk_varlst = 'filter'
+            self.mk_sort = 'filter'
             self.position = 1
             self.page = int(ceil(self.position/self.row_max))
 
         # Reinit
         if self.pkey == 117:
-            self.mk_varlst = 'name'
+            self.mk_sort = 'name'
             self.VarLst_wng = ''
             self.position = 1
             self.page = int(ceil(self.position/self.row_max))
@@ -641,6 +638,12 @@ class MainWin(threading.Thread):
             self.VarLst.addstr('', self.c_exp_pwf | curses.A_BOLD)
         else:
             self.VarLst.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
+
+        # Reset position if position is greater than the new list of var (reset)
+        self.row_num = len(self.strings)
+        if self.position > self.row_num:
+            self.position = 1
+            self.page = 1
 
         # VarLst
         for i in range(1+(self.row_max*(self.page-1)), self.row_max+1 + (self.row_max*(self.page-1))):
@@ -831,16 +834,13 @@ class MainWin(threading.Thread):
     def DebugInfo(self):
         ''' Display debug informations '''
 
-        ThreadLst = threading.enumerate()
-
         self.stdscreen.addstr(self.row_max + 4, 2, ' Debug ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
         self.stdscreen.addstr(self.row_max + 5, 3, ' key : ' + str(self.pkey), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 6, 3, ' search : ' + str(self.search), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 7, 3, ' limit : ' + str(self.filter), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 8, 3, ' sort : ' + str(self.mk_varlst), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 9, 3, ' thread : ' + str(len(ThreadLst)), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 8, 3, ' sort : ' + str(self.mk_sort), curses.A_DIM | self.c_main_txt)
 
     def MenuClose(self):
         ''' Close Menu '''
@@ -891,8 +891,7 @@ class MainWin(threading.Thread):
         elif self.close_signal == 'shutdown':
             print('Exiting ! Shutting down daemon...')
             send_msg(self.RequestSock, '<_stop>')
-            #self.kc.shutdown()
-
+            # self.kc.shutdown()
 
         self.MainSock.close()
         self.RequestSock.close()
@@ -1009,7 +1008,7 @@ if __name__ == "__main__":
     # Init kernel
     km, kc = connect_kernel(cf)
 
-    # Create threads, start them, and wait for terminate
-    thread = MainWin(kc, cf, Config, args.debug)
-    thread.start()
-    thread.join()
+    # Run App
+    App = MainWin(kc, cf, Config, args.debug)
+    App.run()
+
