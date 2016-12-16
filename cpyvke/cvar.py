@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : mer. 14 déc. 2016 11:54:55 CET
+# Last Modified : ven. 16 déc. 2016 15:08:54 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -25,6 +25,7 @@ from curses import panel
 from numpy import load
 from time import sleep, strftime, time
 import os
+from builtins import object
 # Personal
 from inspector import Inspect
 from cwidgets import Viewer, WarningMsg
@@ -242,8 +243,7 @@ class MenuVar(object):
             return [('Busy', ' ')]
 
         elif self.vartype == 'module':
-            return [('Description', "self.inspect.Display('less', 'Description')"),
-                    ('Help', "self.inspect.Display('less', 'Help')")]
+            return [('Help', "self.inspect.Display('less', 'Help')")]
 
         elif self.vartype in ('dict', 'tuple', 'str', 'list'):
             return [('View', 'self.view.Display()'),

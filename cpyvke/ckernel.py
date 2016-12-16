@@ -3,7 +3,7 @@
 #
 # File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mer. 14 déc. 2016 11:54:00 CET
+# Last Modified : ven. 16 déc. 2016 15:08:13 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -20,6 +20,7 @@ DESCRIPTION
 # IMPORTS
 ###############################################################################
 from __future__ import division  # You don't need this in Python3
+from builtins import object
 import os
 import curses
 from curses import panel

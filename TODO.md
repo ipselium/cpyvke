@@ -10,6 +10,6 @@ TODO :
 	* Compatibility python 3.x :
 	    * print : **ok**
 	    * dict.keys() : **ok**
-	    * import : to check
+	    * import : **ok**
  	    * from io import open : to check
-	    * class myclass(object) : to check
+	    * class myclass(object) : **ok**

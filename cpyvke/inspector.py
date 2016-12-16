@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : mer. 14 déc. 2016 11:55:31 CET
+# Last Modified : ven. 16 déc. 2016 15:09:54 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -19,13 +19,13 @@ DESCRIPTION
 ###############################################################################
 # IMPORTS
 ###############################################################################
+from builtins import object
 from matplotlib.pyplot import figure, plot, imshow, show
 from numpy import shape, save, savetxt, savez_compressed
 from multiprocessing import Process
 import subprocess
 import sys
 # Personal imports
-from modinspector import describe
 from ctools import suspend_curses
 
 
@@ -118,8 +118,6 @@ class Inspect(object):
         if self.vartype == 'module':
             if Arg == 'Help':
                 manual(self.varval, filename)
-            elif Arg == 'Description':
-                describe(__import__(self.varval), filename)
 
         else:
             with open(filename, 'w') as f:

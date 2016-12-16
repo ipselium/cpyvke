@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mer. 14 déc. 2016 17:53:04 CET
+# Last Modified : ven. 16 déc. 2016 14:59:51 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -15,18 +15,21 @@ DESCRIPTION
 @author: Cyril Desjouy
 """
 
-import argparse
 import threading
 import socket
 import struct
 import os
 import sys
+import argparse
 from time import sleep
-from Queue import Queue
 from daemon import Daemon
 from jupyter_client import find_connection_file
 from ktools import init_kernel, connect_kernel, print_kernel_list
 from config import cfg_setup
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 
 
 def WhoToDict(string):
