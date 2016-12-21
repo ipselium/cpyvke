@@ -3,7 +3,7 @@
 #
 # File Name : cwidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : ven. 16 déc. 2016 15:09:20 CET
+# Last Modified : ven. 16 déc. 2016 17:57:34 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -25,7 +25,6 @@ from builtins import object
 from time import sleep
 # Personal Libs
 from ctools import dump
-
 
 ###############################################################################
 # Class and Methods

@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : ven. 16 déc. 2016 15:10:16 CET
+# Last Modified : mer. 21 déc. 2016 11:17:06 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -78,8 +78,13 @@ def kernel_list(cf=None):
     ''' List of connection files. '''
 
     path = '/run/user/1000/jupyter/'
-    lst = [(path + item, '[Alive]' if is_runing(path + item) else '[Died]') for item in os.listdir(path)]
-    return [(cf, '[Connected]') if cf in item else item for item in lst]
+
+    try:
+        lst = [(path + item, '[Alive]' if is_runing(path + item) else '[Died]') for item in os.listdir(path)]
+    except:
+        return []
+    else:
+        return [(cf, '[Connected]') if cf in item else item for item in lst]
 
 
 def print_kernel_list():
@@ -89,7 +94,7 @@ def print_kernel_list():
 
     if not klst:
         print('                    No kernel available')
-        print('               Use -n to create a new kernel')
+        print('Last run of the daemon may have quit prematurely.')
     else:
         for item in klst:
             if item == klst[-1]:

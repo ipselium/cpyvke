@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : jeu. 15 déc. 2016 00:20:09 CET
+# Last Modified : mer. 21 déc. 2016 11:35:47 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -20,6 +20,7 @@ DESCRIPTION
 # IMPORTS
 ###############################################################################
 from __future__ import division  # You don't need this in Python3
+from builtins import object
 import argparse
 import curses
 import traceback
@@ -40,7 +41,7 @@ from ktools import check_server, connect_kernel, print_kernel_list
 from config import cfg_setup
 
 
-class MainWin():
+class MainWin(object):
     ''' Main window. '''
 
     def __init__(self, kc, cf, Config, DEBUG=False):
@@ -964,9 +965,13 @@ def ParseArgs(lockfile, pidfile):
         print_kernel_list()
         sys.exit(2)
 
-    if os.path.exists(lockfile) and os.path.exists(pidfile):
+    elif os.path.exists(lockfile) and os.path.exists(pidfile):
 
-        cf = InitCf(lockfile, pidfile)
+        try:
+            cf = InitCf(lockfile, pidfile)
+        except:
+            missing(lockfile, pidfile)
+            sys.exit(2)
 
     elif args.integer:
 
@@ -986,6 +991,23 @@ def ParseArgs(lockfile, pidfile):
         cf = WithDaemon(lockfile, pidfile, cmd)
 
     return args, cf
+
+
+def missing(lockfile, pidfile):
+    ''' Fix missing connection file. '''
+
+    print('An old lock file already exists, but the kernel connection file is missing.')
+    print('As this issue is not fixed, cpyvke cannot run.')
+    rm_lock = raw_input('Remove the old lock file ? [y|n] : ')
+
+    if rm_lock == 'y':
+        os.remove(lockfile)
+        os.remove(pidfile)
+        print('You can now restart cpyvke.')
+    elif rm_lock == 'n':
+        print('Exiting...')
+    else:
+        print('Wrong choice. exiting... ')
 
 
 def main(args=None):
