@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : ven. 16 déc. 2016 15:09:54 CET
+# Last Modified : mer. 21 déc. 2016 19:48:11 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -27,6 +27,9 @@ import subprocess
 import sys
 # Personal imports
 from ctools import suspend_curses
+import locale
+locale.setlocale(locale.LC_ALL, '')
+code = locale.getpreferredencoding()
 
 
 def In_Thread(Func):
@@ -98,11 +101,16 @@ class Inspect(object):
 
         filename = SaveDir + self.varname
 
-        if self.vartype != 'str':
+        if self.vartype != 'str' and self.vartype != 'unicode':
             self.varval = str(self.varval)
 
-        with open(filename, 'w') as f:
-            f.write(self.varval)
+        if self.vartype == 'unicode':
+            with open(filename, 'w') as f:
+                f.write(self.varval.encode(code))
+
+        else:
+            with open(filename, 'w') as f:
+                f.write(self.varval)
 
     def Display(self, app='less', Arg='Help'):
         '''
@@ -112,10 +120,16 @@ class Inspect(object):
 
         filename = '/tmp/tmp_cVKE'
 
-        if self.vartype != 'str':
+        # Convert all type of variable to string
+        if self.vartype != 'str' and self.vartype != 'unicode':
             self.varval = str(self.varval)
 
-        if self.vartype == 'module':
+        #
+        if self.vartype == 'unicode':
+            with open(filename, 'w') as f:
+                f.write(self.varval.encode(code))
+
+        elif self.vartype == 'module':
             if Arg == 'Help':
                 manual(self.varval, filename)
 

@@ -1,6 +1,8 @@
 TODO :
 
 * 12/14/16:
+	* kd5 : fix unicode crash (when user assign a unicode to a string variable)
+	* cpyvke : Viewer crash when trying to read unicode string
 	* Client Log function
 	* Kernel manager (restart dead kernel ?)
 	* Fix bug : for ndarray savetxt : IndexError: list index out of range

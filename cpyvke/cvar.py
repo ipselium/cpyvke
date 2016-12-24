@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : ven. 16 déc. 2016 15:08:54 CET
+# Last Modified : sam. 24 déc. 2016 10:50:43 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -23,13 +23,16 @@ import curses
 import json
 from curses import panel
 from numpy import load
-from time import sleep, strftime, time
+from time import sleep, time
 import os
+import logging
 from builtins import object
 # Personal
 from inspector import Inspect
 from cwidgets import Viewer, WarningMsg
 from kd5 import send_msg
+
+logger = logging.getLogger('cpyvke.cvar')
 
 ###############################################################################
 # Class and Methods
@@ -51,32 +54,33 @@ class MenuVar(object):
         self.c_exp_hh = curses.color_pair(24)
         self.c_exp_pwf = curses.color_pair(25)
         self.SaveDir = parent.Config['path']['save-dir']
-        self.LogFile = parent.LogFile
         self.RequestSock = parent.RequestSock
 
         # Variables properties
         self.varname = parent.strings[parent.position-1]
         self.vartype = parent.variables[parent.strings[parent.position-1]]['type']
+        self.varval = None
 
         # Get variable value
         if parent.variables[parent.strings[parent.position-1]]['type'] == 'module':
             self.varval = parent.variables[parent.strings[parent.position-1]]['value']
             self.varval = self.varval.split("'")[1]
+            self.is_menu = True
 
-        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('dict', 'list', 'tuple', 'str'):
+        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('dict', 'list', 'tuple', 'str', 'unicode'):
             self.filename = '/tmp/tmp_' + self.varname
-            code = "with open('" + self.filename + "' , 'w') as f:\n\tjson.dump(" + self.varname + ", f)"
-            send_msg(self.RequestSock, '<code>' + code)
-            self.Wait(parent)
+            code = "with open('" + self.filename + "' , 'w') as fcpyvke0:\n\tjson.dump(" + self.varname + ", fcpyvke0)"
             try:
+                send_msg(self.RequestSock, '<code>' + code)
+                self.Wait(parent)
                 with open(self.filename, 'r') as f:
                     self.varval = json.load(f)
-            except Exception as err:
+            except Exception:
                 Wng = WarningMsg(self.stdscreen)
                 Wng.Display('Kernel Busy ! Try again...')
                 self.varval = '[Busy]'
-                with open(self.LogFile, 'a') as f:
-                    f.write(strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
+                logger.error('Busy', exc_info=True)
+                self.is_menu = False
             else:
                 self.view = Viewer(self)
                 os.remove(self.filename)
@@ -84,20 +88,21 @@ class MenuVar(object):
         elif parent.variables[parent.strings[parent.position-1]]['type'] == 'ndarray':
             self.filename = '/tmp/tmp_' + self.varname + '.npy'
             code = "np.save('" + self.filename + "', " + self.varname + ')'
-            send_msg(self.RequestSock, '<code>' + code)
-            self.Wait(parent)
             try:
+                send_msg(self.RequestSock, '<code>' + code)
+                self.Wait(parent)
                 self.varval = load(self.filename)
                 os.remove(self.filename)
-            except Exception as err:
+            except Exception:
                 Wng = WarningMsg(self.stdscreen)
                 Wng.Display('Kernel Busy ! Try again...')
                 self.varval = '[Busy]'
-                with open(self.LogFile, 'a') as f:
-                    f.write(strftime("[%D :: %H:%M:%S] ::  Error :: Busy ::") + str(err) + '\n')
-
+                logger.error('Busy', exc_info=True)
+                self.is_menu = False
         else:
             self.varval = '[Not Impl.]'
+            self.is_menu = True
+
 
         # Init Inspector
         self.inspect = Inspect(self.varval, self.varname, self.vartype)
@@ -126,6 +131,10 @@ class MenuVar(object):
 
         # Various variables
         self.menuposition = 0
+
+    def IsMenu(self):
+
+        return self.is_menu
 
     def Display(self):
         ''' Display general menu in a panel. '''
@@ -162,11 +171,10 @@ class MenuVar(object):
                     eval(self.menu_lst[self.menuposition][1])
                     if self.menu_lst[self.menuposition][0] == 'Save':
                         Wng.Display('Saved !')
-                except Exception as err:
+                except Exception:
                     if self.menu_lst[self.menuposition][0] == 'Save':
                         Wng.Display('Not saved !')
-                    with open(self.LogFile, 'a') as f:
-                        f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                    logger.error('Menu', exc_info=True)
                 else:
                     break
 
@@ -245,7 +253,7 @@ class MenuVar(object):
         elif self.vartype == 'module':
             return [('Help', "self.inspect.Display('less', 'Help')")]
 
-        elif self.vartype in ('dict', 'tuple', 'str', 'list'):
+        elif self.vartype in ('dict', 'tuple', 'str', 'list', 'unicode'):
             return [('View', 'self.view.Display()'),
                     ('Less', "self.inspect.Display('less')"),
                     ('Edit', "self.inspect.Display('vim')"),
@@ -307,10 +315,9 @@ class MenuVar(object):
                 try:
                     eval(save_lst[self.menuposition][1])
                     Wng.Display('Saved !')
-                except Exception as err:
+                except Exception:
                     Wng.Display('Not saved !')
-                    with open(self.LogFile, 'a') as f:
-                        f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+                    logger.error('Menu save', exc_info=True)
                 else:
                     break
 

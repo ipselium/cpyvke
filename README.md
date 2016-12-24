@@ -81,7 +81,7 @@ Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
 
 *Usage: kd5 {start|stop|restart|list} [INTEGER]*
 
-* start daemon : If no [INTEGER] is provided, a new ipython kernel is created. [INTEGER] is the id of the connection file.
+* start : start daemon. If no [INTEGER] is provided, a new ipython kernel is created. [INTEGER] is the id of the connection file.
 * stop : stop daemon
 * restart : restart daemon
 * list : list available ipython kernels

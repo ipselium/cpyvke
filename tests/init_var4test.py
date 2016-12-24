@@ -3,7 +3,7 @@
 #
 # File Name : init_var4test.py
 # Creation Date : Thu Nov 17 12:09:09 2016
-# Last Modified : ven. 25 nov. 2016 15:21:29 CET
+# Last Modified : ven. 23 déc. 2016 14:59:44 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <cyril.desjouy@free.fr>
@@ -33,20 +33,18 @@ lst1 = ['janvier', 'fevrier', 'mars', '...']
 lst2 = [('lundi', 1), ('mardi', 2), ('mercredi', 3), ('jeudi', 4), ('vendredi', 5)]
 tuple1 = ('dophin', 'mamif')
 tuple2 = (('imaginary', 1), ('real', 1))
+with open('/home/cdesjouy/Documents/dev/python/cpyvke/tests/univ.html', 'r') as fstring:
+    string1 = fstring.readlines()
+string2 = 'éô'
+string3 = 'yop'
+unicode1 = u'éô'
 float1 = np.pi
 wint1 = 1
 wint2 = 1
 wint3 = 1
 wint4 = 1
 wint5 = 1
-wint6 = 1
-wint7 = 1
-wint8 = 1
-wint9 = 1
-wint10 = 1
-wint11 = 1
-wint12 = 1
-wint13 = 1
+
 
 print('DUMP')
 output = []

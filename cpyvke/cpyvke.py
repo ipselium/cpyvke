@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 21 déc. 2016 11:35:47 CET
+# Last Modified : sam. 24 déc. 2016 10:49:43 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -26,19 +26,27 @@ import curses
 import traceback
 from math import ceil
 from curses import panel
-from time import strftime, sleep
+from time import sleep
 from jupyter_client import find_connection_file
 import sys
 import os
 import socket
+import logging
+from logging.handlers import RotatingFileHandler
 # Personal Libs
 from cvar import MenuVar
 from ckernel import MenuKernel
 from cwidgets import WarningMsg, Help
 from ctools import FormatCell, TypeSort, FilterVarLst
 from kd5 import WhoToDict, recv_msg, send_msg
-from ktools import check_server, connect_kernel, print_kernel_list
+from ktools import connect_kernel, print_kernel_list
 from config import cfg_setup
+import locale
+
+
+locale.setlocale(locale.LC_ALL, '')
+code = locale.getpreferredencoding()
+logger = logging.getLogger("cpyvke")
 
 
 class MainWin(object):
@@ -51,7 +59,6 @@ class MainWin(object):
         self.curse_delay = 10
         self.Config = Config
         self.DEBUG = DEBUG
-        self.LogFile = os.path.expanduser("~") + "/.cpyvke/cpyvke.log"
 
         # Init connection to Main Socket
         self.InitMainSocket()
@@ -99,6 +106,7 @@ class MainWin(object):
         self.VarLst_wng = ""
         self.mk_sort = 'name'
         self.variables = {}
+        self.connected = False
 
         # Init Variable Box
         self.row_max = self.screen_height-self.kernel_info  # max number of rows
@@ -111,7 +119,9 @@ class MainWin(object):
 
         try:
             self.MainSock.close()
-        except:
+            logger.debug('Main socket closed')
+        except Exception as err:
+            logger.debug('Impossible to close socket : %s', err)
             pass
 
     def CloseRequestSocket(self):
@@ -119,7 +129,9 @@ class MainWin(object):
 
         try:
             self.RequestSock.close()
-        except:
+            logger.debug('Request socket closed')
+        except Exception as err:
+            logger.debug('Impossible to close socket : %s', err)
             pass
 
     def InitMainSocket(self):
@@ -131,9 +143,9 @@ class MainWin(object):
             self.MainSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.MainSock.connect((hote, sport))
             self.MainSock.setblocking(0)
+            logger.debug('Connected to main socket')
         except:
-            with open(self.LogFile, 'a') as f:
-                f.write(strftime("[%D :: %H:%M:%S] ::  Error :: Connection to stream socket failed") + '\n')
+            logger.error('Connection to stream socket failed')
 
     def InitRequestSocket(self):
         ''' Init Request Socket. '''
@@ -144,28 +156,29 @@ class MainWin(object):
             self.RequestSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.RequestSock.connect((hote, rport))
             self.RequestSock.setblocking(0)
+            logger.debug('Connected to request socket')
         except:
-            with open(self.LogFile, 'a') as f:
-                f.write(strftime("[%D :: %H:%M:%S] ::  Error :: Connection to request socket failed") + '\n')
+            logger.error('Connection to stream socket failed')
 
-    def ReconnectSockets(self):
-        ''' Force reconnection to sockets if deconnected. '''
-
-        stream = True
-        request = True
-
-        if not check_server(self.Config['comm']['s-port']):
-            self.InitMainSocket()
-            stream = False
-        if not check_server(self.Config['comm']['r-port']):
-            self.InitRequestSocket()
-            request = False
+    def RestartSocketConnection(self):
+        ''' Stop then start connection to sockets. '''
 
         Wmsg = WarningMsg(self.stdscreen)
-        if not stream or not request:
-            Wmsg.Display('Reconnected to sockets')
+        Wmsg.Display(' Restarting connection ')
+        self.CloseMainSocket()
+        self.CloseRequestSocket()
+        self.InitMainSocket()
+        self.InitRequestSocket()
+
+    def WngSock(self):
+        ''' Check connection and display warning. '''
+
+        Wmsg = WarningMsg(self.stdscreen)
+        self.CheckSocket()
+        if self.connected:
+            Wmsg.Display('  Connected to socket  ')
         else:
-            Wmsg.Display('Already connected !')
+            Wmsg.Display(' Disconnected from socket ')
 
     def EvalColor(self, color):
         ''' Check if a color is set to transparent. '''
@@ -177,8 +190,7 @@ class MainWin(object):
             if curses.COLORS > 8:
                 return int(color)
             else:
-                with open(self.LogFile, 'a') as f:
-                    f.write(strftime("[%D :: %H:%M:%S] ::  Error :: TERM accept only 8 colors") + '\n')
+                logger.error('TERM accept only 8 colors')
                 return eval('curses.COLOR_UNDEFINED')
         else:
             return eval('curses.COLOR_' + color.upper())
@@ -202,8 +214,7 @@ class MainWin(object):
             wgtxt_bg = -1
             wgbdr_fg = curses.COLOR_RED
             wgbdr_bg = -1
-            with open(self.LogFile, 'a') as f:
-                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+            logger.error('%s', err)
 
         # Define bar color
         brkn = self.Config['br']['kn'].replace(' ', '').split(',')
@@ -228,8 +239,7 @@ class MainWin(object):
             brco_bg = -1
             brdco_fg = curses.COLOR_RED
             brdco_bg = -1
-            with open(self.LogFile, 'a') as f:
-                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+            logger.error('%s', err)
 
         # Define explorer color
         xptxt = self.Config['xp']['txt'].replace(' ', '').split(',')
@@ -254,8 +264,7 @@ class MainWin(object):
             xpttl_bg = -1
             xphh_fg = curses.COLOR_BLACK
             xphh_bg = curses.COLOR_CYAN
-            with open(self.LogFile, 'a') as f:
-                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+            logger.error('%s', err)
 
         # Define main color
         mntxt = self.Config['mn']['txt'].replace(' ', '').split(',')
@@ -280,8 +289,7 @@ class MainWin(object):
             mnttl_bg = -1
             mnhh_fg = curses.COLOR_BLACK
             mnhh_bg = curses.COLOR_WHITE
-            with open(self.LogFile, 'a') as f:
-                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+            logger.error('%s', err)
 
         # Define kernel color
         kntxt = self.Config['kn']['txt'].replace(' ', '').split(',')
@@ -321,8 +329,7 @@ class MainWin(object):
             knal_bg = -1
             kndi_fg = curses.COLOR_RED
             kndi_bg = -1
-            with open(self.LogFile, 'a') as f:
-                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+            logger.error('%s', err)
 
         # Define Pairs
         curses.init_pair(1, wgtxt_fg, wgtxt_bg)
@@ -447,6 +454,9 @@ class MainWin(object):
             sleep(0.5)
         else:
 
+            # Check Connection to daemon
+            self.CheckSocket()
+
             # Get variables from daemon
             self.GetVars()
 
@@ -465,7 +475,8 @@ class MainWin(object):
                 self.VarLst.refresh()
                 # MenuVar
                 var_menu = MenuVar(self)
-                var_menu.Display()
+                if var_menu.IsMenu():
+                    var_menu.Display()
 
             # Menu Help
             if self.pkey == 104:    # -> h
@@ -494,8 +505,23 @@ class MainWin(object):
                     self.page = int(ceil(self.position/self.row_max))
 
             # Reconnection to socket
-            if self.pkey == 114:    # -> r
-                self.ReconnectSockets()
+            if self.pkey == 82:    # -> R
+                self.RestartSocketConnection()
+                self.WngSock()
+
+            # Disconnect from daemon
+            if self.pkey == 68:    # -> D
+                Wmsg = WarningMsg(self.stdscreen)
+                self.CloseMainSocket()
+                self.CloseRequestSocket()
+                self.WngSock()
+
+            # Connect to daemon
+            if self.pkey == 67:     # -> C
+                Wmsg = WarningMsg(self.stdscreen)
+                self.InitMainSocket()
+                self.InitRequestSocket()
+                self.WngSock()
 
             # Update screen size if another menu break because of resizing
             self.ResizeCurses()
@@ -659,9 +685,9 @@ class MainWin(object):
             else:
                 cell = FormatCell(self.variables, self.strings[i-1], self.screen_width)
                 if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
-                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell, self.c_exp_hh)
+                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell.encode(code), self.c_exp_hh)
                 else:
-                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell, curses.A_DIM | self.c_exp_txt)
+                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell.encode(code), curses.A_DIM | self.c_exp_txt)
                 if i == self.row_num:
                     break
 
@@ -744,11 +770,27 @@ class MainWin(object):
 
         try:
             tmp = recv_msg(self.MainSock)
-        except:
+        except Exception:
             pass
         else:
             if tmp is not None:
                 self.variables = WhoToDict(tmp)
+                logger.info('Variable list updated')
+                logger.debug('\n%s', tmp)
+                try:
+                    # remove temporary file used by daemon from the list
+                    del self.variables['fcpyvke0']
+                except:
+                    pass
+
+    def CheckSocket(self):
+        ''' Test if connection to daemon is alive. '''
+
+        try:
+            send_msg(self.MainSock, '<TEST>')
+            self.connected = True
+        except Exception:
+            self.connected = False
 
     def ResizeCurses(self):
         ''' Check if terminal is resized and adapt screen '''
@@ -774,9 +816,8 @@ class MainWin(object):
         try:
             self.stdscreen.addstr(int(self.screen_height/2), int((self.screen_width-len(msg_limit))/2), msg_limit, self.c_warn_txt | curses.A_BOLD)
             self.stdscreen.addstr(int(self.screen_height/2)+1, int((self.screen_width-len(msg_actual))/2), msg_actual, self.c_warn_txt | curses.A_BOLD)
-        except Exception as err:
-            with open(self.LogFile, 'a') as f:
-                f.write(strftime("[%D :: %H:%M:%S] ::  Error ::") + str(err) + '\n')
+        except:
+            pass
         self.stdscreen.border(0)
         self.stdscreen.refresh()
 
@@ -791,7 +832,7 @@ class MainWin(object):
             self.stdscreen.addstr(self.screen_height-1, 2, '', self.c_bar_kn_pwfi | curses.A_BOLD)
             self.stdscreen.addstr(' Daemon ', self.c_bar_kn)
             self.stdscreen.addstr('', self.c_bar_kn_pwfk | curses.A_BOLD)
-            if check_server(self.Config['comm']['s-port']) and check_server(self.Config['comm']['r-port']):
+            if self.connected:
                 self.stdscreen.addstr(' connected ', self.c_bar_co | curses.A_BOLD)
                 self.stdscreen.addstr(' ', self.c_bar_kn_pwfc | curses.A_BOLD)
                 self.stdscreen.addstr(kernel_info_id, self.c_bar_kn)
@@ -1017,6 +1058,17 @@ def main(args=None):
     logdir = os.path.expanduser('~') + '/.cpyvke/'
     lockfile = logdir + 'kd5.lock'
     pidfile = logdir + 'kd5.pid'
+    logfile = logdir + 'cpyvke.log'
+
+    # Logger
+    logger.setLevel(logging.DEBUG)
+
+    # create the logging file handler
+    handler = RotatingFileHandler(logfile, maxBytes=10*1024*1024,
+                                  backupCount=5)
+    formatter = logging.Formatter('%(asctime)s :: %(name)s :: %(threadName)s :: %(levelname)s :: %(message)s', datefmt='%Y-%m-%d - %H:%M:%S')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
     # Parse Config
     cfg = cfg_setup()
@@ -1029,8 +1081,10 @@ def main(args=None):
     km, kc = connect_kernel(cf)
 
     # Run App
+    logger.info('cpyvke started')
     App = MainWin(kc, cf, Config, args.debug)
     App.run()
+
 
 if __name__ == "__main__":
     main()

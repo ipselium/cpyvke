@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : ven. 16 déc. 2016 14:59:51 CET
+# Last Modified : ven. 23 déc. 2016 18:47:00 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -21,6 +21,8 @@ import struct
 import os
 import sys
 import argparse
+import logging
+from logging.handlers import RotatingFileHandler
 from time import sleep
 from daemon import Daemon
 from jupyter_client import find_connection_file
@@ -30,6 +32,9 @@ try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
+
+
+logger = logging.getLogger('kd5')
 
 
 def WhoToDict(string):
@@ -48,7 +53,7 @@ def WhoToDict(string):
 
 def send_msg(sock, msg):
     ''' Prefix each message with a 4-byte length (network byte order) '''
-    msg = struct.pack('>I', len(msg)) + msg
+    msg = struct.pack('>I', len(msg)) + msg.encode('utf-8')  # transform to unicode
     sock.sendall(msg)
 
 
@@ -79,7 +84,7 @@ class Watcher(threading.Thread):
     The client may also request for the content of a variable.
     '''
 
-    def __init__(self, kc, delay=0.1, sport=15555, rport=15556, verbose=False):
+    def __init__(self, kc, delay=0.1, sport=15555, rport=15556):
 
         # Init Thread
         threading.Thread.__init__(self)
@@ -92,12 +97,6 @@ class Watcher(threading.Thread):
         # Inputs
         self.kc = kc
         self.delay = delay
-        self.verbose = verbose
-        if self.verbose:
-            print('++++++++++++++++++++++++++++')
-            print('Daemon started !')
-            print('Delay set to ' + str(self.delay) + ' s.')
-            print('Kernel : ' + str(self.kc.connection_file))
 
         # Queue
         self.kernel_queue = Queue()
@@ -118,10 +117,13 @@ class Watcher(threading.Thread):
         self.RequestSock.setblocking(0)
         self.client_request = None
 
-        print('____________________________')
-        print('Streaming on ' + str(sport))
-        print('Listening on ' + str(rport))
-        print('____________________________')
+        logger.info('++++++++++++++++++++++++++++')
+        logger.info('Daemon started !')
+        logger.info('Delay set to %s s.', str(self.delay))
+        logger.info('Kernel : %s', str(self.kc.connection_file))
+        logger.info('Streaming on %s', str(sport))
+        logger.info('Listening on %s', str(rport))
+        logger.info('++++++++++++++++++++++++++++')
 
         # Init variables
         self.msg = 0
@@ -146,15 +148,19 @@ class Watcher(threading.Thread):
 
             # Terminate daemon
             if self._stop.isSet():
-                print('Request Socket closed !')
+                logger.info('Request Socket closed !')
                 break
 
             sleep(self.delay)
 
         streamer.join()
+        # Close connection to clients
+        self.MainSock.shutdown()
+        self.RequestSock.shutdown()
+        # Destroy socket
         self.MainSock.close()
         self.RequestSock.close()
-        print('Exited')
+        logger.info('Exited')
 
     def StreamData(self):
         ''' Stream 'whos' output to client. '''
@@ -179,7 +185,7 @@ class Watcher(threading.Thread):
 
             # Terminate daemon
             if self._stop.isSet():
-                print('Stream Socket closed !')
+                logger.info('Stream Socket closed !')
                 break
 
             sleep(self.delay)
@@ -192,22 +198,19 @@ class Watcher(threading.Thread):
             # Send to CUI
             if self.client_main:
                 send_msg(self.client_main, self.variables)
-                if self.verbose:
-                    print('--> Variable list sent to client')
+                logger.info('Variable list sent to client')
 
     def Pause(self):
         ''' Pause streamer when client has a request. '''
 
         if self._pause.isSet():
 
-            if self.verbose:
-                print('Streamer paused...')
+            logger.debug('Streamer paused...')
 
             while self._pause.isSet():
                 sleep(self.delay)
 
-            if self.verbose:
-                print('Streamer active')
+            logger.debug('Streamer active')
 
     def CheckInput(self):
         ''' Check the iopub msgs available '''
@@ -216,8 +219,7 @@ class Watcher(threading.Thread):
         while self.kc.iopub_channel.msg_ready():
             data = self.kc.get_iopub_msg(timeout=0.1)
 
-            if self.verbose is True:
-                print(data['msg_type'], data['content'])
+            logger.debug('%s %s', data['msg_type'], data['content'])
 
             # Wait for answer when execute reset
             if data['msg_type'] == 'execute_input':
@@ -250,9 +252,7 @@ class Watcher(threading.Thread):
             data = self.kc.get_iopub_msg()
             if data['msg_type'] == 'stream' and code == 'whos':
                 value = data['content']['text']
-                if self.verbose is True:
-                    print('Execute result :')
-                    print(data['content']['text'])
+                logger.debug('Execute result :\n %s', data['content']['text'])
 
             elif data['msg_type'] == 'execute_result' and code != 'whos':
                 value = data['content']['data']['text/plain']
@@ -269,22 +269,18 @@ class Watcher(threading.Thread):
 
         try:
             self.client_main, address = self.MainSock.accept()
-            if self.verbose:
-                print("{} connected to main socket".format(address))
+            logger.info("%s connected to main socket", format(address))
         except:
             pass
         else:
             send_msg(self.client_main, self.variables)
-            if self.verbose:
-                print('Client Initiated')
 
     def ListenRequestSockConnection(self):
         ''' Look for client connection to request socket. '''
 
         try:
             self.client_request, address = self.RequestSock.accept()
-            if self.verbose:
-                print("{} connected to request socket".format(address))
+            logger.info("%s connected to request socket", format(address))
         except:
             pass
 
@@ -307,8 +303,8 @@ class Watcher(threading.Thread):
 
             self._pause.set()
             sleep(self.delay)
-            if self.verbose:
-                print('Request from client :\n' + tmp)
+            logger.info('Request from client')
+            logger.debug('Execute :\n %s', tmp)
 
             if '<cf>' in tmp:
                 cf = tmp.split('<cf>')[1]
@@ -326,7 +322,7 @@ class Watcher(threading.Thread):
     def stop(self):
         ''' Stop thread. '''
 
-        print("Client sent SIGTERM")
+        logger.info("Client sent SIGTERM")
         self._stop.set()
 
 
@@ -348,7 +344,6 @@ class Daemonize(Daemon):
         self.sport = WatcherArgs['sport']
         self.rport = WatcherArgs['rport']
         self.delay = WatcherArgs['delay']
-        self.verbose = WatcherArgs['verbose']
 
     def run(self):
         ''' Override Daemon run method with this method. '''
@@ -357,8 +352,7 @@ class Daemonize(Daemon):
         WK = Watcher(kc,
                      sport=self.sport,
                      rport=self.rport,
-                     delay=self.delay,
-                     verbose=self.verbose)
+                     delay=self.delay)
         WK.start()
         WK.join()
 
@@ -469,15 +463,24 @@ def main(args=None):
     lockfile = logdir + 'kd5.lock'
     pidfile = logdir + 'kd5.pid'
 
+    # Logger
+    logger.setLevel(logging.INFO)
+
+    # create the logging file handler
+    handler = RotatingFileHandler(logfile, maxBytes=10*1024*1024,
+                                  backupCount=5)
+    formatter = logging.Formatter('%(asctime)s :: %(name)s :: %(threadName)s :: %(levelname)s :: %(message)s', datefmt='%Y-%m-%d - %H:%M:%S')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    # Parse Arguments
     args, kernel_id = ParseArgs(lockfile, pidfile)
 
     sport = int(Config['comm']['s-port'])
     rport = int(Config['comm']['r-port'])
     delay = float(Config['daemon']['refresh'])
-    verbose = True
 
     WatchConf = {'cf': find_connection_file(kernel_id),
-                 'verbose': verbose,
                  'delay': delay,
                  'sport': sport,
                  'rport': rport}
@@ -493,6 +496,7 @@ def main(args=None):
     elif args.action == 'restart':
         sys.stdout.write('kd5 restarting...\n')
         daemon.restart()
+
 
 if __name__ == "__main__":
 

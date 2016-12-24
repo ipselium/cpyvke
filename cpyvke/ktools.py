@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mer. 21 déc. 2016 11:17:06 CET
+# Last Modified : ven. 23 déc. 2016 17:36:44 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -20,10 +20,13 @@ DESCRIPTION
 # IMPORTS
 ###############################################################################
 from jupyter_client import BlockingKernelClient, manager
-from time import sleep, strftime
+from time import sleep
 import os
 import subprocess
 import psutil
+import logging
+
+logger = logging.getLogger("cpyvke.ktools")
 
 
 def ProcInfo(init=0):
@@ -45,8 +48,7 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/"):
     with open(LogDir + 'LastKernel', "r") as f:
         stdout = f.read()
 
-    with open(LogDir + 'cpyvke.log', 'a') as f:
-        f.write(strftime("[%D :: %H:%M:%S] ::  Create ::") + stdout.split('\n')[-2] + '\n')
+    logger.info('Create :: %s', stdout.split('\n')[-2])
 
     return stdout.split('kernel-')[1].split('.json')[0]
 
@@ -82,6 +84,7 @@ def kernel_list(cf=None):
     try:
         lst = [(path + item, '[Alive]' if is_runing(path + item) else '[Died]') for item in os.listdir(path)]
     except:
+        logger.info('No kernel available')
         return []
     else:
         return [(cf, '[Connected]') if cf in item else item for item in lst]
