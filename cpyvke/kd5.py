@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : ven. 23 déc. 2016 18:47:00 CET
+# Last Modified : sam. 24 déc. 2016 14:17:02 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -464,7 +464,7 @@ def main(args=None):
     pidfile = logdir + 'kd5.pid'
 
     # Logger
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     # create the logging file handler
     handler = RotatingFileHandler(logfile, maxBytes=10*1024*1024,

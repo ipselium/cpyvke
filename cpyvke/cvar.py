@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : sam. 24 déc. 2016 10:50:43 CET
+# Last Modified : sam. 24 déc. 2016 14:16:32 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -84,6 +84,7 @@ class MenuVar(object):
             else:
                 self.view = Viewer(self)
                 os.remove(self.filename)
+                self.is_menu = True
 
         elif parent.variables[parent.strings[parent.position-1]]['type'] == 'ndarray':
             self.filename = '/tmp/tmp_' + self.varname + '.npy'
@@ -99,6 +100,8 @@ class MenuVar(object):
                 self.varval = '[Busy]'
                 logger.error('Busy', exc_info=True)
                 self.is_menu = False
+            else:
+                self.is_menu = True
         else:
             self.varval = '[Not Impl.]'
             self.is_menu = True
