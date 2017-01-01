@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : sam. 24 déc. 2016 14:16:32 CET
+# Last Modified : dim. 01 janv. 2017 16:45:46 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -175,9 +175,9 @@ class MenuVar(object):
                     if self.menu_lst[self.menuposition][0] == 'Save':
                         Wng.Display('Saved !')
                 except Exception:
+                    logger.error('Menu', exc_info=True)
                     if self.menu_lst[self.menuposition][0] == 'Save':
                         Wng.Display('Not saved !')
-                    logger.error('Menu', exc_info=True)
                 else:
                     break
 
@@ -322,6 +322,7 @@ class MenuVar(object):
                     Wng.Display('Not saved !')
                     logger.error('Menu save', exc_info=True)
                 else:
+                    self.menuposition = 0
                     break
 
             elif menukey == curses.KEY_UP:
@@ -331,6 +332,7 @@ class MenuVar(object):
                 self.Navigate(1, len(save_lst))
 
             if menukey == curses.KEY_RESIZE:
+                self.menuposition = 0
                 break
 
         save_menu.clear()
