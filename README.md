@@ -1,10 +1,10 @@
-# cpyvke3
-Curses PYthon3 Variable and Kernel Explorer
+# cpyvke
+Curses PYthon Variable and Kernel Explorer
 
 ![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/array.png)
 
 
-cpyvke is **still in development**
+cpyvke is **still in development** : A lot of bugs are still there !
 
 - - -
 
