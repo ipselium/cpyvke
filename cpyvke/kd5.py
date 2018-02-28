@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : sam. 24 déc. 2016 17:12:15 CET
+# Last Modified : mer. 28 févr. 2018 16:09:28 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -24,7 +24,7 @@ import argparse
 import logging
 from logging.handlers import RotatingFileHandler
 from time import sleep
-from daemon import Daemon
+from daemon3x import Daemon
 from jupyter_client import find_connection_file
 from ktools import init_kernel, connect_kernel, print_kernel_list
 from config import cfg_setup
@@ -42,10 +42,10 @@ def WhoToDict(string):
 
     variables = {}
     for item in string.split('\n')[2:-1]:
-        var_name = filter(None, item.split(' '))[0]
-        var_typ = filter(None, item.split(' '))[1]
-        var_val = filter(None, item.split(' '))[2:]
-        var_val = ' '.join(var_val)
+        tmp = [j for j in item.split(' ') if j is not '']
+        var_name = tmp[0]
+        var_typ = tmp[1]
+        var_val = ' '.join(tmp[2:])
         if var_typ != 'function':
             variables[var_name] = {'value': var_val, 'type': var_typ}
     return variables
@@ -53,7 +53,7 @@ def WhoToDict(string):
 
 def send_msg(sock, msg):
     ''' Prefix each message with a 4-byte length (network byte order) '''
-    msg = struct.pack('>I', len(msg)) + msg.encode('utf-8')  # transform to unicode
+    msg = struct.pack('>I', len(msg)) + msg.encode('utf8')
     sock.sendall(msg)
 
 
@@ -69,7 +69,7 @@ def recv_msg(sock):
 
 def recv_all(sock, n):
     ''' Helper function to recv n bytes or return None if EOF is hit '''
-    data = ''
+    data = b''
     while len(data) < n:
         packet = sock.recv(n - len(data))
         if not packet:
@@ -297,7 +297,7 @@ class Watcher(threading.Thread):
         ''' Listen to sock request :
             handle kernel changes | exec code | stop signal. '''
 
-        tmp = recv_msg(self.client_request)
+        tmp = recv_msg(self.client_request).decode('utf8')
 
         if tmp:
 

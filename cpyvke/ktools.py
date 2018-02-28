@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : ven. 23 déc. 2016 17:36:44 CET
+# Last Modified : mar. 27 févr. 2018 12:08:56 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -16,9 +16,6 @@ DESCRIPTION
 """
 
 
-###############################################################################
-# IMPORTS
-###############################################################################
 from jupyter_client import BlockingKernelClient, manager
 from time import sleep
 import os
@@ -80,9 +77,10 @@ def kernel_list(cf=None):
     ''' List of connection files. '''
 
     path = '/run/user/1000/jupyter/'
+    lstk = [path + item for item in os.listdir(path) if 'kernel' in item]
 
     try:
-        lst = [(path + item, '[Alive]' if is_runing(path + item) else '[Died]') for item in os.listdir(path)]
+        lst = [(item, '[Alive]' if is_runing(item) else '[Died]') for item in lstk]
     except:
         logger.info('No kernel available')
         return []

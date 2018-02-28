@@ -1,5 +1,5 @@
-# cpyvke
-Curses PYthon Variable and Kernel Explorer
+# cpyvke3
+Curses PYthon3 Variable and Kernel Explorer
 
 ![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/array.png)
 
@@ -31,8 +31,7 @@ cpyvke is **still in development**
 * Ipython >= 5.1
 * jupyter_client >= 4.4
 * 256 colors terminal is preferred, but cpyvke also works with 8 colors terminals.
-* Tested with **python 2.7 only**
-* python-future : work in progress -> compatibility with **python 3**
+* Tested with **python 3.5 only**
 
 - - -
 
@@ -110,8 +109,8 @@ Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
 ### Setup workspace
 
 * You can directly launch `cpyvke`. It will create a new kernel, start the daemon and launch the client
-* You can open an ipython instance like this :
-	`ipython console --existing kernel-xxx_kernel_id_xxx.json`
+* You can open an existing ipython instance like this :
+	`ipython console --existing kernel-xxx.json`
 
 
 

@@ -3,7 +3,7 @@
 #
 # File Name : cfg_test.py
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : ven. 16 déc. 2016 15:07:53 CET
+# Last Modified : mar. 27 févr. 2018 11:08:39 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -16,9 +16,6 @@ DESCRIPTION
 """
 
 
-###############################################################################
-# IMPORTS
-###############################################################################
 import sys
 import os
 from time import sleep
@@ -26,7 +23,7 @@ from builtins import object
 try:
     import ConfigParser
 except ImportError:
-    import configparser
+    import configparser as ConfigParser
 
 
 def CheckDir(dir):

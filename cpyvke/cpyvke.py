@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : sam. 31 déc. 2016 17:48:47 CET
+# Last Modified : mer. 28 févr. 2018 16:17:50 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -16,9 +16,6 @@ DESCRIPTION
 """
 
 
-###############################################################################
-# IMPORTS
-###############################################################################
 from __future__ import division  # You don't need this in Python3
 from builtins import object
 import argparse
@@ -769,7 +766,7 @@ class MainWin(object):
         ''' Get variable from the daemon '''
 
         try:
-            tmp = recv_msg(self.MainSock)
+            tmp = recv_msg(self.MainSock).decode('utf8')
         except Exception:
             pass
         else:
@@ -1039,7 +1036,7 @@ def missing(lockfile, pidfile):
 
     print('An old lock file already exists, but the kernel connection file is missing.')
     print('As this issue is not fixed, cpyvke cannot run.')
-    rm_lock = raw_input('Remove the old lock file ? [y|n] : ')
+    rm_lock = input('Remove the old lock file ? [y|n] : ')
 
     if rm_lock == 'y':
         os.remove(lockfile)
