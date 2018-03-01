@@ -128,7 +128,7 @@ If you just want to test cpyvke without installing. In cpyvke/ directory :
 * and launch ipython in another console : `python3 -m cpyvke.launch`
 
 
-## Known Bugs
+## Known Bugs and TODO list
 
 *cpyvke* is still in developpement and may present unexpected behavior !
 
