@@ -135,6 +135,7 @@ If you just want to test cpyvke without installing. In cpyvke/ directory :
 * Issue when shutting down client : whatever user choice, server is killed
 * Fix lockfile creation
 * cpyvke : crash when "brutal" resize
-* Kernel manager (restart dead kernel ?)
+* cpyvke : Kernel manager (restart dead kernel ?)
+* cpyvke : last variable missing when a string objet with accentued characters is in the variable list !
 * Kernel options (extra_arguments=["--matplotlib='inline'"])
 * Compatibility python 3.x : Work still in progress !
