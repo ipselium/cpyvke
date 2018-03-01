@@ -123,7 +123,7 @@ where xxxxx is the id of the kernel
 
 If you just want to test cpyvke without installing. In cpyvke/ directory :
 
-* launch kd5 first : `python3 -m cpyvke.kd5`
+* launch kd5 first : `python3 -m cpyvke.kd5 start`
 * then launch cpyvke : `python3 -m cpyvke.cpyvke`
 * and launch ipython in another console : `python3 -m cpyvke.launch`
 
