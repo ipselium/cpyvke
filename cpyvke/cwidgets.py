@@ -3,7 +3,7 @@
 #
 # File Name : cwidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : ven. 23 déc. 2016 18:38:27 CET
+# Last Modified : jeu. 01 mars 2018 22:03:27 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -16,23 +16,19 @@ DESCRIPTION
 """
 
 
-###############################################################################
-# IMPORTS
-###############################################################################
 import curses
 from curses import panel
 from builtins import object
 from time import sleep
-# Personal Libs
-from ctools import dump
 import locale
+
+from .ctools import dump
+
+
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-###############################################################################
-# Class and Methods
-###############################################################################
 class Viewer(object):
     ''' Display variable content in a pad. '''
 

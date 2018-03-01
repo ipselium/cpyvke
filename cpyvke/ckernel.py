@@ -3,7 +3,7 @@
 #
 # File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : ven. 23 déc. 2016 14:57:42 CET
+# Last Modified : jeu. 01 mars 2018 22:04:19 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -16,9 +16,6 @@ DESCRIPTION
 """
 
 
-###############################################################################
-# IMPORTS
-###############################################################################
 from __future__ import division  # You don't need this in Python3
 from builtins import object
 import os
@@ -26,17 +23,11 @@ import curses
 from curses import panel
 from math import ceil
 from time import sleep
-###############################################################################
-# Personal Libs
-###############################################################################
-from ktools import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
-from cwidgets import WarningMsg, Help
-from kd5 import send_msg
 
+from .ktools import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
+from .cwidgets import WarningMsg, Help
+from .kd5 import send_msg
 
-###############################################################################
-# Classes and Methods
-###############################################################################
 
 class MenuKernel(object):
     ''' Kernel list window. '''

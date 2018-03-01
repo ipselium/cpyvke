@@ -3,7 +3,7 @@
 #
 # File Name : cfg_test.py
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : mar. 27 févr. 2018 11:08:39 CET
+# Last Modified : jeu. 01 mars 2018 11:34:45 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>

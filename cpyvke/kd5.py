@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mer. 28 févr. 2018 16:09:28 CET
+# Last Modified : jeu. 01 mars 2018 22:03:55 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -17,65 +17,25 @@ DESCRIPTION
 
 import threading
 import socket
-import struct
 import os
 import sys
 import argparse
 import logging
 from logging.handlers import RotatingFileHandler
-from time import sleep
-from daemon3x import Daemon
 from jupyter_client import find_connection_file
-from ktools import init_kernel, connect_kernel, print_kernel_list
-from config import cfg_setup
+from time import sleep
 try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
 
+from .ktools import init_kernel, connect_kernel, print_kernel_list, start_new_kernel
+from .stools import send_msg, recv_msg
+from .config import cfg_setup
+from .daemon3x import Daemon
+
 
 logger = logging.getLogger('kd5')
-
-
-def WhoToDict(string):
-    ''' Format output of daemon to a dictionnary '''
-
-    variables = {}
-    for item in string.split('\n')[2:-1]:
-        tmp = [j for j in item.split(' ') if j is not '']
-        var_name = tmp[0]
-        var_typ = tmp[1]
-        var_val = ' '.join(tmp[2:])
-        if var_typ != 'function':
-            variables[var_name] = {'value': var_val, 'type': var_typ}
-    return variables
-
-
-def send_msg(sock, msg):
-    ''' Prefix each message with a 4-byte length (network byte order) '''
-    msg = struct.pack('>I', len(msg)) + msg.encode('utf8')
-    sock.sendall(msg)
-
-
-def recv_msg(sock):
-    ''' Read message length and unpack it into an integer '''
-    raw_msglen = recv_all(sock, 4)
-    if not raw_msglen:
-        return None
-    msglen = struct.unpack('>I', raw_msglen)[0]
-    # Read the message data
-    return recv_all(sock, msglen)
-
-
-def recv_all(sock, n):
-    ''' Helper function to recv n bytes or return None if EOF is hit '''
-    data = b''
-    while len(data) < n:
-        packet = sock.recv(n - len(data))
-        if not packet:
-            return None
-        data += packet
-    return data
 
 
 class Watcher(threading.Thread):
@@ -410,7 +370,6 @@ def StartAction(args, lockfile):
             sys.exit(2)
     else:
         sys.stdout.write('Creating kernel...\n')
-        from ktools import start_new_kernel
         kernel_id = start_new_kernel()
         message = 'Kernel id %s created\n'
         sys.stdout.write(message % kernel_id)

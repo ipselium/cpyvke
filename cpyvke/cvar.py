@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : dim. 01 janv. 2017 16:45:46 CET
+# Last Modified : jeu. 01 mars 2018 22:44:04 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -16,9 +16,6 @@ DESCRIPTION
 """
 
 
-###############################################################################
-# IMPORTS
-###############################################################################
 import curses
 import json
 from curses import panel
@@ -27,16 +24,12 @@ from time import sleep, time
 import os
 import logging
 from builtins import object
-# Personal
-from inspector import Inspect
-from cwidgets import Viewer, WarningMsg
-from kd5 import send_msg
+
+from .inspector import Inspect
+from .cwidgets import Viewer, WarningMsg
+from .kd5 import send_msg
 
 logger = logging.getLogger('cpyvke.cvar')
-
-###############################################################################
-# Class and Methods
-###############################################################################
 
 
 class MenuVar(object):
@@ -105,7 +98,6 @@ class MenuVar(object):
         else:
             self.varval = '[Not Impl.]'
             self.is_menu = True
-
 
         # Init Inspector
         self.inspect = Inspect(self.varval, self.varname, self.vartype)

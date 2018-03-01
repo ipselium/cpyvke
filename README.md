@@ -6,6 +6,9 @@ Curses PYthon Variable and Kernel Explorer
 
 cpyvke is **still in development** : A lot of bugs are still there !
 
+Note that this version only works with Python 3.x.
+The Python 2.7 version is no longer maintened !
+
 - - -
 
 ## kd5 : the daemon to communicate with IPython kernels
@@ -30,6 +33,8 @@ cpyvke is **still in development** : A lot of bugs are still there !
 
 * Ipython >= 5.1
 * jupyter_client >= 4.4
+* numpy (tested with 1.13.0)
+* matplotlib (tested with 1.5.1)
 * 256 colors terminal is preferred, but cpyvke also works with 8 colors terminals.
 * Tested with **python 3.5 only**
 
@@ -70,7 +75,7 @@ Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
 
 `git clone https://github.com/ipselium/cpyvke.git`
 
-`python setup.py install`
+`python3 setup.py install`
 
 - - -
 
@@ -109,9 +114,27 @@ Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
 ### Setup workspace
 
 * You can directly launch `cpyvke`. It will create a new kernel, start the daemon and launch the client
-* You can open an existing ipython instance like this :
-	`ipython console --existing kernel-xxx.json`
+* cpyvke-launch-ipython automatically launch the current ipython console
+* You can also manually open an existing ipython instance like this :
+	`ipython console --existing kernel-xxxxx.json`
+where xxxxx is the id of the kernel
+
+### Note
+
+If you just want to test cpyvke without installing. In cpyvke/ directory :
+
+* launch kd5 first : `python3 -m cpyvke.kd5`
+* then launch cpyvke : `python3 -m cpyvke.cpyvke`
+* and launch ipython in another console : `python3 -m cpyvke.launch`
 
 
+## Known Bugs
 
+*cpyvke* is still in developpement and may present unexpected behavior !
 
+* Issue when shutting down client : whatever user choice, server is killed
+* Fix lockfile creation
+* cpyvke : crash when "brutal" resize
+* Kernel manager (restart dead kernel ?)
+* Kernel options (extra_arguments=["--matplotlib='inline'"])
+* Compatibility python 3.x : Work still in progress !

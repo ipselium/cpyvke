@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : mer. 21 déc. 2016 19:48:11 CET
+# Last Modified : jeu. 01 mars 2018 22:02:56 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -16,18 +16,16 @@ DESCRIPTION
 """
 
 
-###############################################################################
-# IMPORTS
-###############################################################################
 from builtins import object
 from matplotlib.pyplot import figure, plot, imshow, show
 from numpy import shape, save, savetxt, savez_compressed
 from multiprocessing import Process
 import subprocess
 import sys
-# Personal imports
-from ctools import suspend_curses
 import locale
+
+from .ctools import suspend_curses
+
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 

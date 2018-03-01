@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mar. 27 févr. 2018 12:08:56 CET
+# Last Modified : jeu. 01 mars 2018 11:39:19 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>

@@ -3,7 +3,7 @@
 #
 # File Name : ctools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : ven. 23 déc. 2016 14:39:28 CET
+# Last Modified : jeu. 01 mars 2018 11:32:15 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -15,15 +15,8 @@ DESCRIPTION
 @author: Cyril Desjouy
 """
 
-###############################################################################
-# IMPORT
-###############################################################################
 import curses
 
-
-###############################################################################
-# Class and Methods
-###############################################################################
 
 def FilterVarLst(lst, filter):
     ''' Filter variable list (name|type). '''

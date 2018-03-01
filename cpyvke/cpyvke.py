@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 28 févr. 2018 16:17:50 CET
+# Last Modified : jeu. 01 mars 2018 22:01:55 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -14,7 +14,6 @@ DESCRIPTION
 
 @author: Cyril Desjouy
 """
-
 
 from __future__ import division  # You don't need this in Python3
 from builtins import object
@@ -30,15 +29,17 @@ import os
 import socket
 import logging
 from logging.handlers import RotatingFileHandler
-# Personal Libs
-from cvar import MenuVar
-from ckernel import MenuKernel
-from cwidgets import WarningMsg, Help
-from ctools import FormatCell, TypeSort, FilterVarLst
-from kd5 import WhoToDict, recv_msg, send_msg
-from ktools import connect_kernel, print_kernel_list
-from config import cfg_setup
 import locale
+
+# Personal Libs
+from .cvar import MenuVar
+from .ckernel import MenuKernel
+from .cwidgets import WarningMsg, Help
+from .ctools import FormatCell, TypeSort, FilterVarLst
+from .ktools import connect_kernel, print_kernel_list
+from .stools import WhoToDict, recv_msg, send_msg
+from .config import cfg_setup
+
 
 
 locale.setlocale(locale.LC_ALL, '')
@@ -118,7 +119,7 @@ class MainWin(object):
             self.MainSock.close()
             logger.debug('Main socket closed')
         except Exception as err:
-            logger.debug('Impossible to close socket : %s', err)
+            logger.debug('Impossible to close socket : {}'.format(err))
             pass
 
     def CloseRequestSocket(self):
@@ -128,7 +129,7 @@ class MainWin(object):
             self.RequestSock.close()
             logger.debug('Request socket closed')
         except Exception as err:
-            logger.debug('Impossible to close socket : %s', err)
+            logger.debug('Impossible to close socket : {}'.format(err))
             pass
 
     def InitMainSocket(self):
@@ -141,8 +142,8 @@ class MainWin(object):
             self.MainSock.connect((hote, sport))
             self.MainSock.setblocking(0)
             logger.debug('Connected to main socket')
-        except:
-            logger.error('Connection to stream socket failed')
+        except Exception as err:
+            logger.error('Connection to stream socket failed :\n{}'.format(err))
 
     def InitRequestSocket(self):
         ''' Init Request Socket. '''
@@ -154,8 +155,8 @@ class MainWin(object):
             self.RequestSock.connect((hote, rport))
             self.RequestSock.setblocking(0)
             logger.debug('Connected to request socket')
-        except:
-            logger.error('Connection to stream socket failed')
+        except Exception as err:
+            logger.error('Connection to stream socket failed : {}'.format(err))
 
     def RestartSocketConnection(self):
         ''' Stop then start connection to sockets. '''
@@ -436,7 +437,7 @@ class MainWin(object):
             while self.close_signal == 'continue':
                 self.UpdateCurses()
             self.ShutdownApp()
-        except:
+        except Exception as err:
             self.ExitWithError()
 
     def UpdateCurses(self):
@@ -767,7 +768,7 @@ class MainWin(object):
 
         try:
             tmp = recv_msg(self.MainSock).decode('utf8')
-        except Exception:
+        except BlockingIOError:
             pass
         else:
             if tmp is not None:
@@ -1016,8 +1017,8 @@ def ParseArgs(lockfile, pidfile):
         try:
             find_connection_file(str(args.integer))
         except:
-            message = 'Error :\tCannot find kernel id. %s !\n\tExiting\n'
-            sys.stderr.write(message % args.integer)
+            message = 'Error :\tCannot find kernel id. {} !\n\tExiting\n'
+            sys.stderr.write(message.format(args.integer))
             sys.exit(2)
 
         cmd = 'kd5 start ' + str(args.integer)
@@ -1085,5 +1086,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-
-
