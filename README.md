@@ -136,6 +136,5 @@ If you just want to test cpyvke without installing. In cpyvke/ directory :
 * Fix lockfile creation
 * cpyvke : crash when "brutal" resize
 * cpyvke : Kernel manager (restart dead kernel ?)
-* cpyvke : last variable missing when a string objet with accentued characters is in the variable list !
 * Kernel options (extra_arguments=["--matplotlib='inline'"])
 * Compatibility python 3.x : Work still in progress !

@@ -3,7 +3,7 @@
 """
 File Name : stools.py
 Creation Date : jeu. 01 mars 2018 15:09:06 CET
-Last Modified : jeu. 01 mars 2018 15:09:50 CET
+Last Modified : ven. 02 mars 2018 14:20:45 CET
 Created By : Cyril Desjouy
 
 Copyright © 2016-2018 Cyril Desjouy <ipselium@free.fr>
@@ -23,12 +23,12 @@ def WhoToDict(string):
     ''' Format output of daemon to a dictionnary '''
 
     variables = {}
-    for item in string.split('\n')[2:-1]:
+    for item in string.split('\n')[2:]:
         tmp = [j for j in item.split(' ') if j is not '']
-        var_name = tmp[0]
-        var_typ = tmp[1]
-        var_val = ' '.join(tmp[2:])
-        if var_typ != 'function':
+        if tmp:
+            var_name = tmp[0]
+            var_typ = tmp[1]
+            var_val = ' '.join(tmp[2:])
             variables[var_name] = {'value': var_val, 'type': var_typ}
     return variables
 

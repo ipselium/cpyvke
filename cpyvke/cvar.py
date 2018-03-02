@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : jeu. 01 mars 2018 22:44:04 CET
+# Last Modified : ven. 02 mars 2018 00:35:09 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -28,6 +28,7 @@ from builtins import object
 from .inspector import Inspect
 from .cwidgets import Viewer, WarningMsg
 from .kd5 import send_msg
+
 
 logger = logging.getLogger('cpyvke.cvar')
 

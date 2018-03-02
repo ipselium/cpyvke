@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : jeu. 01 mars 2018 22:01:55 CET
+# Last Modified : ven. 02 mars 2018 00:33:05 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -31,7 +31,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 import locale
 
-# Personal Libs
 from .cvar import MenuVar
 from .ckernel import MenuKernel
 from .cwidgets import WarningMsg, Help
@@ -39,7 +38,6 @@ from .ctools import FormatCell, TypeSort, FilterVarLst
 from .ktools import connect_kernel, print_kernel_list
 from .stools import WhoToDict, recv_msg, send_msg
 from .config import cfg_setup
-
 
 
 locale.setlocale(locale.LC_ALL, '')
@@ -437,7 +435,7 @@ class MainWin(object):
             while self.close_signal == 'continue':
                 self.UpdateCurses()
             self.ShutdownApp()
-        except Exception as err:
+        except Exception:
             self.ExitWithError()
 
     def UpdateCurses(self):

@@ -3,7 +3,7 @@
 #
 # File Name : ctools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : jeu. 01 mars 2018 11:32:15 CET
+# Last Modified : ven. 02 mars 2018 00:34:40 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
