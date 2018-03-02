@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : jeu. 01 mars 2018 11:39:19 CET
+# Last Modified : ven. 02 mars 2018 15:57:05 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -39,7 +39,7 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/"):
     ''' Start a new kernel and return the kernel_id '''
 
     with open(LogDir + 'LastKernel', "w") as f:
-        subprocess.Popen(["ipython", "kernel"], stdout=f)
+        subprocess.Popen(["ipython3", "kernel"], stdout=f)
 
     sleep(1)
     with open(LogDir + 'LastKernel', "r") as f:
