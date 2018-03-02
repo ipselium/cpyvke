@@ -128,13 +128,14 @@ If you just want to test cpyvke without installing. In cpyvke/ directory :
 * and launch ipython in another console : `python3 -m cpyvke.launch`
 
 
-## Known Bugs and TODO list
+## Known Bugs
 
 *cpyvke* is still in developpement and may present unexpected behavior !
 
 * Issue when shutting down client : whatever user choice, server is killed
-* Fix lockfile creation
 * cpyvke : crash when "brutal" resize
-* cpyvke : Kernel manager (restart dead kernel ?)
-* Kernel options (extra_arguments=["--matplotlib='inline'"])
-* Compatibility python 3.x : Work still in progress !
+
+## TODO
+
+* cpyvke : Kernel manager : implement dead kernel restart
+* Kernel options : extra_arguments=["--matplotlib='inline'"]
