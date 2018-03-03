@@ -4,7 +4,7 @@ Curses PYthon Variable and Kernel Explorer
 ![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/array.png)
 
 
-cpyvke is **still in development** : A lot of bugs are still there !
+cpyvke is **still in development** : A lot of bugs are definitely there !
 
 Note that this version only works with Python 3.x.
 The Python 2.7 version is no longer maintened !
@@ -68,6 +68,15 @@ Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
 
 `powerline-font = True`
 
+### Python kernel version
+
+The cpyvke/kd5 duo handles python 2.x or 3.x kernel equally. To setup the Python kernel you'll want to use :
+
+`[kernel version]`
+
+`version = 3`
+
+The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 
 - - -
 

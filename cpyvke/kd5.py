@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : jeu. 01 mars 2018 22:03:55 CET
+# Last Modified : sam. 03 mars 2018 23:45:07 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -317,7 +317,7 @@ class Daemonize(Daemon):
         WK.join()
 
 
-def ParseArgs(lockfile, pidfile):
+def ParseArgs(lockfile, pidfile, Config):
     ''' Parse arguments. '''
 
     parser = argparse.ArgumentParser()
@@ -335,7 +335,7 @@ def ParseArgs(lockfile, pidfile):
             sys.stderr.write(message % pidfile)
             sys.exit(1)
         else:
-            kernel_id = StartAction(args, lockfile)
+            kernel_id = StartAction(args, lockfile, Config)
 
     # Stop action
     elif args.action == 'stop':
@@ -353,7 +353,7 @@ def ParseArgs(lockfile, pidfile):
     return args, kernel_id
 
 
-def StartAction(args, lockfile):
+def StartAction(args, lockfile, Config):
     ''' Start Parser action. '''
 
     if args.integer:
@@ -370,9 +370,9 @@ def StartAction(args, lockfile):
             sys.exit(2)
     else:
         sys.stdout.write('Creating kernel...\n')
-        kernel_id = start_new_kernel()
-        message = 'Kernel id %s created\n'
-        sys.stdout.write(message % kernel_id)
+        kernel_id = start_new_kernel(version=Config['kernel version']['version'])
+        message = 'Kernel id {} created (Python {})\n'
+        sys.stdout.write(message.format(kernel_id, Config['kernel version']['version']))
         with open(lockfile, "w") as f:
             f.write(kernel_id)
 
@@ -433,7 +433,7 @@ def main(args=None):
     logger.addHandler(handler)
 
     # Parse Arguments
-    args, kernel_id = ParseArgs(lockfile, pidfile)
+    args, kernel_id = ParseArgs(lockfile, pidfile, Config)
 
     sport = int(Config['comm']['s-port'])
     rport = int(Config['comm']['r-port'])

@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : ven. 02 mars 2018 00:33:05 CET
+# Last Modified : dim. 04 mars 2018 00:50:03 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -1050,6 +1050,10 @@ def missing(lockfile, pidfile):
 def main(args=None):
     ''' Launch cpyvke. '''
 
+    # Parse Config
+    cfg = cfg_setup()
+    Config = cfg.RunCfg()
+
     # Define Paths
     logdir = os.path.expanduser('~') + '/.cpyvke/'
     lockfile = logdir + 'kd5.lock'
@@ -1065,10 +1069,6 @@ def main(args=None):
     formatter = logging.Formatter('%(asctime)s :: %(name)s :: %(threadName)s :: %(levelname)s :: %(message)s', datefmt='%Y-%m-%d - %H:%M:%S')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-
-    # Parse Config
-    cfg = cfg_setup()
-    Config = cfg.RunCfg()
 
     # Parse arguments
     args, cf = ParseArgs(lockfile, pidfile)

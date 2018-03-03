@@ -3,7 +3,7 @@
 #
 # File Name : cfg_test.py
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : ven. 02 mars 2018 00:33:52 CET
+# Last Modified : dim. 04 mars 2018 00:47:51 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -44,7 +44,7 @@ class cfg_setup(object):
         self.home = os.path.expanduser("~")
         self.path = self.home + '/.cpyvke/'
         # Check if config dir exists. If not create it.
-        if os.path.exists(self.path) is False:
+        if not os.path.exists(self.path):
             os.makedirs(self.path)
             print("Create configuration directory : " + str(self.path))
             sleep(0.5)
@@ -105,7 +105,10 @@ class cfg_setup(object):
         self.cfg.add_section('daemon')
         self.cfg.set('daemon', 'refresh', 0.1)
 
-        with open(self.path + 'cpyvke.conf', 'wb') as configfile:
+        self.cfg.add_section('kernel version')
+        self.cfg.set('kernel version', 'version', '3')
+
+        with open(self.path + 'cpyvke.conf', 'w') as configfile:
             self.cfg.write(configfile)
 
     def InitSaveDir(self):
@@ -139,6 +142,12 @@ class cfg_setup(object):
                 pwf = self.cfg.get('font', 'powerline-font')
             else:
                 pwf = 'False'
+
+            # KERNEL VERSION
+            if self.cfg.has_option('kernel version', 'version'):
+                kver = self.cfg.get('kernel version', 'version')
+            else:
+                kver = 3
 
             # Refresh delay
             if self.cfg.has_option('daemon', 'refresh'):
@@ -291,6 +300,7 @@ class cfg_setup(object):
                                   'dco': br_dco},
                            'path': {'save-dir': self.SaveDir},
                            'font': {'pw-font': pwf},
+                           'kernel version': {'version': kver},
                            'comm': {'s-port': sport,
                                     'r-port': rport},
                            'daemon': {'refresh': delay}}

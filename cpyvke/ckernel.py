@@ -3,7 +3,7 @@
 #
 # File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 01 mars 2018 22:04:19 CET
+# Last Modified : sam. 03 mars 2018 23:43:08 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -329,9 +329,10 @@ class MenuKernel(object):
     def StartNewKernel(self):
         ''' Create a new kernel. '''
 
-        kid = start_new_kernel()
+        kid = start_new_kernel(version=self.Config['kernel version']['version'])
         msg = WarningMsg(self.stdscreen)
-        msg.Display('Kernel id ' + kid + ' created')
+        msg.Display('Kernel id {} created (Python {})'.format(kid,
+                    self.Config['kernel version']['version']))
 
     def ShutdownKernel(self):
         ''' Kill kernel. '''

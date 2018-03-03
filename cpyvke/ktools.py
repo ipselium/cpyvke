@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : ven. 02 mars 2018 15:57:05 CET
+# Last Modified : dim. 04 mars 2018 00:04:54 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -35,11 +35,14 @@ def ProcInfo(init=0):
     return mem
 
 
-def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/"):
+def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
     ''' Start a new kernel and return the kernel_id '''
 
     with open(LogDir + 'LastKernel', "w") as f:
-        subprocess.Popen(["ipython3", "kernel"], stdout=f)
+        if version == '2':
+            subprocess.Popen(["ipython", "kernel"], stdout=f)
+        else:
+            subprocess.Popen(["ipython3", "kernel"], stdout=f)
 
     sleep(1)
     with open(LogDir + 'LastKernel', "r") as f:
