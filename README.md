@@ -90,6 +90,10 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 
 ## Quick Start
 
+To start working, just launch cpyvke in a console. It will create a new kernel, start the daemon and launch the client !
+
+## Manuals
+
 ### kd5 : The Daemon
 
 *Usage: kd5 {start|stop|restart|list} [INTEGER]*
