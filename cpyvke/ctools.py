@@ -3,7 +3,7 @@
 #
 # File Name : ctools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : ven. 02 mars 2018 00:34:40 CET
+# Last Modified : dim. 04 mars 2018 12:23:48 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -43,39 +43,40 @@ def TypeSort(lst):
     return [item[0] for item in types]
 
 
-def FormatCell(variables, string, max_width):
+def FormatCell(variables, name, max_width):
     ''' Format cells for display '''
 
-    max_width = int((max_width-5)/5)
-    name = string.ljust(2*max_width)
-    typ = '[' + variables[string]['type'] + ']'
-    typ = typ.ljust(max_width)
+    max_width = int((max_width-7)/5)
+    typ = '[' + variables[name]['type'] + ']'
 
     # Only display module name
-    if 'module' in variables[string]['value']:
-        val = variables[string]['value'].split("'")[1]
-        val = val.ljust(2*max_width)
+    if 'module' in variables[name]['value']:
+        val = variables[name]['value'].split("'")[1]
 
     # Only display dimensions of array
-    elif 'elem' in variables[string]['value']:
-        val1 = variables[string]['value'].split(":")[0]
-        val2 = variables[string]['value'].split("`")[1]
+    elif 'elem' in variables[name]['value']:
+        val1 = variables[name]['value'].split(":")[0]
+        val2 = variables[name]['value'].split("`")[1]
         val = val1 + ' [' + val2 + ']'
-        val = val.ljust(2*max_width)
     else:
         # Repr to avoid interpreting \n in strings
-        val = repr(variables[string]['value']).split("'")[1].ljust(2*max_width)
+        val = variables[name]['value']
 
+    # Check length of each entry
     if len(val) > 2*max_width:
-        val = val[0:max_width-4] + '... '
+        val = val[0:2*max_width-4] + '... '
 
     if len(name) > 2*max_width:
-        name = name[0:max_width-4] + '... '
+        name = name[0:2*max_width-4] + '... '
 
     if len(typ) > max_width:
         typ = typ[0:max_width-4] + '... '
 
-    return ''.join([name[0:2*max_width], val[0:2*max_width],  typ[0:max_width]])
+    s = "{:{wname}} {:{wval}} {:{wtype}}".format(name, val, typ,
+                                                 wname=2*max_width,
+                                                 wval=2*max_width,
+                                                 wtype=max_width)
+    return s
 
 
 def dump(obj, nested_level=0, output=[]):
