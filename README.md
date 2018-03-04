@@ -1,3 +1,5 @@
+- - -
+
 # cpyvke
 Curses PYthon Variable and Kernel Explorer
 
@@ -92,6 +94,8 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 
 To start working, just launch cpyvke in a console. It will create a new kernel, start the daemon and launch the client !
 
+- - -
+
 ## Manuals
 
 ### kd5 : The Daemon
@@ -140,6 +144,7 @@ If you just want to test cpyvke without installing. In cpyvke/ directory :
 * then launch cpyvke : `python3 -m cpyvke.cpyvke`
 * and launch ipython in another console : `python3 -m cpyvke.launch`
 
+- - -
 
 ## Known Bugs
 
@@ -147,6 +152,8 @@ If you just want to test cpyvke without installing. In cpyvke/ directory :
 
 * Issue when shutting down client : whatever user choice, server is killed
 * cpyvke : crash when "brutal" resize
+
+- - -
 
 ## TODO
 
