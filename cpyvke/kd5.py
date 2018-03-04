@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : sam. 03 mars 2018 23:45:07 CET
+# Last Modified : dim. 04 mars 2018 16:33:50 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -79,10 +79,10 @@ class Watcher(threading.Thread):
 
         logger.info('++++++++++++++++++++++++++++')
         logger.info('Daemon started !')
-        logger.info('Delay set to %s s.', str(self.delay))
-        logger.info('Kernel : %s', str(self.kc.connection_file))
-        logger.info('Streaming on %s', str(sport))
-        logger.info('Listening on %s', str(rport))
+        logger.info('Delay set to {} s.'.format(self.delay))
+        logger.info('Kernel : {}'.format(self.kc.connection_file))
+        logger.info('Streaming on {}'.format(sport))
+        logger.info('Listening on {}'.format(rport))
         logger.info('++++++++++++++++++++++++++++')
 
         # Init variables
@@ -157,8 +157,13 @@ class Watcher(threading.Thread):
             self.variables = self.Exec('whos')
             # Send to CUI
             if self.client_main:
-                send_msg(self.client_main, self.variables)
-                logger.info('Variable list sent to client')
+                try:
+                    send_msg(self.client_main, self.variables)
+                except:
+                    logger.info("Client is disconnected from main socket!")
+                    self.client_main = None
+                else:
+                    logger.info('Variable list sent to client')
 
     def Pause(self):
         ''' Pause streamer when client has a request. '''
@@ -179,7 +184,7 @@ class Watcher(threading.Thread):
         while self.kc.iopub_channel.msg_ready():
             data = self.kc.get_iopub_msg(timeout=0.1)
 
-            logger.debug('%s %s', data['msg_type'], data['content'])
+            logger.debug('{} {}'.format(data['msg_type'], data['content']))
 
             # Wait for answer when execute reset
             if data['msg_type'] == 'execute_input':
@@ -212,7 +217,7 @@ class Watcher(threading.Thread):
             data = self.kc.get_iopub_msg()
             if data['msg_type'] == 'stream' and code == 'whos':
                 value = data['content']['text']
-                logger.debug('Execute result :\n %s', data['content']['text'])
+                logger.debug('Execute result :\n {}'.format(data['content']['text']))
 
             elif data['msg_type'] == 'execute_result' and code != 'whos':
                 value = data['content']['data']['text/plain']
@@ -229,8 +234,8 @@ class Watcher(threading.Thread):
 
         try:
             self.client_main, address = self.MainSock.accept()
-            logger.info("%s connected to main socket", format(address))
-        except:
+            logger.info("{} connected to main socket".format(address))
+        except BlockingIOError:
             pass
         else:
             send_msg(self.client_main, self.variables)
@@ -240,8 +245,8 @@ class Watcher(threading.Thread):
 
         try:
             self.client_request, address = self.RequestSock.accept()
-            logger.info("%s connected to request socket", format(address))
-        except:
+            logger.info("{} connected to request socket".format(address))
+        except BlockingIOError:
             pass
 
     def KernelChange(self, cf):
@@ -251,20 +256,29 @@ class Watcher(threading.Thread):
         # Force update
         self.variables = self.Exec('whos')
         # Send to CUI
-        send_msg(self.client_main, self.variables)
+        try:
+            send_msg(self.client_main, self.variables)
+        except:
+            logger.info("Client is disconnected from main socket!")
+            self.client_main = None
 
     def ClientRequestSocket(self):
         ''' Listen to sock request :
             handle kernel changes | exec code | stop signal. '''
 
-        tmp = recv_msg(self.client_request).decode('utf8')
+        try:
+            tmp = recv_msg(self.client_request).decode('utf8')
+        except AttributeError:
+            tmp = None
+            self.client_request = None
+            logger.info("Client is disconnected from request socket!")
 
         if tmp:
 
             self._pause.set()
             sleep(self.delay)
             logger.info('Request from client')
-            logger.debug('Execute :\n %s', tmp)
+            logger.debug('Execute :\n {}'.format(tmp))
 
             if '<cf>' in tmp:
                 cf = tmp.split('<cf>')[1]
@@ -331,8 +345,8 @@ def ParseArgs(lockfile, pidfile, Config):
     # Start action
     if args.action == 'start':
         if os.path.exists(pidfile):
-            message = "pidfile %s already exist. Daemon already running?\n"
-            sys.stderr.write(message % pidfile)
+            message = "pidfile {} already exist. Daemon already running?\n"
+            sys.stderr.write(message.format(pidfile))
             sys.exit(1)
         else:
             kernel_id = StartAction(args, lockfile, Config)
@@ -359,14 +373,14 @@ def StartAction(args, lockfile, Config):
     if args.integer:
         try:
             kernel_id = str(args.integer)
-            message = 'Connecting to kernel id. %s\n'
-            sys.stdout.write(message % kernel_id)
+            message = 'Connecting to kernel id. {}\n'
+            sys.stdout.write(message.format(kernel_id))
             find_connection_file(kernel_id)
             with open(lockfile, "w") as f:
                 f.write(kernel_id)
         except:
-            message = 'Error :\tCannot find kernel id. %s !\n\tExiting\n'
-            sys.stderr.write(message % args.integer)
+            message = 'Error :\tCannot find kernel id. {} !\n\tExiting\n'
+            sys.stderr.write(message.format(args.integer))
             sys.exit(2)
     else:
         sys.stdout.write('Creating kernel...\n')
@@ -386,12 +400,12 @@ def StopAction(lockfile):
         with open(lockfile, "r") as f:
             kernel_id = f.readline()
     except:
-        message = '%s not found. Daemon is not running. Try start action !\n'
-        sys.stderr.write(message % lockfile)
+        message = '{} not found. Daemon is not running. Try start action !\n'
+        sys.stderr.write(message.format(lockfile))
         sys.exit(2)
     else:
-        message = 'Disconnecting from kernel id. %s\n'
-        sys.stdout.write(message % kernel_id)
+        message = 'Disconnecting from kernel id. {}\n'
+        sys.stdout.write(message.format(kernel_id))
 
     if os.path.exists(lockfile):
         os.remove(lockfile)
@@ -406,8 +420,8 @@ def RestartAction(lockfile):
         with open(lockfile, "r") as f:
             return f.readline()
     except:
-        message = '%s not found. Daemon is not running. Try start action !\n'
-        sys.stderr.write(message % lockfile)
+        message = '{} not found. Daemon is not running. Try start action !\n'
+        sys.stderr.write(message.format(lockfile))
         sys.exit(2)
 
 
