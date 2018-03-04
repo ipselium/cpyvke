@@ -42,46 +42,6 @@ The Python 2.7 version is no longer maintened !
 
 - - -
 
-## Configuration
-
-A configuration file *cpyvke.conf* is created in `$HOME/.cpyvke/` at first startup. Appearance of the client can be customize (colors, font).
-
-### Colors
-
-The available colors are...
-
-* black
-* red
-* green
-* yellow
-* blue
-* magenta
-* cyan
-* white
-
-### Fonts
-
-cpyvke can also display powerline fonts. You can find them here :
-https://github.com/powerline/fonts.
-
-Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
-
-`[font]`
-
-`powerline-font = True`
-
-### Python kernel version
-
-The cpyvke/kd5 duo handles python 2.x or 3.x kernel equally. To setup the Python kernel you'll want to use :
-
-`[kernel version]`
-
-`version = 3`
-
-The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
-
-- - -
-
 ## Installation
 
 `git clone https://github.com/ipselium/cpyvke.git`
@@ -92,7 +52,13 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 
 ## Quick Start
 
-To start working, just launch cpyvke in a console. It will create a new kernel, start the daemon and launch the client !
+To start working, just launch `cpyvke` in a console. It will create a new kernel, start the daemon and launch the client :
+
+`cpyvke`
+
+You can also launch `cpyvke-launch-ipython` to open the current kernel :
+
+`cpyvke-launch-ipython`
 
 - - -
 
@@ -143,6 +109,47 @@ If you just want to test cpyvke without installing. In cpyvke/ directory :
 * launch kd5 first : `python3 -m cpyvke.kd5 start`
 * then launch cpyvke : `python3 -m cpyvke.cpyvke`
 * and launch ipython in another console : `python3 -m cpyvke.launch`
+
+- - -
+
+## Configuration
+
+A configuration file *cpyvke.conf* is created in `$HOME/.cpyvke/` at first startup. Appearance of the client can be customize (colors, font).
+
+### Colors
+
+The available colors are...
+
+* black
+* red
+* green
+* yellow
+* blue
+* magenta
+* cyan
+* white
+
+### Fonts
+
+cpyvke can also display powerline fonts. You can find them here :
+https://github.com/powerline/fonts.
+
+Add the following section in `$HOME/.cpyvke/cpyvke.conf`:
+
+`[font]`
+
+`powerline-font = True`
+
+### Python kernel version
+
+The cpyvke/kd5 duo handles python 2.x or 3.x kernel equally. To setup the Python kernel you'll want to use :
+
+`[kernel version]`
+
+`version = 3`
+
+The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
+
 
 - - -
 
