@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : dim. 04 mars 2018 20:38:29 CET
+# Last Modified : lun. 05 mars 2018 12:25:13 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -491,6 +491,7 @@ class MainWin(object):
             if self.pkey == 47:    # -> /
                 self.SearchVar()
                 try:
+                    logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
                     self.search_index = min([i for i, s in enumerate(self.strings) if self.search in s])
                 except ValueError:
                     Wmsg = WarningMsg(self.stdscreen)
@@ -543,7 +544,7 @@ class MainWin(object):
 
         elif self.mk_sort == 'filter':
             self.strings = FilterVarLst(self.variables, self.filter)
-            self.VarLst_wng = 'Filter : ' + str(self.filter) + ' (' + str(len(self.strings)) + ' obj.)'
+            self.VarLst_wng = 'Filter : ' + self.filter + ' (' + str(len(self.strings)) + ' obj.)'
 
         # Sort variable by name/type
         if self.pkey == 115:
@@ -594,7 +595,7 @@ class MainWin(object):
 
         curses.echo()
         menu_filter.addstr(2, 3, "Filter :", curses.A_BOLD | self.c_exp_txt)
-        self.filter = menu_filter.getstr(2, 14, 20)
+        self.filter = menu_filter.getstr(2, 14, 20).decode('utf-8')
         curses.noecho()
 
         panel_filter.hide()
@@ -625,7 +626,7 @@ class MainWin(object):
 
         curses.echo()
         menu_search.addstr(2, 3, "Search Variable :", curses.A_BOLD | self.c_exp_txt)
-        self.search = menu_search.getstr(2, 21, 20)
+        self.search = menu_search.getstr(2, 21, 20).decode('utf-8')
         curses.noecho()
 
         panel_search.hide()
