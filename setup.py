@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-#from distutils.core import setup
 
 import sys
 
@@ -23,8 +22,6 @@ setup(
     author_email='ipselium@free.fr',
     packages=find_packages(),
     include_package_data=True,
-#    packages=['cpyvke'],
-    py_modules=['cvar', 'ktools'],
     entry_points={
         'console_scripts': [
             'kd5 = cpyvke.kd5:main',
@@ -32,7 +29,7 @@ setup(
             'cpyvke-launch-ipython = cpyvke.launch:main',
         ],
     },
-    install_requires=["jupyter_client", "numpy", "matplotlib"],
+    install_requires=["jupyter_client", "ipykernel", "psutil", "numpy", "matplotlib"],
     license='BSD',
     description='A Kernel and variable explorer in Curses',
     long_description=__doc__,
