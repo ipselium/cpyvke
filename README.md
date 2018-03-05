@@ -3,7 +3,7 @@
 # cpyvke
 Curses PYthon Variable and Kernel Explorer
 
-![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/array.png)
+![A Basic Client](https://github.com/ipselium/cpyvke/blob/master/docs/pydev.png)
 
 
 cpyvke is **still in development** : A lot of bugs are definitely there !
@@ -114,6 +114,8 @@ If you just want to test cpyvke without installing. In cpyvke/ directory :
 
 ## Configuration
 
+![Configuration](https://github.com/ipselium/cpyvke/blob/master/docs/array.png)
+
 A configuration file *cpyvke.conf* is created in `$HOME/.cpyvke/` at first startup. Appearance of the client can be customize (colors, font).
 
 ### Colors
@@ -157,7 +159,6 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 
 *cpyvke* is still in developpement and may present unexpected behavior !
 
-* Issue when shutting down client : whatever user choice, server is killed
 * cpyvke : crash when "brutal" resize
 
 - - -

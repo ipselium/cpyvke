@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : dim. 04 mars 2018 00:50:03 CET
+# Last Modified : dim. 04 mars 2018 20:38:29 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -768,15 +768,17 @@ class MainWin(object):
             tmp = recv_msg(self.MainSock).decode('utf8')
         except BlockingIOError:
             pass
+        except OSError:     # If user disconnect cpyvke from socket
+            pass
         else:
-            if tmp is not None:
+            if tmp:
                 self.variables = WhoToDict(tmp)
                 logger.info('Variable list updated')
                 logger.debug('\n%s', tmp)
                 try:
                     # remove temporary file used by daemon from the list
                     del self.variables['fcpyvke0']
-                except:
+                except KeyError:
                     pass
 
     def CheckSocket(self):
@@ -785,7 +787,7 @@ class MainWin(object):
         try:
             send_msg(self.MainSock, '<TEST>')
             self.connected = True
-        except Exception:
+        except OSError:
             self.connected = False
 
     def ResizeCurses(self):
