@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : lun. 05 mars 2018 12:25:13 CET
+# Last Modified : lun. 05 mars 2018 12:35:35 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -767,9 +767,11 @@ class MainWin(object):
 
         try:
             tmp = recv_msg(self.MainSock).decode('utf8')
-        except BlockingIOError:
+        except BlockingIOError:     # If no message !
             pass
-        except OSError:     # If user disconnect cpyvke from socket
+        except OSError:             # If user disconnect cpyvke from socket
+            pass
+        except AttributeError:      # If kd5 is stopped
             pass
         else:
             if tmp:
