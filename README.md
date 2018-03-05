@@ -8,7 +8,7 @@ Curses PYthon Variable and Kernel Explorer
 
 cpyvke is a variable explorer and a kernel manager written in Python 3 ncurses
 for iPython kernels (Python 2.x or 3.x).
-cpyvke supports inpection of numpy ndarray among other, and provides a set of
+cpyvke supports inspection of numpy ndarray among others types, and provides a set of
 tools to visualize and plot data.
 
 Be aware that cpyvke is **still in development** : A lot of bugs are definitely there !
@@ -38,8 +38,9 @@ longer maintened !
 
 ## Requirement
 
-
-* python3-tk : install it with package manager
+* 256 colors terminal is preferred, but cpyvke also works with 8 colors terminals.
+* python3-tk : install it with your package manager
+* Tested with **python 3.5 only**
 
 - - -
 
@@ -51,9 +52,6 @@ longer maintened !
 * psutil (tested with 3.4.2)
 * numpy (tested with 1.13.0)
 * matplotlib (tested with 1.5.1)
-* 256 colors terminal is preferred, but cpyvke also works with 8 colors terminals.
-* Tested with **python 3.5 only**
-
 
 - - -
 
