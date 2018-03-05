@@ -3,7 +3,7 @@
 """
 File Name :
 Creation Date :
-Last Modified : ven. 02 mars 2018 16:00:58 CET
+Last Modified : lun. 05 mars 2018 17:54:38 CET
 Created By : Cyril Desjouy
 
 Copyright © 2016-2018 Cyril Desjouy <ipselium@free.fr>
@@ -20,9 +20,9 @@ import os
 
 
 def main():
-    '''
+    """
     launch ipython console.
-    '''
+    """
     logdir = os.path.expanduser('~') + '/.cpyvke/'
     lockfile = logdir + 'kd5.lock'
 

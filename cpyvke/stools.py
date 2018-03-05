@@ -3,7 +3,7 @@
 """
 File Name : stools.py
 Creation Date : jeu. 01 mars 2018 15:09:06 CET
-Last Modified : ven. 02 mars 2018 14:20:45 CET
+Last Modified : lun. 05 mars 2018 17:54:54 CET
 Created By : Cyril Desjouy
 
 Copyright © 2016-2018 Cyril Desjouy <ipselium@free.fr>
@@ -20,7 +20,7 @@ import struct
 
 
 def WhoToDict(string):
-    ''' Format output of daemon to a dictionnary '''
+    """ Format output of daemon to a dictionnary """
 
     variables = {}
     for item in string.split('\n')[2:]:
@@ -34,13 +34,13 @@ def WhoToDict(string):
 
 
 def send_msg(sock, msg):
-    ''' Prefix each message with a 4-byte length (network byte order) '''
+    """ Prefix each message with a 4-byte length (network byte order) """
     msg = struct.pack('>I', len(msg)) + msg.encode('utf8')
     sock.sendall(msg)
 
 
 def recv_msg(sock):
-    ''' Read message length and unpack it into an integer '''
+    """ Read message length and unpack it into an integer """
     raw_msglen = recv_all(sock, 4)
     if not raw_msglen:
         return None
@@ -50,7 +50,7 @@ def recv_msg(sock):
 
 
 def recv_all(sock, n):
-    ''' Helper function to recv n bytes or return None if EOF is hit '''
+    """ Helper function to recv n bytes or return None if EOF is hit """
     data = b''
     while len(data) < n:
         packet = sock.recv(n - len(data))

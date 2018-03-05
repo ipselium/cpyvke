@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : dim. 04 mars 2018 00:04:54 CET
+# Last Modified : lun. 05 mars 2018 17:54:09 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -36,7 +36,7 @@ def ProcInfo(init=0):
 
 
 def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
-    ''' Start a new kernel and return the kernel_id '''
+    """ Start a new kernel and return the kernel_id """
 
     with open(LogDir + 'LastKernel', "w") as f:
         if version == '2':
@@ -54,7 +54,7 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
 
 
 def is_runing(cf):
-    ''' Check if kernel is alive. '''
+    """ Check if kernel is alive. """
 
     kc = BlockingKernelClient()
     kc.load_connection_file(cf)
@@ -67,7 +67,7 @@ def is_runing(cf):
 
 
 def check_server(port):
-    ''' Check if a service is listening on port. '''
+    """ Check if a service is listening on port. """
 
     addr = [item.laddr for item in psutil.net_connections('inet') if str(port) in str(item.laddr[1])]
     if addr:
@@ -77,7 +77,7 @@ def check_server(port):
 
 
 def kernel_list(cf=None):
-    ''' List of connection files. '''
+    """ List of connection files. """
 
     path = '/run/user/1000/jupyter/'
     lstk = [path + item for item in os.listdir(path) if 'kernel' in item]
@@ -92,7 +92,7 @@ def kernel_list(cf=None):
 
 
 def print_kernel_list():
-    ''' Display kernel list. '''
+    """ Display kernel list. """
     klst = kernel_list()
     print('---------------| List of available kernels |---------------')
 
@@ -109,7 +109,7 @@ def print_kernel_list():
 
 
 def connect_kernel(cf):
-    ''' Connect a kernel. '''
+    """ Connect a kernel. """
 
     if is_runing(cf) is True:
         kc = BlockingKernelClient(connection_file=cf)
@@ -129,7 +129,7 @@ def connect_kernel(cf):
 
 
 def init_kernel(kc):
-    ''' init communication. '''
+    """ init communication. """
 
     kc.execute("import numpy as np", store_history=False)
     kc.execute("np.set_printoptions(threshold='nan')", store_history=False)
@@ -137,7 +137,7 @@ def init_kernel(kc):
 
 
 def shutdown_kernel(cf):
-    ''' Shutdown a kernel based on its connection file. '''
+    """ Shutdown a kernel based on its connection file. """
 
     km, kc = connect_kernel(cf)
     kc.shutdown()

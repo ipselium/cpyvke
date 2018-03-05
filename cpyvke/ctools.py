@@ -3,7 +3,7 @@
 #
 # File Name : ctools.py
 # Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : dim. 04 mars 2018 12:23:48 CET
+# Last Modified : lun. 05 mars 2018 17:46:44 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -19,7 +19,7 @@ import curses
 
 
 def FilterVarLst(lst, filter):
-    ''' Filter variable list (name|type). '''
+    """ Filter variable list (name|type). """
 
     filtered = []
     for key in list(lst):
@@ -30,7 +30,7 @@ def FilterVarLst(lst, filter):
 
 
 def TypeSort(lst):
-    ''' Sort variable by type. '''
+    """ Sort variable by type. """
 
     from operator import itemgetter
 
@@ -44,7 +44,7 @@ def TypeSort(lst):
 
 
 def FormatCell(variables, name, max_width):
-    ''' Format cells for display '''
+    """ Format cells for display """
 
     max_width = int((max_width-7)/5)
     typ = '[' + variables[name]['type'] + ']'
@@ -80,7 +80,7 @@ def FormatCell(variables, name, max_width):
 
 
 def dump(obj, nested_level=0, output=[]):
-    ''' Format dict, list and tuples variables for displaying. '''
+    """ Format dict, list and tuples variables for displaying. """
 
     if nested_level == 0:
         output = []

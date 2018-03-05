@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : ven. 02 mars 2018 00:35:09 CET
+# Last Modified : lun. 05 mars 2018 17:47:29 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -34,7 +34,7 @@ logger = logging.getLogger('cpyvke.cvar')
 
 
 class MenuVar(object):
-    ''' Class to handle variable menus. '''
+    """ Class to handle variable menus. """
 
     def __init__(self, parent):
 
@@ -133,18 +133,20 @@ class MenuVar(object):
         return self.is_menu
 
     def Display(self):
-        ''' Display general menu in a panel. '''
+        """ Display general menu in a panel. """
 
         self.panel_menu.top()        # Push the panel to the bottom of the stack
         self.panel_menu.show()       # Display the panel
         self.menu.clear()
         self.menu.border(0)
         if self.Config['font']['pw-font'] == 'True':
-            self.menu.addstr(0, int((self.menu_width-len(self.menu_title) - 4)/2), '', self.c_exp_pwf | curses.A_BOLD)
+            self.menu.addstr(0, int((self.menu_width-len(self.menu_title) - 4)/2),
+                             '', self.c_exp_pwf | curses.A_BOLD)
             self.menu.addstr(' ' + self.menu_title + ' ', self.c_exp_ttl | curses.A_BOLD)
             self.menu.addstr('', self.c_exp_pwf | curses.A_BOLD)
         else:
-            self.menu.addstr(0, int((self.menu_width-len(self.menu_title) - 4)/2), '| ' + self.menu_title + ' |', self.c_exp_ttl | curses.A_BOLD)
+            self.menu.addstr(0, int((self.menu_width-len(self.menu_title) - 4)/2),
+                             '| ' + self.menu_title + ' |', self.c_exp_ttl | curses.A_BOLD)
 
         menukey = -1
         while menukey not in (27, 113):
@@ -187,7 +189,7 @@ class MenuVar(object):
         self.panel_menu.hide()
 
     def Wait(self, parent):
-        ''' Wait for variable value. '''
+        """ Wait for variable value. """
 
         i = 0
         spinner = [['.', 'o', 'O', 'o'],
@@ -218,7 +220,8 @@ class MenuVar(object):
         ti = time()
         while os.path.exists(self.filename) is False:
             sleep(0.05)
-            self.stdscreen.addstr(parent.position - (parent.page-1)*parent.row_max + 1, 2, spinner[i], self.c_exp_txt | curses.A_BOLD)
+            self.stdscreen.addstr(parent.position - (parent.page-1)*parent.row_max + 1,
+                                  2, spinner[i], self.c_exp_txt | curses.A_BOLD)
 
             self.stdscreen.refresh()
             if i < len(spinner) - 1:
@@ -232,7 +235,7 @@ class MenuVar(object):
         self.stdscreen.refresh()
 
     def Navigate(self, n, size):
-        ''' Navigate through the general menu. '''
+        """ Navigate through the general menu. """
 
         self.menuposition += n
         if self.menuposition < 0:
@@ -241,7 +244,7 @@ class MenuVar(object):
             self.menuposition = size-1
 
     def CreateMenuLst(self):
-        ''' Create the item list for the general menu. '''
+        """ Create the item list for the general menu. """
 
         if self.varval == '[Busy]':
             return [('Busy', ' ')]
@@ -268,7 +271,7 @@ class MenuVar(object):
             return []
 
     def MenuSave(self):
-        ''' Create the save menu. '''
+        """ Create the save menu. """
 
         # Init Menu
         save_menu = self.stdscreen.subwin(5, 6, self.menu_height, self.screen_width-9)

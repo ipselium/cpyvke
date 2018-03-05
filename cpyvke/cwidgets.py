@@ -3,7 +3,7 @@
 #
 # File Name : cwidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : jeu. 01 mars 2018 22:03:27 CET
+# Last Modified : lun. 05 mars 2018 17:49:13 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -30,7 +30,7 @@ code = locale.getpreferredencoding()
 
 
 class Viewer(object):
-    ''' Display variable content in a pad. '''
+    """ Display variable content in a pad. """
 
     def __init__(self, parent):
 
@@ -68,14 +68,16 @@ class Viewer(object):
 
         # Viewer title
         if self.Config['font']['pw-font'] == 'True':
-            self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '', self.c_exp_pwf | curses.A_BOLD)
+            self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
+                                    '', self.c_exp_pwf | curses.A_BOLD)
             self.menu_viewer.addstr(self.menu_title, self.c_exp_ttl | curses.A_BOLD)
             self.menu_viewer.addstr('', self.c_exp_pwf | curses.A_BOLD)
         else:
-            self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '|' + self.menu_title + '|', self.c_exp_ttl | curses.A_BOLD)
+            self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
+                                    '|' + self.menu_title + '|', self.c_exp_ttl | curses.A_BOLD)
 
     def Display(self):
-        ''' Create pad to display variable content. '''
+        """ Create pad to display variable content. """
 
         menukey = -1
         padpos = 0
@@ -110,7 +112,7 @@ class Viewer(object):
 
 
 class WarningMsg(object):
-    ''' Display a message. '''
+    """ Display a message. """
 
     def __init__(self, stdscreen):
 
@@ -122,7 +124,7 @@ class WarningMsg(object):
         self.c_warn_bdr = curses.color_pair(2)
 
     def Display(self, wng_msg):
-        ''' Display **wng_msg** in a panel. '''
+        """ Display **wng_msg** in a panel. """
 
         # Init Menu
         wng_width = len(wng_msg) + 2
@@ -147,7 +149,7 @@ class WarningMsg(object):
 
 
 class Help(object):
-    ''' Display help in a pad. '''
+    """ Display help in a pad. """
 
     def __init__(self, parent):
 
@@ -192,14 +194,16 @@ class Help(object):
 
         # Help Title
         if self.Config['font']['pw-font'] == 'True':
-            self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '', self.c_main_pwf | curses.A_BOLD)
+            self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
+                                  '', self.c_main_pwf | curses.A_BOLD)
             self.menu_help.addstr(self.menu_title, self.c_main_ttl | curses.A_BOLD)
             self.menu_help.addstr('', self.c_main_pwf | curses.A_BOLD)
         else:
-            self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2), '|' + self.menu_title + '|', self.c_main_ttl | curses.A_BOLD)
+            self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
+                                  '|' + self.menu_title + '|', self.c_main_ttl | curses.A_BOLD)
 
     def Display(self):
-        ''' Display pad. '''
+        """ Display pad. """
 
         menukey = -1
         padpos = 0

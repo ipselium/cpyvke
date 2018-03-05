@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : jeu. 01 mars 2018 22:02:56 CET
+# Last Modified : lun. 05 mars 2018 17:52:00 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -31,7 +31,7 @@ code = locale.getpreferredencoding()
 
 
 def In_Thread(Func):
-    ''' Run Func in thread '''
+    """ Run Func in thread """
     def run(*k, **kw):
         t = Process(target=Func, args=k, kwargs=kw)
         t.start()
@@ -40,7 +40,7 @@ def In_Thread(Func):
 
 
 class Inspect(object):
-    ''' Plot/Display variable. '''
+    """ Plot/Display variable. """
 
     def __init__(self, varval, varname, vartype):
 
@@ -50,7 +50,7 @@ class Inspect(object):
 
     @In_Thread
     def Plot2D(self):
-        ''' Plot 2D variable. '''
+        """ Plot 2D variable. """
 
         figure()
         imshow(self.varval)
@@ -58,7 +58,7 @@ class Inspect(object):
 
     @In_Thread
     def Plot1D(self):
-        ''' Plot 1D variable. '''
+        """ Plot 1D variable. """
 
         figure()
         plot(self.varval)
@@ -66,7 +66,7 @@ class Inspect(object):
 
     @In_Thread
     def Plot1Dcols(self):
-        ''' Plot 2D variable : superimpose all columns '''
+        """ Plot 2D variable : superimpose all columns """
 
         figure()
         for i in range(shape(self.varval)[1]):
@@ -75,7 +75,7 @@ class Inspect(object):
 
     @In_Thread
     def Plot1Dlines(self):
-        ''' Plot 2D variable : superimpose all lines '''
+        """ Plot 2D variable : superimpose all lines """
 
         figure()
         for i in range(shape(self.varval)[0]):
@@ -83,7 +83,7 @@ class Inspect(object):
         show()
 
     def SaveNP(self, varname, SaveDir, METHOD='npy'):
-        ''' Save numpy variable to file '''
+        """ Save numpy variable to file """
 
         if METHOD == 'txt':
             savetxt(SaveDir + varname + '.txt', self.varval)
@@ -95,7 +95,7 @@ class Inspect(object):
             savez_compressed(SaveDir + varname, var=self.varval)
 
     def Save(self, SaveDir):
-        ''' Save variable to text file '''
+        """ Save variable to text file """
 
         filename = SaveDir + self.varname
 
@@ -111,10 +111,10 @@ class Inspect(object):
                 f.write(self.varval)
 
     def Display(self, app='less', Arg='Help'):
-        '''
+        """
         Display variable using **App** (less|vim).
         If a module is provided, use **Arg** to choose wich methode to use.
-        '''
+        """
 
         filename = '/tmp/tmp_cVKE'
 
@@ -141,8 +141,7 @@ class Inspect(object):
 
 
 def manual(module, filename):
-    ''' Display help of a module. '''
+    """ Display help of a module. """
 
     sys.stdout = open(filename, 'w')
     print(help(module))
-

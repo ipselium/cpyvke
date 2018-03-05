@@ -3,7 +3,7 @@
 #
 # File Name : cmain.py
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : lun. 05 mars 2018 12:35:35 CET
+# Last Modified : lun. 05 mars 2018 23:04:45 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -46,7 +46,7 @@ logger = logging.getLogger("cpyvke")
 
 
 class MainWin(object):
-    ''' Main window. '''
+    """ Main window. """
 
     def __init__(self, kc, cf, Config, DEBUG=False):
 
@@ -73,13 +73,13 @@ class MainWin(object):
         curses.noecho()             # Wont print the input
         curses.cbreak()             #
         curses.curs_set(0)          #
-        curses.halfdelay(self.curse_delay)         # How many tenths of a second are waited to refresh stdscreen, from 1 to 255
-
+        # How many tenths of second are waited to refresh screen, from 1 to 255
+        curses.halfdelay(self.curse_delay)
         # Colors
         self.InitColors()
         self.ColorDef()
         self.stdscreen.bkgd(self.c_main_txt)
-        self.stdscreen.attrset(self.c_main_bdr | curses.A_BOLD)  # Change border color
+        self.stdscreen.attrset(self.c_main_bdr | curses.A_BOLD)  # border color
 
         # Min terminal size allowed
         if self.DEBUG:
@@ -106,12 +106,13 @@ class MainWin(object):
 
         # Init Variable Box
         self.row_max = self.screen_height-self.kernel_info  # max number of rows
-        self.VarLst = curses.newwin(self.row_max+2, self.screen_width-2, 1, 1)  # (heigh, width, begin_y, begin_x)
+        # newwin(heigh, width, begin_y, begin_x)
+        self.VarLst = curses.newwin(self.row_max+2, self.screen_width-2, 1, 1)
         self.VarLst.bkgd(self.c_exp_txt)
-        self.VarLst.attrset(self.c_exp_bdr | curses.A_BOLD)  # Change border color
+        self.VarLst.attrset(self.c_exp_bdr | curses.A_BOLD)  # border color
 
     def CloseMainSocket(self):
-        ''' Close Main socket. '''
+        """ Close Main socket. """
 
         try:
             self.MainSock.close()
@@ -121,7 +122,7 @@ class MainWin(object):
             pass
 
     def CloseRequestSocket(self):
-        ''' Close Request socket. '''
+        """ Close Request socket. """
 
         try:
             self.RequestSock.close()
@@ -131,7 +132,7 @@ class MainWin(object):
             pass
 
     def InitMainSocket(self):
-        ''' Init Main Socket. '''
+        """ Init Main Socket. """
 
         try:
             hote = "localhost"
@@ -144,7 +145,7 @@ class MainWin(object):
             logger.error('Connection to stream socket failed :\n{}'.format(err))
 
     def InitRequestSocket(self):
-        ''' Init Request Socket. '''
+        """ Init Request Socket. """
 
         try:
             hote = "localhost"
@@ -157,7 +158,7 @@ class MainWin(object):
             logger.error('Connection to stream socket failed : {}'.format(err))
 
     def RestartSocketConnection(self):
-        ''' Stop then start connection to sockets. '''
+        """ Stop then start connection to sockets. """
 
         Wmsg = WarningMsg(self.stdscreen)
         Wmsg.Display(' Restarting connection ')
@@ -167,7 +168,7 @@ class MainWin(object):
         self.InitRequestSocket()
 
     def WngSock(self):
-        ''' Check connection and display warning. '''
+        """ Check connection and display warning. """
 
         Wmsg = WarningMsg(self.stdscreen)
         self.CheckSocket()
@@ -177,7 +178,7 @@ class MainWin(object):
             Wmsg.Display(' Disconnected from socket ')
 
     def EvalColor(self, color):
-        ''' Check if a color is set to transparent. '''
+        """ Check if a color is set to transparent. """
 
         if color == 'transparent':
             curses.use_default_colors()
@@ -192,7 +193,7 @@ class MainWin(object):
             return eval('curses.COLOR_' + color.upper())
 
     def InitColors(self):
-        ''' Initialize colors. '''
+        """ Initialize colors. """
 
         curses.start_color()        #
         curses.setupterm()
@@ -390,7 +391,7 @@ class MainWin(object):
             curses.init_pair(46, mnbdr_fg, mnbdr_bg)
 
     def ColorDef(self):
-        ''' Color variables. '''
+        """ Color variables. """
 
         self.c_warn_txt = curses.color_pair(1)
         self.c_warn_bdr = curses.color_pair(2)
@@ -428,7 +429,7 @@ class MainWin(object):
         self.c_bar_kn_pwfd = curses.color_pair(40)
 
     def run(self):
-        ''' Run daemon '''
+        """ Run daemon """
         try:
             self.GetVars()    # Init Variables
             self.pkey = -1    # Init pressed Key
@@ -439,7 +440,7 @@ class MainWin(object):
             self.ExitWithError()
 
     def UpdateCurses(self):
-        ''' Update Curses '''
+        """ Update Curses """
 
         # Listen to resize and adapt Curses
         self.ResizeCurses()
@@ -534,7 +535,7 @@ class MainWin(object):
                 self.MenuClose()
 
     def ArangeVarLst(self):
-        ''' Organize/Arange variable list. '''
+        """ Organize/Arange variable list. """
 
         if self.mk_sort == 'name':
             self.strings = sorted(list(self.variables))
@@ -571,7 +572,7 @@ class MainWin(object):
         self.row_num = len(self.strings)
 
     def FilterVar(self):
-        ''' Apply filter for the variable list'''
+        """ Apply filter for the variable list"""
 
         # Init Menu
         menu_filter = self.stdscreen.subwin(self.row_max+2, self.screen_width-2, 1, 1)
@@ -591,7 +592,8 @@ class MainWin(object):
             menu_filter.addstr(self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
             menu_filter.addstr('', self.c_exp_pwf)
         else:
-            menu_filter.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
+            menu_filter.addstr(0, int((self.screen_width-len(self.VarLst_name))/2),
+                               '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
 
         curses.echo()
         menu_filter.addstr(2, 3, "Filter :", curses.A_BOLD | self.c_exp_txt)
@@ -602,7 +604,7 @@ class MainWin(object):
         curses.halfdelay(self.curse_delay)  # Relaunch autorefresh !
 
     def SearchVar(self):
-        ''' Search an object in the variable list'''
+        """ Search an object in the variable list"""
 
         # Init Menu
         menu_search = self.stdscreen.subwin(self.row_max+2, self.screen_width-2, 1, 1)
@@ -618,11 +620,13 @@ class MainWin(object):
         menu_search.attrset(self.c_exp_bdr | curses.A_BOLD)  # Change border color
         menu_search.border(0)
         if self.Config['font']['pw-font'] == 'True':
-            menu_search.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '', self.c_exp_pwf)
+            menu_search.addstr(0, int((self.screen_width-len(self.VarLst_name))/2),
+                               '', self.c_exp_pwf)
             menu_search.addstr(self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
             menu_search.addstr('', self.c_exp_pwf)
         else:
-            menu_search.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
+            menu_search.addstr(0, int((self.screen_width-len(self.VarLst_name))/2),
+                               '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
 
         curses.echo()
         menu_search.addstr(2, 3, "Search Variable :", curses.A_BOLD | self.c_exp_txt)
@@ -633,7 +637,7 @@ class MainWin(object):
         curses.halfdelay(self.curse_delay)  # Relaunch autorefresh !
 
     def UpdateStatic(self):
-        ''' Update all static windows. '''
+        """ Update all static windows. """
 
         # Erase all windows
         self.VarLst.erase()
@@ -657,15 +661,17 @@ class MainWin(object):
         self.VarLst.refresh()
 
     def UpdateVarLst(self):
-        ''' Update the list of variables display '''
+        """ Update the list of variables display """
 
         # Title
         if self.Config['font']['pw-font'] == 'True':
-            self.VarLst.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '', self.c_exp_pwf | curses.A_BOLD)
+            self.VarLst.addstr(0, int((self.screen_width-len(self.VarLst_name))/2),
+                               '', self.c_exp_pwf | curses.A_BOLD)
             self.VarLst.addstr(self.VarLst_name, self.c_exp_ttl | curses.A_BOLD)
             self.VarLst.addstr('', self.c_exp_pwf | curses.A_BOLD)
         else:
-            self.VarLst.addstr(0, int((self.screen_width-len(self.VarLst_name))/2), '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
+            self.VarLst.addstr(0, int((self.screen_width-len(self.VarLst_name))/2),
+                               '| ' + self.VarLst_name + ' |', self.c_exp_ttl | curses.A_BOLD)
 
         # Reset position if position is greater than the new list of var (reset)
         self.row_num = len(self.strings)
@@ -682,9 +688,11 @@ class MainWin(object):
             else:
                 cell = FormatCell(self.variables, self.strings[i-1], self.screen_width)
                 if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
-                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell.encode(code), self.c_exp_hh)
+                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2,
+                                       cell.encode(code), self.c_exp_hh)
                 else:
-                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2, cell.encode(code), curses.A_DIM | self.c_exp_txt)
+                    self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2,
+                                       cell.encode(code), curses.A_DIM | self.c_exp_txt)
                 if i == self.row_num:
                     break
 
@@ -694,10 +702,12 @@ class MainWin(object):
             self.VarLst.addstr(self.VarLst_wng, self.c_exp_ttl | curses.A_BOLD)
             self.VarLst.addstr('',  self.c_exp_pwf | curses.A_BOLD)
         elif len(self.VarLst_wng) > 0:
-            self.VarLst.addstr(self.row_max+1, int((self.screen_width-len(self.VarLst_wng))/2), '< ' + self.VarLst_wng + ' >', curses.A_DIM | self.c_exp_ttl)
+            self.VarLst.addstr(self.row_max+1,
+                               int((self.screen_width-len(self.VarLst_wng))/2),
+                               '< ' + self.VarLst_wng + ' >', curses.A_DIM | self.c_exp_ttl)
 
     def NavigateVarLst(self):
-        ''' Navigation though the variable list'''
+        """ Navigation though the variable list"""
 
         self.pages = int(ceil(self.row_num/self.row_max))
         if self.pkey == curses.KEY_DOWN:
@@ -716,7 +726,7 @@ class MainWin(object):
             self.page = self.pages
 
     def NavUp(self):
-        ''' Navigate Up. '''
+        """ Navigate Up. """
 
         if self.page == 1:
             if self.position > 1:
@@ -729,7 +739,7 @@ class MainWin(object):
                 self.position = self.row_max + (self.row_max*(self.page-1))
 
     def NavDown(self):
-        ''' Navigate Down. '''
+        """ Navigate Down. """
 
         if self.page == 1:
             if (self.position < self.row_max) and (self.position < self.row_num):
@@ -749,21 +759,21 @@ class MainWin(object):
                 self.position = 1 + (self.row_max * (self.page-1))
 
     def NavLeft(self):
-        ''' Navigate Left. '''
+        """ Navigate Left. """
 
         if self.page > 1:
             self.page = self.page - 1
             self.position = 1 + (self.row_max*(self.page-1))
 
     def NavRight(self):
-        ''' Navigate Right. '''
+        """ Navigate Right. """
 
         if self.page < self.pages:
             self.page = self.page + 1
             self.position = (1+(self.row_max*(self.page-1)))
 
     def GetVars(self):
-        ''' Get variable from the daemon '''
+        """ Get variable from the daemon """
 
         try:
             tmp = recv_msg(self.MainSock).decode('utf8')
@@ -785,7 +795,7 @@ class MainWin(object):
                     pass
 
     def CheckSocket(self):
-        ''' Test if connection to daemon is alive. '''
+        """ Test if connection to daemon is alive. """
 
         try:
             send_msg(self.MainSock, '<TEST>')
@@ -794,7 +804,7 @@ class MainWin(object):
             self.connected = False
 
     def ResizeCurses(self):
-        ''' Check if terminal is resized and adapt screen '''
+        """ Check if terminal is resized and adapt screen """
 
         resize = curses.is_term_resized(self.screen_height, self.screen_width)
         if resize is True and self.screen_height >= self.term_min_height and self.screen_width >= self.term_min_width:
@@ -808,22 +818,26 @@ class MainWin(object):
             self.VarLst.refresh()
 
     def SizeWng(self):
-        ''' Blank screen and display a warning if size of the terminal is too small. '''
+        """ Blank screen and display a warning if size of the terminal is too small. """
 
         self.stdscreen.erase()
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
         msg_actual = str(self.screen_width) + 'x' + str(self.screen_height)
         msg_limit = 'Win must be > ' + str(self.term_min_width) + 'x' + str(self.term_min_height)
         try:
-            self.stdscreen.addstr(int(self.screen_height/2), int((self.screen_width-len(msg_limit))/2), msg_limit, self.c_warn_txt | curses.A_BOLD)
-            self.stdscreen.addstr(int(self.screen_height/2)+1, int((self.screen_width-len(msg_actual))/2), msg_actual, self.c_warn_txt | curses.A_BOLD)
+            self.stdscreen.addstr(int(self.screen_height/2),
+                                  int((self.screen_width-len(msg_limit))/2),
+                                  msg_limit, self.c_warn_txt | curses.A_BOLD)
+            self.stdscreen.addstr(int(self.screen_height/2)+1,
+                                  int((self.screen_width-len(msg_actual))/2),
+                                  msg_actual, self.c_warn_txt | curses.A_BOLD)
         except:
             pass
         self.stdscreen.border(0)
         self.stdscreen.refresh()
 
     def BottomInfo(self):
-        ''' Check and display kernel informations '''
+        """ Check and display kernel informations """
 
         kernel_info_id = 'kernel ' + self.cf.split('-')[1].split('.')[0] + ' '
         kernel_info_obj = str(len(list(self.variables))) + ' obj.'
@@ -855,31 +869,41 @@ class MainWin(object):
 
         # Help
         if self.Config['font']['pw-font'] == 'True':
-            self.stdscreen.addstr(self.screen_height-1, self.screen_width-12, '', self.c_bar_hlp_pwf | curses.A_BOLD)
+            self.stdscreen.addstr(self.screen_height-1, self.screen_width-12,
+                                  '', self.c_bar_hlp_pwf | curses.A_BOLD)
             self.stdscreen.addstr(' h:help ', self.c_bar_hlp | curses.A_BOLD)
             self.stdscreen.addstr('', self.c_bar_hlp_pwf | curses.A_BOLD)
         else:
-            self.stdscreen.addstr(self.screen_height-1, self.screen_width-12, '< h:help >', self.c_bar_hlp | curses.A_BOLD)
+            self.stdscreen.addstr(self.screen_height-1, self.screen_width-12,
+                                  '< h:help >', self.c_bar_hlp | curses.A_BOLD)
 
     def QueueInfo(self):
-        ''' Display queue informations '''
+        """ Display queue informations """
 
-        self.stdscreen.addstr(self.row_max + 4, int(2*self.screen_width/3), ' Socket ', self.c_main_ttl | curses.A_BOLD)
+        self.stdscreen.addstr(self.row_max + 4, int(2*self.screen_width/3),
+                              ' Socket ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
 
     def TermInfo(self):
-        ''' Display terminal informations '''
+        """ Display terminal informations """
 
-        self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/3), ' Terminal ', self.c_main_ttl | curses.A_BOLD)
+        self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/3),
+                              ' Terminal ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscreen.addstr(self.row_max + 5, int(self.screen_width/3) + 1, ' width : ' + str(self.screen_width), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/3) + 1, ' heigh : ' + str(self.screen_height), curses.A_DIM | self.c_main_txt)
-        self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/3) + 1, ' color : ' + str(curses.COLORS), curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 5, int(self.screen_width/3) + 1,
+                              ' width : ' + str(self.screen_width),
+                              curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 6, int(self.screen_width/3) + 1,
+                              ' heigh : ' + str(self.screen_height),
+                              curses.A_DIM | self.c_main_txt)
+        self.stdscreen.addstr(self.row_max + 7, int(self.screen_width/3) + 1,
+                              ' color : ' + str(curses.COLORS),
+                              curses.A_DIM | self.c_main_txt)
 
     def DebugInfo(self):
-        ''' Display debug informations '''
+        """ Display debug informations """
 
         self.stdscreen.addstr(self.row_max + 4, 2, ' Debug ', self.c_main_ttl | curses.A_BOLD)
         if self.Config['font']['pw-font'] == 'True':
@@ -890,12 +914,14 @@ class MainWin(object):
         self.stdscreen.addstr(self.row_max + 8, 3, ' sort : ' + str(self.mk_sort), curses.A_DIM | self.c_main_txt)
 
     def MenuClose(self):
-        ''' Close Menu '''
+        """ Close Menu """
 
         # Init Menu
         cmsg = 'Shutdown daemon (default no) ? [y|n|q]'
         cmsg_width = len(cmsg) + 4
-        menu_close = self.stdscreen.subwin(3, cmsg_width, int(self.screen_height/2), int((self.screen_width-cmsg_width)/2))
+        menu_close = self.stdscreen.subwin(3, cmsg_width,
+                                           int(self.screen_height/2),
+                                           int((self.screen_width-cmsg_width)/2))
         menu_close.bkgd(self.c_warn_txt)
         menu_close.attrset(self.c_warn_bdr | curses.A_BOLD)  # Change border color
         menu_close.border(0)
@@ -929,7 +955,7 @@ class MainWin(object):
             self.close_signal = 'continue'
 
     def ShutdownApp(self):
-        ''' Shutdown CUI, Daemon, and kernel '''
+        """ Shutdown CUI, Daemon, and kernel """
 
         curses.endwin()
 
@@ -945,7 +971,7 @@ class MainWin(object):
         self.KillAllFigures()   # Stop all figure subprocesses
 
     def KillAllFigures(self):
-        ''' Kill all figures (running in different processes) '''
+        """ Kill all figures (running in different processes) """
 
         import multiprocessing
 
@@ -958,8 +984,8 @@ class MainWin(object):
             child.terminate()
 
     def ExitWithError(self):
-        ''' If error, send terminate signal to daemon and resore terminal to
-            sane state '''
+        """ If error, send terminate signal to daemon and resore terminal to
+            sane state """
 
         self.close_signal = 'close'
         self.stdscreen.keypad(0)
@@ -971,7 +997,7 @@ class MainWin(object):
 
 
 def InitCf(lockfile, pidfile):
-    ''' Init connection file. '''
+    """ Init connection file. """
 
     with open(lockfile, 'r') as f:
         kernel_id = f.readline()
@@ -980,7 +1006,7 @@ def InitCf(lockfile, pidfile):
 
 
 def WithDaemon(lockfile, pidfile, cmd):
-    ''' Launch daemon. '''
+    """ Launch daemon. """
 
     os.system(cmd)
 
@@ -991,13 +1017,13 @@ def WithDaemon(lockfile, pidfile, cmd):
 
 
 def ParseArgs(lockfile, pidfile):
-    ''' Parse Arguments. '''
+    """ Parse Arguments. """
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-D", "--debug", help="Debug mode", action="store_true")
-    parser.add_argument("-L", "--list", help="List all kernels", action="store_true")
-    parser.add_argument("integer",
-                        help="Start up with existing kernel. \
+    parser.add_argument("-L", "--list", help="List all kernels",
+                        action="store_true")
+    parser.add_argument("integer", help="Start up with existing kernel. \
                         INTEGER is the id of the connection file.",
                         nargs='?')
 
@@ -1036,7 +1062,7 @@ def ParseArgs(lockfile, pidfile):
 
 
 def missing(lockfile, pidfile):
-    ''' Fix missing connection file. '''
+    """ Fix missing connection file. """
 
     print('An old lock file already exists, but the kernel connection file is missing.')
     print('As this issue is not fixed, cpyvke cannot run.')
@@ -1053,7 +1079,7 @@ def missing(lockfile, pidfile):
 
 
 def main(args=None):
-    ''' Launch cpyvke. '''
+    """ Launch cpyvke. """
 
     # Parse Config
     cfg = cfg_setup()
@@ -1071,7 +1097,8 @@ def main(args=None):
     # create the logging file handler
     handler = RotatingFileHandler(logfile, maxBytes=10*1024*1024,
                                   backupCount=5)
-    formatter = logging.Formatter('%(asctime)s :: %(name)s :: %(threadName)s :: %(levelname)s :: %(message)s', datefmt='%Y-%m-%d - %H:%M:%S')
+    logmsg = '%(asctime)s :: %(name)s :: %(threadName)s :: %(levelname)s :: %(message)s'
+    formatter = logging.Formatter(logmsg, datefmt='%Y-%m-%d - %H:%M:%S')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 

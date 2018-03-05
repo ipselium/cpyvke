@@ -3,7 +3,7 @@
 #
 # File Name : cfg_test.py
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : dim. 04 mars 2018 00:47:51 CET
+# Last Modified : lun. 05 mars 2018 17:46:28 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -26,17 +26,17 @@ except ImportError:
     import configparser as ConfigParser
 
 
-def CheckDir(dir):
-    ''' Check if dir exists. If not, create it.'''
+def CheckDir(directory):
+    """ Check if dir exists. If not, create it."""
 
-    if os.path.isdir(dir) is False:
-        os.makedirs(dir)
-        print("Create directory : " + str(dir))
+    if os.path.isdir(directory) is False:
+        os.makedirs(directory)
+        print("Create directory : " + str(directory))
         sleep(0.5)
 
 
 class cfg_setup(object):
-    ''' Handle configuration file. '''
+    """ Handle configuration file. """
 
     def __init__(self):
 
@@ -50,7 +50,7 @@ class cfg_setup(object):
             sleep(0.5)
 
     def InitCfg(self):
-        ''' Check if cpyvke.conf exists. If not create it. '''
+        """ Check if cpyvke.conf exists. If not create it. """
 
         if os.path.exists(self.path + 'cpyvke.conf') is False:
             open(self.path + 'cpyvke.conf', 'a').close()
@@ -59,7 +59,7 @@ class cfg_setup(object):
             self.WriteConfig()
 
     def WriteConfig(self):
-        ''' Write configuration file. '''
+        """ Write configuration file. """
 
         self.cfg.add_section('main colors')
         self.cfg.set('main colors', 'title', 'white, transparent')
@@ -112,7 +112,7 @@ class cfg_setup(object):
             self.cfg.write(configfile)
 
     def InitSaveDir(self):
-        ''' Check|create configuration directories. '''
+        """ Check|create configuration directories. """
 
         if os.path.exists(self.SaveDir) is False:
             os.makedirs(self.SaveDir)
@@ -120,7 +120,7 @@ class cfg_setup(object):
             sleep(0.5)
 
     def RunCfg(self):
-        ''' Run configuration. '''
+        """ Run configuration. """
 
         try:
             # Check if config file exist. If not create it
@@ -313,4 +313,3 @@ class cfg_setup(object):
         except ConfigParser.Error as err:
             print('Bad cfg file : ', err)
             sys.exit(1)
-
