@@ -3,7 +3,7 @@
 #
 # File Name : KernelTools.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : lun. 05 mars 2018 17:54:09 CET
+# Last Modified : mer. 07 mars 2018 00:29:13 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -134,6 +134,7 @@ def init_kernel(kc):
     kc.execute("import numpy as np", store_history=False)
     kc.execute("np.set_printoptions(threshold='nan')", store_history=False)
     kc.execute("import json", store_history=False)
+    kc.execute("%matplotlib", store_history=False)
 
 
 def shutdown_kernel(cf):
