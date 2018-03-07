@@ -1,0 +1,9 @@
+[path]
+LogDir = $HOME/.cpyvke/
+SaveDir = $HOME/
+
+[colors]
+Warn = red
+sub = cyan
+background = transparent
+
