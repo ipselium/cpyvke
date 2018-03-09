@@ -3,7 +3,7 @@
 #
 # File Name : cfg_test.py
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : lun. 05 mars 2018 17:46:28 CET
+# Last Modified : jeu. 08 mars 2018 22:56:56 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -19,7 +19,6 @@ DESCRIPTION
 import sys
 import os
 from time import sleep
-from builtins import object
 try:
     import ConfigParser
 except ImportError:
@@ -35,7 +34,7 @@ def CheckDir(directory):
         sleep(0.5)
 
 
-class cfg_setup(object):
+class cfg_setup:
     """ Handle configuration file. """
 
     def __init__(self):

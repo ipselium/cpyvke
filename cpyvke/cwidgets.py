@@ -3,7 +3,7 @@
 #
 # File Name : cwidgets.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : lun. 05 mars 2018 17:49:13 CET
+# Last Modified : jeu. 08 mars 2018 22:52:01 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -18,7 +18,6 @@ DESCRIPTION
 
 import curses
 from curses import panel
-from builtins import object
 from time import sleep
 import locale
 
@@ -29,7 +28,7 @@ locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-class Viewer(object):
+class Viewer:
     """ Display variable content in a pad. """
 
     def __init__(self, parent):
@@ -111,7 +110,7 @@ class Viewer(object):
         self.menu_viewer.erase()
 
 
-class WarningMsg(object):
+class WarningMsg:
     """ Display a message. """
 
     def __init__(self, stdscreen):
@@ -148,7 +147,7 @@ class WarningMsg(object):
         panel_wng.hide()
 
 
-class Help(object):
+class Help:
     """ Display help in a pad. """
 
     def __init__(self, parent):
@@ -163,7 +162,7 @@ class Help(object):
         self.c_main_pwf = parent.c_main_pwf
 
         # Init Menu
-        self.nb_items = 17
+        self.nb_items = 18
         self.pad_width = 38
         self.pad_height = self.nb_items+2
 
@@ -183,13 +182,14 @@ class Help(object):
         self.menu_help.addstr(9, 3, '(l) Limit display to keyword', self.c_main_txt | curses.A_DIM)
         self.menu_help.addstr(10, 3, '(u) Undo limit', self.c_main_txt | curses.A_DIM)
         self.menu_help.addstr(11, 3, '(c) Kernel Menu', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(12, 3, '(R) Restart connection to daemon', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(13, 3, '(D) disconnect from daemon', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(14, 3, '(C) Connect to daemon', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(15, 3, '(↓) Next line', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(16, 3, '(↑) Previous line', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(17, 3, '(→|↡) Next page', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(18, 3, '(←|↟) Previous page', self.c_main_txt | curses.A_DIM)
+        self.menu_help.addstr(12, 3, '(r) Refresh explorer', self.c_main_txt | curses.A_DIM)
+        self.menu_help.addstr(13, 3, '(R) Restart connection to daemon', self.c_main_txt | curses.A_DIM)
+        self.menu_help.addstr(14, 3, '(D) disconnect from daemon', self.c_main_txt | curses.A_DIM)
+        self.menu_help.addstr(15, 3, '(C) Connect to daemon', self.c_main_txt | curses.A_DIM)
+        self.menu_help.addstr(16, 3, '(↓) Next line', self.c_main_txt | curses.A_DIM)
+        self.menu_help.addstr(17, 3, '(↑) Previous line', self.c_main_txt | curses.A_DIM)
+        self.menu_help.addstr(18, 3, '(→|↡) Next page', self.c_main_txt | curses.A_DIM)
+        self.menu_help.addstr(19, 3, '(←|↟) Previous page', self.c_main_txt | curses.A_DIM)
         self.menu_help.border(0)
 
         # Help Title

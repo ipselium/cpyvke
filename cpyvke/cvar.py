@@ -3,7 +3,7 @@
 #
 # File Name : cvar.py
 # Creation Date : Wed Nov  9 16:29:28 2016
-# Last Modified : lun. 05 mars 2018 17:47:29 CET
+# Last Modified : ven. 09 mars 2018 00:22:01 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -23,7 +23,6 @@ from numpy import load
 from time import sleep, time
 import os
 import logging
-from builtins import object
 
 from .inspector import Inspect
 from .cwidgets import Viewer, WarningMsg
@@ -33,7 +32,7 @@ from .kd5 import send_msg
 logger = logging.getLogger('cpyvke.cvar')
 
 
-class MenuVar(object):
+class MenuVar:
     """ Class to handle variable menus. """
 
     def __init__(self, parent):
@@ -57,15 +56,11 @@ class MenuVar(object):
 
         # Get variable value
         if parent.variables[parent.strings[parent.position-1]]['type'] == 'module':
-            self.varval = parent.variables[parent.strings[parent.position-1]]['value']
-            self.varval = self.varval.split("'")[1]
-            self.is_menu = True
-
-        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('dict', 'list', 'tuple', 'str', 'unicode'):
             self.filename = '/tmp/tmp_' + self.varname
-            code = "with open('" + self.filename + "' , 'w') as fcpyvke0:\n\tjson.dump(" + self.varname + ", fcpyvke0)"
+            code = "with open('{}' , 'w') as fcpyvke0:\n\tjson.dump({}.__name__, fcpyvke0)".format(self.filename, self.varname)
             try:
                 send_msg(self.RequestSock, '<code>' + code)
+                logger.debug("Name of module '{}' asked to kd5".format(self.varname))
                 self.Wait(parent)
                 with open(self.filename, 'r') as f:
                     self.varval = json.load(f)
@@ -73,8 +68,24 @@ class MenuVar(object):
                 Wng = WarningMsg(self.stdscreen)
                 Wng.Display('Kernel Busy ! Try again...')
                 self.varval = '[Busy]'
-                logger.error('Busy', exc_info=True)
+                logger.error('Get Value : ', exc_info=True)
                 self.is_menu = False
+            else:
+                logger.debug('kd5 answer : {}'.format(self.varval))
+                os.remove(self.filename)
+                self.is_menu = True
+
+        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('dict', 'list', 'tuple', 'str', 'unicode'):
+            self.filename = '/tmp/tmp_' + self.varname
+            code = "with open('{}' , 'w') as fcpyvke0:\n\tjson.dump({}, fcpyvke0)".format(self.filename, self.varname)
+            try:
+                send_msg(self.RequestSock, '<code>' + code)
+                self.Wait(parent)
+                with open(self.filename, 'r') as f:
+                    self.varval = json.load(f)
+            except Exception:
+                logger.error('Get Value', exc_info=True)
+                self.KernelBusy()
             else:
                 self.view = Viewer(self)
                 os.remove(self.filename)
@@ -89,11 +100,8 @@ class MenuVar(object):
                 self.varval = load(self.filename)
                 os.remove(self.filename)
             except Exception:
-                Wng = WarningMsg(self.stdscreen)
-                Wng.Display('Kernel Busy ! Try again...')
-                self.varval = '[Busy]'
-                logger.error('Busy', exc_info=True)
-                self.is_menu = False
+                logger.error('Get Variable : ', exc_info=True)
+                self.KernelBusy()
             else:
                 self.is_menu = True
         else:
@@ -128,8 +136,14 @@ class MenuVar(object):
         # Various variables
         self.menuposition = 0
 
-    def IsMenu(self):
+    def KernelBusy(self):
+        Wng = WarningMsg(self.stdscreen)
+        Wng.Display('Kernel Busy ! Try again...')
+        self.varval = '[Busy]'
+        self.is_menu = False
 
+    def IsMenu(self):
+        """ Used in cmain to check if menu is open! """
         return self.is_menu
 
     def Display(self):
@@ -243,32 +257,76 @@ class MenuVar(object):
         elif self.menuposition >= size:
             self.menuposition = size-1
 
+    def DelVar(self):
+        code = 'del {}'.format(self.varname)
+        try:
+            send_msg(self.RequestSock, '<code>' + code)
+            logger.debug("Send delete signal for variable {}".format(self.varname))
+        except Exception:
+            logger.error('Delete variable :', exc_info=True)
+            Wng = WarningMsg(self.stdscreen)
+            Wng.Display('Kernel Busy ! Try again...')
+        else:
+            Wng = WarningMsg(self.stdscreen)
+            Wng.Display('Variable {} deleted'.format(self.varname))
+
     def CreateMenuLst(self):
         """ Create the item list for the general menu. """
 
         if self.varval == '[Busy]':
             return [('Busy', ' ')]
 
-        elif self.vartype == 'module':
-            return [('Help', "self.inspect.Display('less', 'Help')")]
+        elif self.vartype in ('int', 'float', 'complex'):
+            return [('Del', "self.DelVar()")]
+
+        elif self.vartype in ['module', 'function']:
+            return [('Help', "self.Help()")]
 
         elif self.vartype in ('dict', 'tuple', 'str', 'list', 'unicode'):
             return [('View', 'self.view.Display()'),
                     ('Less', "self.inspect.Display('less')"),
                     ('Edit', "self.inspect.Display('vim')"),
-                    ('Save', "self.inspect.Save(self.SaveDir)")]
+                    ('Save', "self.inspect.Save(self.SaveDir)"),
+                    ('Del', "self.DelVar()")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 1):
             return [('Plot', 'self.inspect.Plot1D()'),
-                    ('Save', 'self.MenuSave()')]
+                    ('Save', 'self.MenuSave()'),
+                    ('Del', "self.DelVar()")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 2):
             return [('Plot 2D', 'self.inspect.Plot2D()'),
                     ('Plot (cols)', 'self.inspect.Plot1Dcols()'),
                     ('Plot (lines)', 'self.inspect.Plot1Dlines()'),
-                    ('Save', 'self.MenuSave()')]
+                    ('Save', 'self.MenuSave()'),
+                    ('Del', "self.DelVar()")]
+
         else:
             return []
+
+    def Help(self):
+        """ Help item in menu """
+
+        if self.vartype == 'function':
+            self.filename = '/tmp/tmp_' + self.varname
+            code = "with open('{}' , 'w') as fcpyvke0:\n\tjson.dump({}.__doc__, fcpyvke0)".format(self.filename, self.varname)
+            try:
+                send_msg(self.RequestSock, '<code>' + code)
+                logger.debug("Help of function '{}' asked to kd5".format(self.varname))
+                with open(self.filename, 'r') as f:
+                    self.varval = json.load(f)
+            except Exception:
+                Wng = WarningMsg(self.stdscreen)
+                Wng.Display('Kernel Busy ! Try again...')
+                self.varval = '[Busy]'
+                logger.error('Get Help : ', exc_info=True)
+                self.is_menu = False
+            else:
+                logger.debug('kd5 answer : {}'.format(self.varval))
+                os.remove(self.filename)
+
+        self.inspect = Inspect(self.varval, self.varname, self.vartype)
+        self.inspect.Display('less', 'Help')
 
     def MenuSave(self):
         """ Create the save menu. """

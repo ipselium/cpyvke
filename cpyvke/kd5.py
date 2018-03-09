@@ -3,7 +3,7 @@
 #
 # File Name : KernelDaemon5.py
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : lun. 05 mars 2018 17:53:52 CET
+# Last Modified : ven. 09 mars 2018 14:54:53 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -15,22 +15,20 @@ DESCRIPTION
 @author: Cyril Desjouy
 """
 
-import threading
-import socket
 import os
 import sys
+import threading
+import socket
 import argparse
 import logging
+from time import sleep
+from queue import Queue
 from logging.handlers import RotatingFileHandler
 from jupyter_client import find_connection_file
-from time import sleep
-try:
-    from Queue import Queue
-except ImportError:
-    from queue import Queue
 
 from .ktools import init_kernel, connect_kernel, print_kernel_list, start_new_kernel
 from .stools import send_msg, recv_msg
+from .dtools import disp_data
 from .config import cfg_setup
 from .daemon3x import Daemon
 
@@ -45,6 +43,7 @@ class Watcher(threading.Thread):
     """
 
     def __init__(self, kc, delay=0.1, sport=15555, rport=15556):
+        """ Class constructor """
 
         # Init Thread
         threading.Thread.__init__(self)
@@ -87,24 +86,24 @@ class Watcher(threading.Thread):
 
         # Init variables
         self.msg = 0
-        self.CheckInput()
-        self.variables = self.Exec('whos')
+        self.check_input()
+        self.variables = ''
 
     def run(self):
         """ Run the variable explorer daemon """
 
         # Launch streamer
-        streamer = threading.Thread(target=self.StreamData)
+        streamer = threading.Thread(target=self.stream_data)
         streamer.start()
 
         while True:
 
             # Look for connection to request socket
-            self.ListenRequestSockConnection()
+            self.listen_request_sock()
 
             # Watch RequestSock for code request OR kernel changes
             if self.client_request:
-                self.ClientRequestSocket()
+                self.fetch_request()
 
             # Terminate daemon
             if self._stop.isSet():
@@ -122,26 +121,31 @@ class Watcher(threading.Thread):
         self.RequestSock.close()
         logger.info('Exited')
 
-    def StreamData(self):
+    def stream_data(self):
         """ Stream 'whos' output to client. """
 
         while True:
 
             # Pause if client has a request
-            self.Pause()
+            self.pause()
+
+            # Check if reset has been invoked
+            if 'empty' in self.variables:
+                init_kernel(self.kc)
 
             # Look for connection to main socket
-            self.ListenMainSockConnection()
+            self.listen_main_sock()
 
             # Listen to kernel changes
             if self.kernel_queue.qsize() > 0:
-                self.KernelChange(self.kernel_queue.get())
+                self.kernel_change(self.kernel_queue.get())
 
             # Check in new entries in kernel
-            self.CheckInput()
+            self.check_input()
 
             # If new entries, update variables
-            self.UpdateStream()
+            if self.msg == 1:
+                self.send_variables()
 
             # Terminate daemon
             if self._stop.isSet():
@@ -150,22 +154,7 @@ class Watcher(threading.Thread):
 
             sleep(self.delay)
 
-    def UpdateStream(self):
-        """ If new entry in kernel, update variable list. """
-
-        if self.msg == 1:
-            self.variables = self.Exec('whos')
-            # Send to CUI
-            if self.client_main:
-                try:
-                    send_msg(self.client_main, self.variables)
-                except:
-                    logger.info("Client is disconnected from main socket!")
-                    self.client_main = None
-                else:
-                    logger.info('Variable list sent to client')
-
-    def Pause(self):
+    def pause(self):
         """ Pause streamer when client has a request. """
 
         if self._pause.isSet():
@@ -177,59 +166,53 @@ class Watcher(threading.Thread):
 
             logger.debug('Streamer active')
 
-    def CheckInput(self):
+            # Force Update var list
+            self.send_variables()
+
+    def check_input(self):
         """ Check the iopub msgs available """
 
         self.msg = 0
         while self.kc.iopub_channel.msg_ready():
             data = self.kc.get_iopub_msg(timeout=0.1)
-
-            logger.debug('{} {}'.format(data['msg_type'], data['content']))
-
-            # Wait for answer when execute reset
-            if data['msg_type'] == 'execute_input':
-                if data['content']['code'] == 'reset':
-                    init_kernel(self.kc)
-                    data = self.kc.get_iopub_msg()
-
-            # Wait for end execution (script)
-            if data['msg_type'] == 'execute_input':
-                if 'run' in data['content']['code']:
-                    data = self.kc.get_iopub_msg()
-
-            # For long script with output to sdtout
-            while data['msg_type'] == 'stream':
-                data = self.kc.get_iopub_msg()
-
+            logger.debug('WATCHING : {}'.format(disp_data(data)))
             self.msg = 1
 
-    def Exec(self, code):
+    def execute(self, code):
         """ Execute **code** """
 
-        value = 'No Value !'
+        value = None
+        MSG_RECEIVED = False
 
-        self.kc.execute(code, store_history=False)
+        msg_id = self.kc.execute(code, store_history=False)
+        logger.debug("EXEC : '{}' sent with id {}".format(code, msg_id.split('-')[0]))
 
-        while self.kc.iopub_channel.msg_ready() is False:  # To fix.Have to wait
-            sleep(self.delay)
+        while not MSG_RECEIVED:
+            self.wait_msg()
 
-        while self.kc.iopub_channel.msg_ready():
-            data = self.kc.get_iopub_msg()
-            if data['msg_type'] == 'stream' and code == 'whos':
-                value = data['content']['text']
-                logger.debug('Execute result :\n {}'.format(data['content']['text']))
+            while self.kc.iopub_channel.msg_ready():
+                data = self.kc.get_iopub_msg()
+                if data['parent_header']['msg_id'] != msg_id:
+                    logger.debug('EXEC : PASS MSG : {}'.format(disp_data(data)))
+                    continue
+                else:
+                    MSG_RECEIVED = True
+                    logger.debug('EXEC : PROCEED MSG : {}'.format(disp_data(data)))
+                    if data['header']['msg_type'] == 'stream':
+                        value = data['content']['text']
 
-            elif data['msg_type'] == 'execute_result' and code != 'whos':
-                value = data['content']['data']['text/plain']
-
-            elif data['msg_type'] == 'stream' and code != 'whos':
-                value = data['content']['text']
-
+        logger.debug('EXEC : RESULT :\n {}'.format(value))
         self.msg = 0
 
         return value
 
-    def ListenMainSockConnection(self):
+    def wait_msg(self):
+        """ Waiting for message from iopub channel """
+
+        while not self.kc.iopub_channel.msg_ready():  # To fix.Have to wait
+            sleep(self.delay)
+
+    def listen_main_sock(self):
         """ Look for client connection to main socket. """
 
         try:
@@ -240,7 +223,7 @@ class Watcher(threading.Thread):
         else:
             send_msg(self.client_main, self.variables)
 
-    def ListenRequestSockConnection(self):
+    def listen_request_sock(self):
         """ Look for client connection to request socket. """
 
         try:
@@ -249,20 +232,36 @@ class Watcher(threading.Thread):
         except BlockingIOError:
             pass
 
-    def KernelChange(self, cf):
+    def check_variables(self):
+        """ If variables is None, ask again to kernel """
+        if not self.variables:
+            logger.debug("EXEC : 'variables' is None : RUN AGAIN 'whos'")
+        while not self.variables:
+            self.variables = self.execute('whos')
+
+    def kernel_change(self, cf):
         """ Watch kernel changes """
 
         km, self.kc = connect_kernel(cf)
         # Force update
-        self.variables = self.Exec('whos')
-        # Send to CUI
-        try:
-            send_msg(self.client_main, self.variables)
-        except:
-            logger.info("Client is disconnected from main socket!")
-            self.client_main = None
+        self.send_variables()
 
-    def ClientRequestSocket(self):
+    def send_variables(self):
+        """ Send variable to client """
+
+        self.variables = self.execute('whos')
+        self.check_variables()
+        # Send to client
+        if self.client_main:
+            try:
+                send_msg(self.client_main, self.variables)
+            except BlockingIOError:
+                logger.info("Client is disconnected from main socket!")
+                self.client_main = None
+            else:
+                logger.info('Variable list sent to client')
+
+    def fetch_request(self):
         """ Listen to sock request :
             handle kernel changes | exec code | stop signal. """
 
@@ -274,11 +273,10 @@ class Watcher(threading.Thread):
             logger.info("Client is disconnected from request socket!")
 
         if tmp:
-
             self._pause.set()
             sleep(self.delay)
             logger.info('Request from client')
-            logger.debug('Execute :\n {}'.format(tmp))
+            logger.debug('RECEIVED :\n {}'.format(tmp))
 
             if '<cf>' in tmp:
                 cf = tmp.split('<cf>')[1]
@@ -289,7 +287,7 @@ class Watcher(threading.Thread):
                 self.stop()
 
             elif '<code>' in tmp:
-                self.Exec(tmp.split('<code>')[1])
+                self.execute(tmp.split('<code>')[1])
 
             self._pause.clear()
 
@@ -301,6 +299,7 @@ class Watcher(threading.Thread):
 
 
 class Daemonize(Daemon):
+    """ Daemonize a class """
 
     def __init__(self,
                  pidfile,
@@ -331,7 +330,7 @@ class Daemonize(Daemon):
         WK.join()
 
 
-def ParseArgs(lockfile, pidfile, Config):
+def parse_args(lockfile, pidfile, Config):
     """ Parse arguments. """
 
     parser = argparse.ArgumentParser()
@@ -349,15 +348,15 @@ def ParseArgs(lockfile, pidfile, Config):
             sys.stderr.write(message.format(pidfile))
             sys.exit(1)
         else:
-            kernel_id = StartAction(args, lockfile, Config)
+            kernel_id = start_action(args, lockfile, Config)
 
     # Stop action
     elif args.action == 'stop':
-        kernel_id = StopAction(lockfile)
+        kernel_id = stop_action(lockfile)
 
     # Restart action
     elif args.action == 'restart':
-        kernel_id = RestartAction(lockfile)
+        kernel_id = restart_action(lockfile)
 
     # List action
     elif args.action == 'list':
@@ -367,7 +366,7 @@ def ParseArgs(lockfile, pidfile, Config):
     return args, kernel_id
 
 
-def StartAction(args, lockfile, Config):
+def start_action(args, lockfile, Config):
     """ Start Parser action. """
 
     if args.integer:
@@ -378,7 +377,7 @@ def StartAction(args, lockfile, Config):
             find_connection_file(kernel_id)
             with open(lockfile, "w") as f:
                 f.write(kernel_id)
-        except:
+        except FileNotFoundError:
             message = 'Error :\tCannot find kernel id. {} !\n\tExiting\n'
             sys.stderr.write(message.format(args.integer))
             sys.exit(2)
@@ -393,13 +392,13 @@ def StartAction(args, lockfile, Config):
     return kernel_id
 
 
-def StopAction(lockfile):
+def stop_action(lockfile):
     """ Parser Stop Action. """
 
     try:
         with open(lockfile, "r") as f:
             kernel_id = f.readline()
-    except:
+    except FileNotFoundError:
         message = '{} not found. Daemon is not running. Try start action !\n'
         sys.stderr.write(message.format(lockfile))
         sys.exit(2)
@@ -413,13 +412,13 @@ def StopAction(lockfile):
     return kernel_id
 
 
-def RestartAction(lockfile):
+def restart_action(lockfile):
     """ Parser Restart action. """
 
     try:
         with open(lockfile, "r") as f:
             return f.readline()
-    except:
+    except FileNotFoundError:
         message = '{} not found. Daemon is not running. Try start action !\n'
         sys.stderr.write(message.format(lockfile))
         sys.exit(2)
@@ -448,7 +447,7 @@ def main(args=None):
     logger.addHandler(handler)
 
     # Parse Arguments
-    args, kernel_id = ParseArgs(lockfile, pidfile, Config)
+    args, kernel_id = parse_args(lockfile, pidfile, Config)
 
     sport = int(Config['comm']['s-port'])
     rport = int(Config['comm']['r-port'])
@@ -473,5 +472,4 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-
     main()

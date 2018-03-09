@@ -3,7 +3,7 @@
 #
 # File Name : ckernel.py
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : lun. 05 mars 2018 21:50:32 CET
+# Last Modified : ven. 09 mars 2018 10:05:21 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -15,7 +15,6 @@ DESCRIPTION
 @author: Cyril Desjouy
 """
 
-from builtins import object
 import os
 import curses
 from curses import panel
@@ -27,7 +26,7 @@ from .cwidgets import WarningMsg, Help
 from .kd5 import send_msg
 
 
-class MenuKernel(object):
+class MenuKernel:
     """ Kernel list window. """
 
     def __init__(self, parent):
@@ -286,6 +285,7 @@ class MenuKernel(object):
         elif self.selected[1] == '[Alive]':
             return [('Connect', 'self.ConnectKernel()'),
                     ('Shutdown', 'self.ShutdownKernel()'),
+                    ('Shutdown All Alive', 'self.ShutdownAllAliveKernel()'),
                     ('Create New Kernel', 'self.StartNewKernel()'),
                     ('Remove all died', 'self.RemoveAllDiedKernelJson()')]
 
@@ -372,6 +372,15 @@ class MenuKernel(object):
         shutdown_kernel(self.selected[0])
         self.position = 1
         self.page = 1
+
+    def ShutdownAllAliveKernel(self):
+        """ Kill all kernel marked as Alive. """
+
+        for json_path, status in self.lst:
+            if status == '[Alive]':
+                shutdown_kernel(json_path)
+        self.page = 1
+        self.position = 1  # Reinit cursor location
 
     def RemoveKernelJson(self):
         """ Remove connection file of died kernel. """

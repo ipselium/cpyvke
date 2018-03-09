@@ -3,7 +3,7 @@
 #
 # File Name : ModuleInspector.py
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : lun. 05 mars 2018 17:52:00 CET
+# Last Modified : ven. 09 mars 2018 00:11:21 CET
 # Created By : Cyril Desjouy
 #
 # Copyright © 2016-2017 Cyril Desjouy <ipselium@free.fr>
@@ -16,7 +16,6 @@ DESCRIPTION
 """
 
 
-from builtins import object
 from matplotlib.pyplot import figure, plot, imshow, show
 from numpy import shape, save, savetxt, savez_compressed
 from multiprocessing import Process
@@ -39,7 +38,7 @@ def In_Thread(Func):
     return run
 
 
-class Inspect(object):
+class Inspect:
     """ Plot/Display variable. """
 
     def __init__(self, varval, varname, vartype):
@@ -127,21 +126,20 @@ class Inspect(object):
             with open(filename, 'w') as f:
                 f.write(self.varval.encode(code))
 
+        elif self.vartype == 'function':
+            if Arg == 'Help':
+                with open(filename, 'w') as f:
+                    f.write(self.varval)
+
         elif self.vartype == 'module':
             if Arg == 'Help':
-                manual(self.varval, filename)
+                sys.stdout = open(filename, 'w')
+                print(help(self.varval))
 
         else:
             with open(filename, 'w') as f:
                 f.write(self.varval)
 
         with suspend_curses():
-            subprocess.call([app, filename])
-            subprocess.call(['rm', filename])
-
-
-def manual(module, filename):
-    """ Display help of a module. """
-
-    sys.stdout = open(filename, 'w')
-    print(help(module))
+            subprocess.run([app, filename])
+            subprocess.run(['rm', filename])
