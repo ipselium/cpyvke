@@ -184,4 +184,5 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 ## TODO
 
 * cpyvke : Kernel manager : implement dead kernel restart
-* Kernel options : extra_arguments=["--matplotlib='inline'"]
+* Starting kernel options
+* Class instance explorer -> sub-variable explorer
