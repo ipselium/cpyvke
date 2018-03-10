@@ -1,6 +1,47 @@
-"""Generic linux daemon base class for python 3.x."""
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Adapted from python daemon library written by Sander Marechal :
+#
+# Source : http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/www.boxedice.com
+# Adaptation to Python 3.x : https://gist.github.com/andreif/cbb71b0498589dac93cb
+#
+# Copyright © Sander Marechal
+# Copyright © 2016-2018 Cyril Desjouy <ipselium@free.fr>
+#
+# This file is part of cpyvke
+#
+# cpyvke is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cpyvke is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cpyvke. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Creation Date :
+# Last Modified : sam. 10 mars 2018 20:22:23 CET
+"""
+-----------
+DOCSTRING
 
-import sys, os, time, atexit, signal
+Generic linux daemon base class for python 3.x.
+
+@author: Cyril Desjouy
+"""
+
+import sys
+import os
+import time
+import atexit
+import signal
+
 
 class Daemon:
 	"""A generic daemon class.
