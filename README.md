@@ -78,6 +78,15 @@ You can now work in this Ipython console and cpyvke will display all changes in 
 `In [1] : run my_program.py`
 
 
+## Tips
+
+You can also use : https://github.com/ipselium/vim-cpyvke
+
+**vim-cpyvke** provides tools to evaluate blocks of code or full scripts
+directly from vim. The duo **cpyvke/vim-cpyvke** paired with a vim plugin such
+as **python-mode** (www.github.com/klen/python-mode) can provide a complete
+development environment for Python in console.
+
 - - -
 
 ## Manuals
@@ -178,11 +187,12 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 *cpyvke* is still in developpement and may present unexpected behavior !
 
 * cpyvke : crash when "brutal" resize
+* cpyvke : shutting down kernel does not seem to work
 
 - - -
 
 ## TODO
 
 * cpyvke : Kernel manager : implement dead kernel restart
-* Starting kernel options
+* Starting kernel options (matplotlib backend in configrc)
 * Class instance explorer -> sub-variable explorer
