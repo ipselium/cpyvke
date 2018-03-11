@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : sam. 10 mars 2018 20:16:33 CET
+# Last Modified : dim. 11 mars 2018 22:55:30 CET
 """
 -----------
 DOCSTRING
@@ -293,19 +293,23 @@ class MenuKernel:
 
         if self.selected[1] == '[Connected]':
             return [('Create New Kernel', 'self.StartNewKernel()'),
-                    ('Remove all died', 'self.RemoveAllDiedKernelJson()')]
+                    ('Remove all died', 'self.RemoveAllDiedKernelJson()'),
+                    ('Remove all died and alive', 'self.RemoveAllKernelJson()')]
 
         elif self.selected[1] == '[Alive]':
             return [('Connect', 'self.ConnectKernel()'),
                     ('Shutdown', 'self.ShutdownKernel()'),
                     ('Shutdown All Alive', 'self.ShutdownAllAliveKernel()'),
                     ('Create New Kernel', 'self.StartNewKernel()'),
-                    ('Remove all died', 'self.RemoveAllDiedKernelJson()')]
+                    ('Remove connection file', 'self.RemoveKernelJson()'),
+                    ('Remove all died', 'self.RemoveAllDiedKernelJson()'),
+                    ('Remove all died and alive', 'self.RemoveAllKernelJson()')]
 
         elif self.selected[1] == '[Died]':
             return [('Restart', 'self.RestartKernel()'),
                     ('Remove connection file', 'self.RemoveKernelJson()'),
                     ('Remove all died', 'self.RemoveAllDiedKernelJson()'),
+                    ('Remove all died and alive', 'self.RemoveAllKernelJson()'),
                     ('Create New Kernel', 'self.StartNewKernel()')]
         else:
             return []
@@ -407,6 +411,15 @@ class MenuKernel:
 
         for json_path, status in self.lst:
             if status == '[Died]':
+                os.remove(json_path)
+        self.page = 1
+        self.position = 1  # Reinit cursor location
+
+    def RemoveAllKernelJson(self):
+        """ Remove connection files of all died kernels. """
+
+        for json_path, status in self.lst:
+            if status == '[Died]' or status == '[Alive]':
                 os.remove(json_path)
         self.page = 1
         self.position = 1  # Reinit cursor location

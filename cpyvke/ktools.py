@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : sam. 10 mars 2018 20:19:00 CET
+# Last Modified : dim. 11 mars 2018 23:02:54 CET
 """
 -----------
 DOCSTRING
@@ -141,19 +141,30 @@ def connect_kernel(cf):
     return km, kc
 
 
+def connect_kernel_as_manager(cf):
+    # Kernel manager
+    km = manager.KernelManager(connection_file=cf)
+    km.start_kernel()
+    # Kernel Client
+    kc = km.blocking_client()
+    init_kernel(kc)
+
+    return km, kc
+
+
 def init_kernel(kc, backend='tk'):
     """ init communication. """
 
     backend = 'tk'
 
-    kc.execute("import numpy as np", store_history=False)
-    kc.execute("np.set_printoptions(threshold='nan')", store_history=False)
-    kc.execute("import json", store_history=False)
+    kc.execute("import numpy as _np", store_history=False)
+    kc.execute("_np.set_printoptions(threshold='nan')", store_history=False)
+    kc.execute("import json as _json", store_history=False)
     kc.execute("%matplotlib {}".format(backend), store_history=False)
 
 
 def shutdown_kernel(cf):
     """ Shutdown a kernel based on its connection file. """
 
-    km, kc = connect_kernel(cf)
-    kc.shutdown()
+    km, kc = connect_kernel_as_manager(cf)
+    km.shutdown_kernel(now=True)

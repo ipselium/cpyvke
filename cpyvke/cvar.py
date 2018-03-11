@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : sam. 10 mars 2018 20:18:05 CET
+# Last Modified : dim. 11 mars 2018 22:30:38 CET
 """
 -----------
 DOCSTRING
@@ -70,7 +70,7 @@ class MenuVar:
         # Get variable value
         if parent.variables[parent.strings[parent.position-1]]['type'] == 'module':
             self.filename = '/tmp/tmp_' + self.varname
-            code = "with open('{}' , 'w') as fcpyvke0:\n\tjson.dump({}.__name__, fcpyvke0)".format(self.filename, self.varname)
+            code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}.__name__, fcpyvke0)".format(self.filename, self.varname)
             try:
                 send_msg(self.RequestSock, '<code>' + code)
                 logger.debug("Name of module '{}' asked to kd5".format(self.varname))
@@ -90,7 +90,7 @@ class MenuVar:
 
         elif parent.variables[parent.strings[parent.position-1]]['type'] in ('dict', 'list', 'tuple', 'str', 'unicode'):
             self.filename = '/tmp/tmp_' + self.varname
-            code = "with open('{}' , 'w') as fcpyvke0:\n\tjson.dump({}, fcpyvke0)".format(self.filename, self.varname)
+            code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}, fcpyvke0)".format(self.filename, self.varname)
             try:
                 send_msg(self.RequestSock, '<code>' + code)
                 self.Wait(parent)
@@ -106,7 +106,7 @@ class MenuVar:
 
         elif parent.variables[parent.strings[parent.position-1]]['type'] == 'ndarray':
             self.filename = '/tmp/tmp_' + self.varname + '.npy'
-            code = "np.save('" + self.filename + "', " + self.varname + ')'
+            code = "_np.save('" + self.filename + "', " + self.varname + ')'
             try:
                 send_msg(self.RequestSock, '<code>' + code)
                 self.Wait(parent)
@@ -322,7 +322,7 @@ class MenuVar:
 
         if self.vartype == 'function':
             self.filename = '/tmp/tmp_' + self.varname
-            code = "with open('{}' , 'w') as fcpyvke0:\n\tjson.dump({}.__doc__, fcpyvke0)".format(self.filename, self.varname)
+            code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}.__doc__, fcpyvke0)".format(self.filename, self.varname)
             try:
                 send_msg(self.RequestSock, '<code>' + code)
                 logger.debug("Help of function '{}' asked to kd5".format(self.varname))

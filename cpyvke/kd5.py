@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : sam. 10 mars 2018 20:11:49 CET
+# Last Modified : dim. 11 mars 2018 22:31:50 CET
 """
 -----------
 DOCSTRING
@@ -142,9 +142,9 @@ class Watcher(threading.Thread):
             # Pause if client has a request
             self.pause()
 
-            # Check if reset has been invoked
-            if 'empty' in self.variables:
-                init_kernel(self.kc)
+#            # Check if reset has been invoked
+#            if 'empty' in self.variables:
+#                init_kernel(self.kc)
 
             # Look for connection to main socket
             self.listen_main_sock()
