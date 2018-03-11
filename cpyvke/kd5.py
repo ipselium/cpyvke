@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : dim. 11 mars 2018 22:31:50 CET
+# Last Modified : dim. 11 mars 2018 23:45:02 CET
 """
 -----------
 DOCSTRING
@@ -190,6 +190,13 @@ class Watcher(threading.Thread):
             data = self.kc.get_iopub_msg(timeout=0.1)
             logger.debug('WATCHING : {}'.format(disp_data(data)))
             self.msg = 1
+            self.check_init(data)
+
+    def check_init(self, data):
+        if 'code' in data['content'].keys():
+            if 'reset' in data['content']['code']:
+                init_kernel(self.kc)
+                logger.debug('RESET RECEIVED : {}'.format('Init Kernel'))
 
     def execute(self, code):
         """ Execute **code** """
@@ -207,6 +214,7 @@ class Watcher(threading.Thread):
                 data = self.kc.get_iopub_msg()
                 if data['parent_header']['msg_id'] != msg_id:
                     logger.debug('EXEC : PASS MSG : {}'.format(disp_data(data)))
+                    self.check_init(data)
                     continue
                 else:
                     MSG_RECEIVED = True

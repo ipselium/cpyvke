@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : sam. 10 mars 2018 20:17:05 CET
+# Last Modified : dim. 11 mars 2018 23:16:18 CET
 """
 -----------
 DOCSTRING
@@ -1015,9 +1015,9 @@ class MainWin:
         import multiprocessing
 
         if len(multiprocessing.active_children()) == 1:
-            print(str(len(multiprocessing.active_children())) + ' figures killed')
+            print('{} figure killed'.format(len(multiprocessing.active_children())))
         elif len(multiprocessing.active_children()) > 1:
-            print(str(len(multiprocessing.active_children())) + ' figure killed')
+            print('{} figures killed'.format(len(multiprocessing.active_children())))
 
         for child in multiprocessing.active_children():
             child.terminate()

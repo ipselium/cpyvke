@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : sam. 10 mars 2018 20:17:28 CET
+# Last Modified : lun. 12 mars 2018 00:06:39 CET
 """
 -----------
 DOCSTRING
@@ -43,7 +43,7 @@ def CheckDir(directory):
 
     if os.path.isdir(directory) is False:
         os.makedirs(directory)
-        print("Create directory : " + str(directory))
+        print("Create directory :", directory)
         sleep(0.5)
 
 
@@ -58,7 +58,7 @@ class cfg_setup:
         # Check if config dir exists. If not create it.
         if not os.path.exists(self.path):
             os.makedirs(self.path)
-            print("Create configuration directory : " + str(self.path))
+            print("Create configuration directory :", self.path)
             sleep(0.5)
 
     def InitCfg(self):
@@ -66,7 +66,7 @@ class cfg_setup:
 
         if os.path.exists(self.path + 'cpyvke.conf') is False:
             open(self.path + 'cpyvke.conf', 'a').close()
-            print("Create configuration file : " + str(self.path + 'cpyvke.conf'))
+            print("Create configuration file : {}cpyvke.conf".format(self.path))
             sleep(0.5)
             self.WriteConfig()
 
@@ -128,7 +128,7 @@ class cfg_setup:
 
         if os.path.exists(self.SaveDir) is False:
             os.makedirs(self.SaveDir)
-            print("Create save directory : " + str(self.SaveDir))
+            print("Create save directory :", self.SaveDir)
             sleep(0.5)
 
     def RunCfg(self):

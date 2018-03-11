@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : dim. 11 mars 2018 23:02:54 CET
+# Last Modified : dim. 11 mars 2018 23:59:59 CET
 """
 -----------
 DOCSTRING
@@ -107,18 +107,18 @@ def kernel_list(cf=None):
 def print_kernel_list():
     """ Display kernel list. """
     klst = kernel_list()
-    print('---------------| List of available kernels |---------------')
+    print('{:-^79}'.format('| List of available kernels |'))
 
     if not klst:
-        print('                    No kernel available')
-        print('Last run of the daemon may have quit prematurely.')
+        print('{:^79}'.format('No kernel available'))
+        print('{:^79}'.format('Last run of the daemon may have quit prematurely.'))
     else:
         for item in klst:
             if item == klst[-1]:
-                print(str(item[0]) + ' : ' + str(item[1]))
+                print('{0[0]:71}{0[1]:>8}'.format(item))
             else:
-                print(str(item[0]) + ' : ' + str(item[1]) + '\n')
-    print('-----------------------------------------------------------')
+                print('{0[0]:71}{0[1]:>8}\n'.format(item))
+    print(79*'-')
 
 
 def connect_kernel(cf):
