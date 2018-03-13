@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Thu Nov 17 12:09:09 2016
-# Last Modified : mar. 13 mars 2018 10:51:43 CET
+# Last Modified : mar. 13 mars 2018 16:22:30 CET
 """
 -----------
 
@@ -33,6 +33,7 @@ Initialize different variable type to test cpyvke variable explorer !
 import numpy as np
 from numpy import linspace
 from mymod import MyClass2
+from math import ceil
 
 
 def myfct(x):

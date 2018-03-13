@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 13 mars 2018 12:41:18 CET
+# Last Modified : mar. 13 mars 2018 17:06:51 CET
 """
 -----------
 DOCSTRING
@@ -39,10 +39,11 @@ from ..utils.comm import send_msg
 from .widgets import WarningMsg, Help
 
 
-class MenuKernel:
-    """ Kernel list window. """
+class KernelWin:
+    """ Kernel Window. """
 
     def __init__(self, parent):
+        """ Kernel Window Constructor """
 
         self.parent = parent
         self.RequestSock = parent.RequestSock
@@ -66,7 +67,7 @@ class MenuKernel:
         self.kernel_info = parent.kernel_info
         self.cf = parent.cf
         # Init Menu
-        self.menu_title = ' Kernel Manager '
+        self.win_title = ' Kernel Manager '
 
         # Init constants
         self.new_kernel_connection = False
@@ -83,7 +84,7 @@ class MenuKernel:
         self.panel_kernel = panel.new_panel(self.KernelLst)
         self.panel_kernel.hide()
 
-    def Display(self):
+    def display(self):
         """ Display the kernel explorer. """
 
         self.panel_kernel.top()     # Push the panel to the bottom of the stack.
@@ -103,10 +104,10 @@ class MenuKernel:
                 help_menu.Display()
 
             # Navigate in the variable list window
-            self.NavigateKernelLst()
+            self.navigate_kernel_lst()
 
             if self.pkey == ord("\n") and self.row_num != 0:
-                self.SubMenuKernel()
+                self.init_kernel_menu()
 
             # Erase all windows
             self.KernelLst.erase()
@@ -115,7 +116,7 @@ class MenuKernel:
             self.KernelLst.border(0)
 
             # Update all windows (virtually)
-            self.UpdateKernelLst()     # Update variables list
+            self.update_kernel_lst()     # Update variables list
 
             # Update display
             self.KernelLst.refresh()
@@ -136,17 +137,17 @@ class MenuKernel:
         self.panel_kernel.hide()
         return self.cf, self.kc
 
-    def UpdateKernelLst(self):
+    def update_kernel_lst(self):
         """ Update the kernel list """
 
         if self.Config['font']['pw-font'] == 'True':
-            self.KernelLst.addstr(0, int((self.screen_width-len(self.menu_title))/2),
+            self.KernelLst.addstr(0, int((self.screen_width-len(self.win_title))/2),
                                   '', curses.A_BOLD | self.c_kern_pwf)
-            self.KernelLst.addstr(self.menu_title, curses.A_BOLD | self.c_kern_ttl)
+            self.KernelLst.addstr(self.win_title, curses.A_BOLD | self.c_kern_ttl)
             self.KernelLst.addstr('', curses.A_BOLD | self.c_kern_pwf)
         else:
-            self.KernelLst.addstr(0, int((self.screen_width-len(self.menu_title))/2),
-                                  '|' + self.menu_title + '|',
+            self.KernelLst.addstr(0, int((self.screen_width-len(self.win_title))/2),
+                                  '|' + self.win_title + '|',
                                   curses.A_BOLD | self.c_kern_ttl)
 
         for i in range(1+(self.row_max*(self.page-1)),
@@ -194,32 +195,32 @@ class MenuKernel:
         self.stdscreen.refresh()
         self.KernelLst.refresh()
 
-    def NavigateKernelLst(self):
+    def navigate_kernel_lst(self):
         """ Navigation though the kernel list"""
 
         self.pages = int(ceil(self.row_num/self.row_max))
         if self.pkey == curses.KEY_DOWN:
-            self.NavDown()
+            self.navigate_down()
         if self.pkey == curses.KEY_UP:
-            self.NavUp()
+            self.navigate_up()
         if self.pkey in (curses.KEY_LEFT, 339) and self.page > 1:
-            self.NavLeft()
+            self.navigate_left()
         if self.pkey in (curses.KEY_RIGHT, 338) and self.page < self.pages:
-            self.NavRight()
+            self.navigate_right()
 
-    def NavRight(self):
+    def navigate_right(self):
         """ Navigate Right. """
 
         self.page = self.page + 1
         self.position = (1+(self.row_max*(self.page-1)))
 
-    def NavLeft(self):
+    def navigate_left(self):
         """ Navigate Left. """
 
         self.page = self.page - 1
         self.position = 1+(self.row_max*(self.page-1))
 
-    def NavUp(self):
+    def navigate_up(self):
         """ Navigate Up. """
 
         if self.page == 1:
@@ -232,7 +233,7 @@ class MenuKernel:
                 self.page = self.page - 1
                 self.position = self.row_max+(self.row_max*(self.page-1))
 
-    def NavDown(self):
+    def navigate_down(self):
         """ Navigate Down. """
 
         if self.page == 1:
@@ -252,23 +253,23 @@ class MenuKernel:
                 self.page = self.page + 1
                 self.position = 1+(self.row_max*(self.page-1))
 
-    def SubMenuKernel(self):
-        """ Init kernel list submenu """
+    def init_kernel_menu(self):
+        """ Init kernel menu """
 
         self.selected = self.lst[self.position-1]
-        self.kernel_submenu_lst = self.CreateSubMenuKernel()
+        self.kernel_menu_lst = self.create_kernel_menu()
 
         # Various variables
         self.menuposition = 0
-        self.kernel_submenu_title = ' ' + self.selected[0].split('-')[1].split('.')[0] + ' '
+        self.kernel_menu_title = ' ' + self.selected[0].split('-')[1].split('.')[0] + ' '
 
         # Menu dimensions
         self.kernel_submenu_width = len(max(
-            [self.kernel_submenu_lst[i][0] for i in range(len(self.kernel_submenu_lst))],
+            [self.kernel_menu_lst[i][0] for i in range(len(self.kernel_menu_lst))],
             key=len))
         self.kernel_submenu_width = max(self.kernel_submenu_width,
-                                        len(self.kernel_submenu_title)) + 4
-        self.kernel_submenu_height = len(self.kernel_submenu_lst) + 2
+                                        len(self.kernel_menu_title)) + 4
+        self.kernel_submenu_height = len(self.kernel_menu_lst) + 2
 
         # Init Menu
         self.kernel_submenu = self.stdscreen.subwin(self.kernel_submenu_height,
@@ -286,36 +287,35 @@ class MenuKernel:
         panel.update_panels()
 
         # Submenu
-        self.DisplaySubMenuKernel()
+        self.display_kernel_menu()
 
-    def CreateSubMenuKernel(self):
-        """ Create the item list for the kernel submenu  """
+    def create_kernel_menu(self):
+        """ Create the item list for the kernel menu  """
 
         if self.selected[1] == '[Connected]':
-            return [('Create New Kernel', 'self.StartNewKernel()'),
-                    ('Remove all died', 'self.RemoveAllDiedKernelJson()'),
-                    ('Remove all died and alive', 'self.RemoveAllKernelJson()')]
+            return [('New', 'self._new_k()'),
+                    ('Remove all died', 'self._rm_all_cf()'),
+                    ('Shutdown all alive', 'self._kill_all_k()')]
 
         elif self.selected[1] == '[Alive]':
-            return [('Connect', 'self.ConnectKernel()'),
-                    ('Shutdown', 'self.ShutdownKernel()'),
-                    ('Shutdown All Alive', 'self.ShutdownAllAliveKernel()'),
-                    ('Create New Kernel', 'self.StartNewKernel()'),
-                    ('Remove connection file', 'self.RemoveKernelJson()'),
-                    ('Remove all died', 'self.RemoveAllDiedKernelJson()'),
-                    ('Remove all died and alive', 'self.RemoveAllKernelJson()')]
+            return [('Connect', 'self._connect_k()'),
+                    ('New', 'self._new_k()'),
+                    ('Shutdown', 'self._kill_k()'),
+                    ('Shutdown all alive', 'self._kill_all_k()'),
+                    ('Remove all died', 'self._rm_all_cf()')]
 
         elif self.selected[1] == '[Died]':
-            return [('Restart', 'self.RestartKernel()'),
-                    ('Remove connection file', 'self.RemoveKernelJson()'),
-                    ('Remove all died', 'self.RemoveAllDiedKernelJson()'),
-                    ('Remove all died and alive', 'self.RemoveAllKernelJson()'),
-                    ('Create New Kernel', 'self.StartNewKernel()')]
+            return [('Restart', 'self._restart_k()'),
+                    ('New', 'self._new_k()'),
+                    ('Remove file', 'self._rm_cf()'),
+                    ('Remove all died', 'self._rm_all_cf()'),
+                    ('Shutdown all alive', 'self._kill_all_k()')]
+
         else:
             return []
 
-    def DisplaySubMenuKernel(self):
-        """ Display the kernel submenu """
+    def display_kernel_menu(self):
+        """ Display the kernel menu """
 
         self.panel_kernel_submenu.top()        # Push the panel to the bottom of the stack.
         self.panel_kernel_submenu.show()       # Display the panel (which might have been hidden)
@@ -328,22 +328,22 @@ class MenuKernel:
             if self.Config['font']['pw-font'] == 'True':
                 self.kernel_submenu.addstr(0,
                                            int((self.kernel_submenu_width -
-                                                len(self.kernel_submenu_title) - 2)/2),
+                                                len(self.kernel_menu_title) - 2)/2),
                                            '', curses.A_BOLD | self.c_kern_pwf)
-                self.kernel_submenu.addstr(self.kernel_submenu_title,
+                self.kernel_submenu.addstr(self.kernel_menu_title,
                                            curses.A_BOLD | self.c_kern_ttl)
                 self.kernel_submenu.addstr('', curses.A_BOLD | self.c_kern_pwf)
             else:
                 self.kernel_submenu.addstr(0,
                                            int((self.kernel_submenu_width -
-                                                len(self.kernel_submenu_title) - 2)/2),
-                                           '|' + self.kernel_submenu_title + '|',
+                                                len(self.kernel_menu_title) - 2)/2),
+                                           '|' + self.kernel_menu_title + '|',
                                            curses.A_BOLD | self.c_kern_ttl)
 
             self.kernel_submenu.refresh()
 
             # Create entries
-            for index, item in enumerate(self.kernel_submenu_lst):
+            for index, item in enumerate(self.kernel_menu_lst):
                 if index == self.menuposition:
                     mode = self.c_kern_hh | curses.A_BOLD
                 else:
@@ -354,28 +354,28 @@ class MenuKernel:
             menukey = self.kernel_submenu.getch()
 
             if menukey in [curses.KEY_ENTER, ord('\n')]:
-                eval(self.kernel_submenu_lst[self.menuposition][1])
+                eval(self.kernel_menu_lst[self.menuposition][1])
                 break
 
             elif menukey == curses.KEY_UP:
-                self.NavigateSubMenuKernel(-1)
+                self.navigate_kernel_menu(-1)
 
             elif menukey == curses.KEY_DOWN:
-                self.NavigateSubMenuKernel(1)
+                self.navigate_kernel_menu(1)
 
         self.kernel_submenu.clear()
         self.panel_kernel_submenu.hide()
 
-    def NavigateSubMenuKernel(self, n):
+    def navigate_kernel_menu(self, n):
         """ Navigate through the kernel submenu """
 
         self.menuposition += n
         if self.menuposition < 0:
             self.menuposition = 0
-        elif self.menuposition >= len(self.kernel_submenu_lst):
-            self.menuposition = len(self.kernel_submenu_lst)-1
+        elif self.menuposition >= len(self.kernel_menu_lst):
+            self.menuposition = len(self.kernel_menu_lst)-1
 
-    def StartNewKernel(self):
+    def _new_k(self):
         """ Create a new kernel. """
 
         kid = start_new_kernel(version=self.Config['kernel version']['version'])
@@ -383,48 +383,7 @@ class MenuKernel:
         msg.Display('Kernel id {} created (Python {})'.format(kid,
                     self.Config['kernel version']['version']))
 
-    def ShutdownKernel(self):
-        """ Kill kernel. """
-
-        shutdown_kernel(self.selected[0])
-        self.position = 1
-        self.page = 1
-
-    def ShutdownAllAliveKernel(self):
-        """ Kill all kernel marked as Alive. """
-
-        for json_path, status in self.lst:
-            if status == '[Alive]':
-                shutdown_kernel(json_path)
-        self.page = 1
-        self.position = 1  # Reinit cursor location
-
-    def RemoveKernelJson(self):
-        """ Remove connection file of died kernel. """
-
-        os.remove(self.selected[0])
-        self.page = 1
-        self.position = 1  # Reinit cursor location
-
-    def RemoveAllDiedKernelJson(self):
-        """ Remove connection files of all died kernels. """
-
-        for json_path, status in self.lst:
-            if status == '[Died]':
-                os.remove(json_path)
-        self.page = 1
-        self.position = 1  # Reinit cursor location
-
-    def RemoveAllKernelJson(self):
-        """ Remove connection files of all died kernels. """
-
-        for json_path, status in self.lst:
-            if status == '[Died]' or status == '[Alive]':
-                os.remove(json_path)
-        self.page = 1
-        self.position = 1  # Reinit cursor location
-
-    def ConnectKernel(self):
+    def _connect_k(self):
         """ Connect to a kernel. """
 
         km, self.kc = connect_kernel(self.selected[0])
@@ -434,8 +393,40 @@ class MenuKernel:
         self.cf = self.kc.connection_file
         self.new_kernel_connection = True
 
-    def RestartKernel(self):
+    def _restart_k(self):
         """ Restart a died kernel. """
 
         msg = WarningMsg(self.stdscreen)
         msg.Display('Not Implement yet!')
+
+    def _kill_k(self):
+        """ Kill kernel. """
+
+        shutdown_kernel(self.selected[0])
+        self.position = 1
+        self.page = 1
+
+    def _kill_all_k(self):
+        """ Kill all kernel marked as Alive. """
+
+        for json_path, status in self.lst:
+            if status == '[Alive]':
+                shutdown_kernel(json_path)
+        self.page = 1
+        self.position = 1  # Reinit cursor location
+
+    def _rm_cf(self):
+        """ Remove connection file of died kernel. """
+
+        os.remove(self.selected[0])
+        self.page = 1
+        self.position = 1  # Reinit cursor location
+
+    def _rm_all_cf(self):
+        """ Remove connection files of all died kernels. """
+
+        for json_path, status in self.lst:
+            if status == '[Died]':
+                os.remove(json_path)
+        self.page = 1
+        self.position = 1  # Reinit cursor location

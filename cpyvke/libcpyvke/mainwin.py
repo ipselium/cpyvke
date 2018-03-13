@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 13 mars 2018 12:51:23 CET
+# Last Modified : mar. 13 mars 2018 16:34:27 CET
 """
 -----------
 DOCSTRING
@@ -38,12 +38,12 @@ import logging
 import locale
 
 from .varmenu import MenuVar
-from .kernelwin import MenuKernel
+from .kernelwin import KernelWin
 from .widgets import WarningMsg, Help
-from ..utils.display import FormatCell, TypeSort, FilterVarLst, whos_to_dic
+from .colors import Colors
+from ..utils.display import format_cell, type_sort, filter_var_lst, whos_to_dic
 from ..utils.comm import recv_msg, send_msg
 from ..utils.kernel import restart_daemon
-
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
@@ -54,18 +54,17 @@ class MainWin:
     """ Main window. """
 
     def __init__(self, kc, cf, Config, DEBUG=False):
+        """ Main window constructor """
 
+        # Basics
         self.kc = kc
         self.cf = cf
-        self.curse_delay = 10
+        self.curse_delay = 25
         self.Config = Config
         self.DEBUG = DEBUG
 
-        # Init connection to Main Socket
-        self.InitMainSocket()
-
-        # Init connection to Main Socket
-        self.InitRequestSocket()
+        # Init connection to Main and request sockets
+        self.init_sockets()
 
         # Init CUI :
         self.close_signal = 'continue'
@@ -80,9 +79,11 @@ class MainWin:
         curses.curs_set(0)          #
         # How many tenths of second are waited to refresh screen, from 1 to 255
         curses.halfdelay(self.curse_delay)
-        # Colors
-        self.InitColors()
-        self.ColorDef()
+        # Init color pairs
+        Colors(self.Config)
+        # Assign color pairs to variables
+        self.color_def()
+        # Set some colors
         self.stdscreen.bkgd(self.c_main_txt)
         self.stdscreen.attrset(self.c_main_bdr | curses.A_BOLD)  # border color
 
@@ -116,27 +117,7 @@ class MainWin:
         self.VarLst.bkgd(self.c_exp_txt)
         self.VarLst.attrset(self.c_exp_bdr | curses.A_BOLD)  # border color
 
-    def CloseMainSocket(self):
-        """ Close Main socket. """
-
-        try:
-            self.MainSock.close()
-            logger.debug('Main socket closed')
-        except Exception:
-            logger.error('Unable to close socket : ', exc_info=True)
-            pass
-
-    def CloseRequestSocket(self):
-        """ Close Request socket. """
-
-        try:
-            self.RequestSock.close()
-            logger.debug('Request socket closed')
-        except Exception:
-            logger.error('Unable to close socket : ', exc_info=True)
-            pass
-
-    def InitMainSocket(self):
+    def init_main_socket(self):
         """ Init Main Socket. """
 
         try:
@@ -149,7 +130,7 @@ class MainWin:
         except Exception:
             logger.error('Connection to stream socket failed : \n', exc_info=True)
 
-    def InitRequestSocket(self):
+    def init_request_socket(self):
         """ Init Request Socket. """
 
         try:
@@ -162,260 +143,64 @@ class MainWin:
         except Exception:
             logger.error('Connection to stream socket failed : \n', exc_info=True)
 
-    def InitSockets(self):
+    def init_sockets(self):
         """ Init all sockets """
-        self.InitMainSocket()
-        self.InitRequestSocket()
 
-    def CloseSockets(self):
+        self.init_main_socket()
+        self.init_request_socket()
+
+    def close_main_socket(self):
+        """ Close Main socket. """
+
+        try:
+            self.MainSock.close()
+            logger.debug('Main socket closed')
+        except Exception:
+            logger.error('Unable to close socket : ', exc_info=True)
+            pass
+
+    def close_request_socket(self):
+        """ Close Request socket. """
+
+        try:
+            self.RequestSock.close()
+            logger.debug('Request socket closed')
+        except Exception:
+            logger.error('Unable to close socket : ', exc_info=True)
+            pass
+
+    def close_sockets(self):
         """ Close all sockets """
-        self.CloseMainSocket()
-        self.CloseRequestSocket()
 
-    def RestartSocketConnection(self):
+        self.close_main_socket()
+        self.close_request_socket()
+
+    def restart_sockets(self):
         """ Stop then start connection to sockets. """
 
-        self.CloseMainSocket()
-        self.CloseRequestSocket()
-        self.InitMainSocket()
-        self.InitRequestSocket()
+        self.close_sockets()
+        self.init_sockets()
 
-    def WngSock(self, WngMsg):
+    def check_main_socket(self):
+        """ Test if connection to daemon is alive. """
+
+        try:
+            send_msg(self.MainSock, '<TEST>')
+            self.connected = True
+        except OSError:
+            self.connected = False
+
+    def warning_socket(self, WngMsg):
         """ Check connection and display warning. """
 
-        self.CheckSocket()
+        self.check_main_socket()
         if self.connected:
             WngMsg.Display('  Connected to socket  ')
         else:
             WngMsg.Display(' Disconnected from socket ')
 
-    def EvalColor(self, color):
-        """ Check if a color is set to transparent. """
-
-        if color == 'transparent':
-            curses.use_default_colors()
-            return -1
-        elif color.isdigit():
-            if curses.COLORS > 8:
-                return int(color)
-            else:
-                logger.error('TERM accept only 8 colors')
-                return eval('curses.COLOR_UNDEFINED')
-        else:
-            return eval('curses.COLOR_' + color.upper())
-
-    def warning_colors(self):
-        """ Define warning color """
-        wgtxt = self.Config['wg']['txt'].replace(' ', '').split(',')
-        wgbdr = self.Config['wg']['bdr'].replace(' ', '').split(',')
-        try:
-            wgtxt_fg = self.EvalColor(wgtxt[0])
-            wgtxt_bg = self.EvalColor(wgtxt[1])
-            wgbdr_fg = self.EvalColor(wgbdr[0])
-            wgbdr_bg = self.EvalColor(wgbdr[1])
-        except Exception as err:
-            wgtxt_fg = curses.COLOR_RED
-            wgtxt_bg = -1
-            wgbdr_fg = curses.COLOR_RED
-            wgbdr_bg = -1
-            logger.error('%s', err)
-
-        # Define pairs :
-        curses.init_pair(1, wgtxt_fg, wgtxt_bg)
-        curses.init_pair(2, wgbdr_fg, wgbdr_bg)
-
-    def main_and_bar_colors(self):
-        """ Define Main & Bar color """
-
-        mntxt = self.Config['mn']['txt'].replace(' ', '').split(',')
-        mnbdr = self.Config['mn']['bdr'].replace(' ', '').split(',')
-        mnttl = self.Config['mn']['ttl'].replace(' ', '').split(',')
-        mnhh = self.Config['mn']['hh'].replace(' ', '').split(',')
-        try:
-            mntxt_fg = self.EvalColor(mntxt[0])
-            mntxt_bg = self.EvalColor(mntxt[1])
-            mnbdr_fg = self.EvalColor(mnbdr[0])
-            mnbdr_bg = self.EvalColor(mnbdr[1])
-            mnttl_fg = self.EvalColor(mnttl[0])
-            mnttl_bg = self.EvalColor(mnttl[1])
-            mnhh_fg = self.EvalColor(mnhh[0])
-            mnhh_bg = self.EvalColor(mnhh[1])
-        except Exception as err:
-            mntxt_fg = curses.COLOR_WHITE
-            mntxt_bg = -1
-            mnbdr_fg = curses.COLOR_WHITE
-            mnbdr_bg = -1
-            mnttl_fg = curses.COLOR_WHITE
-            mnttl_bg = -1
-            mnhh_fg = curses.COLOR_BLACK
-            mnhh_bg = curses.COLOR_WHITE
-            logger.error('%s', err)
-
-        brkn = self.Config['br']['kn'].replace(' ', '').split(',')
-        brhlp = self.Config['br']['hlp'].replace(' ', '').split(',')
-        brco = self.Config['br']['co'].replace(' ', '').split(',')
-        brdco = self.Config['br']['dco'].replace(' ', '').split(',')
-        try:
-            brkn_fg = self.EvalColor(brkn[0])
-            brkn_bg = self.EvalColor(brkn[1])
-            brhlp_fg = self.EvalColor(brhlp[0])
-            brhlp_bg = self.EvalColor(brhlp[1])
-            brco_fg = self.EvalColor(brco[0])
-            brco_bg = self.EvalColor(brco[1])
-            brdco_fg = self.EvalColor(brdco[0])
-            brdco_bg = self.EvalColor(brdco[1])
-        except Exception as err:
-            brkn_fg = curses.COLOR_WHITE
-            brkn_bg = -1
-            brhlp_fg = curses.COLOR_WHITE
-            brhlp_bg = -1
-            brco_fg = curses.COLOR_GREEN
-            brco_bg = -1
-            brdco_fg = curses.COLOR_RED
-            brdco_bg = -1
-            logger.error('%s', err)
-
-        # Define Pairs
-        curses.init_pair(11, mntxt_fg, mntxt_bg)
-        curses.init_pair(12, mnbdr_fg, mnbdr_bg)
-        curses.init_pair(13, mnttl_fg, mnttl_bg)
-        curses.init_pair(14, mnhh_fg, mnhh_bg)
-        if mnttl_bg != -1:
-            curses.init_pair(15, mnttl_bg, mnbdr_bg)
-        else:
-            curses.init_pair(15, mnbdr_fg, mnbdr_bg)
-
-        curses.init_pair(41, brkn_fg, brkn_bg)
-        curses.init_pair(42, brhlp_fg, brhlp_bg)
-        curses.init_pair(43, brco_fg, brco_bg)
-        curses.init_pair(44, brdco_fg, brdco_bg)
-        curses.init_pair(47, mnbdr_fg, brkn_bg)
-
-        if brdco_bg != -1:
-            curses.init_pair(40, brdco_bg, mnbdr_bg)
-        else:
-            curses.init_pair(40, mnbdr_fg, mnbdr_bg)
-
-        if brco_bg != -1:
-            curses.init_pair(49, brco_bg, brkn_bg)
-        else:
-            curses.init_pair(49, mnbdr_fg, brkn_bg)
-
-        if brkn_bg != -1:
-            curses.init_pair(45, brkn_bg, mnbdr_bg)
-            curses.init_pair(48, brkn_bg, brco_bg)
-        else:
-            curses.init_pair(45, mnbdr_fg, mnbdr_bg)
-            curses.init_pair(48, mnbdr_fg, brco_bg)
-
-        if brhlp_bg != -1:
-            curses.init_pair(46, brhlp_bg, mnbdr_bg)
-        else:
-            curses.init_pair(46, mnbdr_fg, mnbdr_bg)
-
-    def explorer_colors(self):
-        """ Define explorer color """
-        xptxt = self.Config['xp']['txt'].replace(' ', '').split(',')
-        xpbdr = self.Config['xp']['bdr'].replace(' ', '').split(',')
-        xpttl = self.Config['xp']['ttl'].replace(' ', '').split(',')
-        xphh = self.Config['xp']['hh'].replace(' ', '').split(',')
-        try:
-            xptxt_fg = self.EvalColor(xptxt[0])
-            xptxt_bg = self.EvalColor(xptxt[1])
-            xpbdr_fg = self.EvalColor(xpbdr[0])
-            xpbdr_bg = self.EvalColor(xpbdr[1])
-            xpttl_fg = self.EvalColor(xpttl[0])
-            xpttl_bg = self.EvalColor(xpttl[1])
-            xphh_fg = self.EvalColor(xphh[0])
-            xphh_bg = self.EvalColor(xphh[1])
-        except Exception as err:
-            xptxt_fg = curses.COLOR_WHITE
-            xptxt_bg = -1
-            xpbdr_fg = curses.COLOR_CYAN
-            xpbdr_bg = -1
-            xpttl_fg = curses.COLOR_CYAN
-            xpttl_bg = -1
-            xphh_fg = curses.COLOR_BLACK
-            xphh_bg = curses.COLOR_CYAN
-            logger.error('%s', err)
-
-        # Define pairs
-        curses.init_pair(21, xptxt_fg, xptxt_bg)
-        curses.init_pair(22, xpbdr_fg, xpbdr_bg)
-        curses.init_pair(23, xpttl_fg, xpttl_bg)
-        curses.init_pair(24, xphh_fg, xphh_bg)
-        if xpttl_bg != -1:
-            curses.init_pair(25, xpttl_bg, xpbdr_bg)
-        else:
-            curses.init_pair(25, xpbdr_fg, xpbdr_bg)
-
-    def kernel_colors(self):
-        """ Define kernel color """
-        kntxt = self.Config['kn']['txt'].replace(' ', '').split(',')
-        knbdr = self.Config['kn']['bdr'].replace(' ', '').split(',')
-        knttl = self.Config['kn']['ttl'].replace(' ', '').split(',')
-        knhh = self.Config['kn']['hh'].replace(' ', '').split(',')
-        knco = self.Config['kn']['co'].replace(' ', '').split(',')
-        kndi = self.Config['kn']['di'].replace(' ', '').split(',')
-        knal = self.Config['kn']['al'].replace(' ', '').split(',')
-        try:
-            kntxt_fg = self.EvalColor(kntxt[0])
-            kntxt_bg = self.EvalColor(kntxt[1])
-            knbdr_fg = self.EvalColor(knbdr[0])
-            knbdr_bg = self.EvalColor(knbdr[1])
-            knttl_fg = self.EvalColor(knttl[0])
-            knttl_bg = self.EvalColor(knttl[1])
-            knhh_fg = self.EvalColor(knhh[0])
-            knhh_bg = self.EvalColor(knhh[1])
-            knco_fg = self.EvalColor(knco[0])
-            knco_bg = self.EvalColor(knco[1])
-            kndi_fg = self.EvalColor(kndi[0])
-            kndi_bg = self.EvalColor(kndi[1])
-            knal_fg = self.EvalColor(knal[0])
-            knal_bg = self.EvalColor(knal[1])
-        except Exception as err:
-            kntxt_fg = curses.COLOR_RED
-            kntxt_bg = -1
-            knbdr_fg = curses.COLOR_RED
-            knbdr_bg = -1
-            knttl_fg = curses.COLOR_RED
-            knttl_bg = -1
-            knhh_fg = curses.COLOR_WHITE
-            knhh_bg = -1
-            knco_fg = curses.COLOR_GREEN
-            knco_bg = -1
-            knal_fg = curses.COLOR_CYAN
-            knal_bg = -1
-            kndi_fg = curses.COLOR_RED
-            kndi_bg = -1
-            logger.error('%s', err)
-
-        # Define pairs
-        curses.init_pair(31, kntxt_fg, kntxt_bg)
-        curses.init_pair(32, knbdr_fg, knbdr_bg)
-        curses.init_pair(33, knttl_fg, knttl_bg)
-        curses.init_pair(34, knhh_fg, knhh_bg)
-        curses.init_pair(35, knco_fg, knco_bg)
-        curses.init_pair(36, knal_fg, knal_bg)
-        curses.init_pair(37, kndi_fg, kndi_bg)
-        if knttl_bg != -1:
-            curses.init_pair(38, knttl_bg, knbdr_bg)
-        else:
-            curses.init_pair(38, knbdr_fg, knbdr_bg)
-
-    def InitColors(self):
-        """ Initialize colors. """
-
-        curses.start_color()        #
-        curses.setupterm()
-
-        self.warning_colors()
-        self.main_and_bar_colors()
-        self.explorer_colors()
-        self.kernel_colors()
-
-    def ColorDef(self):
-        """ Color variables. """
+    def color_def(self):
+        """ Definition of all color variables """
 
         self.c_warn_txt = curses.color_pair(1)
         self.c_warn_bdr = curses.color_pair(2)
@@ -454,60 +239,61 @@ class MainWin:
 
     def run(self):
         """ Run daemon """
+
         try:
-            self.GetVars()    # Init Variables
+            self.get_vars()    # Init Variables
             self.pkey = -1    # Init pressed Key
             while self.close_signal == 'continue':
-                self.UpdateCurses()
-            self.ShutdownApp()
+                self.update_curses()
+            self.shutdown()
         except Exception:
-            self.ExitWithError()
+            self.exit_with_error()
 
-    def UpdateCurses(self):
+    def update_curses(self):
         """ Update Curses """
 
         # Listen to resize and adapt Curses
-        self.ResizeCurses()
+        self.resize_curses()
 
         # Check if size is enough
         if self.screen_height < self.term_min_height or self.screen_width < self.term_min_width:
-            self.SizeWng()
+            self.check_size()
             sleep(0.5)
         else:
-            self.UpdateCursesTasks()
+            self.tasks()
 
-    def UpdateCursesTasks(self):
+    def tasks(self):
         """ Tasks to update curses """
 
         # Check Connection to daemon
-        self.CheckSocket()
+        self.check_main_socket()
 
         # Get variables from daemon
-        self.GetVars()
+        self.get_vars()
 
         # Arange variable list
-        self.ArangeVarLst()
+        self.arange_var_lst()
 
         # Navigate in the variable list window
-        self.NavigateVarLst()
+        self.navigate_var_lst()
 
         # Keys
-        self.KeyBindings()
+        self.key_bindings()
 
         # Update screen size if another menu break because of resizing
-        self.ResizeCurses()
+        self.resize_curses()
 
         # Update all static panels
-        self.UpdateStatic()
+        self.update_static()
 
         # Get pressed key
         self.pkey = self.stdscreen.getch()
 
         # Close menu
         if self.pkey == 113:
-                self.MenuClose()
+                self.close_menu()
 
-    def KeyBindings(self):
+    def key_bindings(self):
         """ Key Actions ! """
 
         # Init Warning Msg
@@ -517,7 +303,7 @@ class MainWin:
         if self.pkey == ord("\n") and self.row_num != 0:
             # First Update VarLst (avoid bug)
             self.VarLst.border(0)
-            self.UpdateVarLst()
+            self.update_var_lst()
             self.stdscreen.refresh()
             self.VarLst.refresh()
             # MenuVar
@@ -527,70 +313,61 @@ class MainWin:
             sleep(0.5)
 
         # Menu Help
-        if self.pkey == 104:    # -> h
+        elif self.pkey == 104:    # -> h
             help_menu = Help(self)
             help_menu.Display()
 
         # Menu KERNEL
-        if self.pkey == 107:    # -> k
-            kernel_menu = MenuKernel(self)
-            self.cf, self.kc = kernel_menu.Display()
+        elif self.pkey == 107:    # -> k
+            kernel_win = KernelWin(self)
+            self.cf, self.kc = kernel_win.display()
             # Reset cursor location
             self.position = 1
             self.page = int(ceil(self.position/self.row_max))
 
         # Menu Search
-        if self.pkey == 47:    # -> /
-            self.SearchVar()
-            try:
-                logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
-                self.search_index = min([i for i, s in enumerate(self.strings) if self.search in s])
-            except ValueError:
-                WngMsg.Display('Variable ' + self.search + ' not in kernel')
-                pass
-            else:
-                self.position = self.search_index + 1
-                self.page = int(ceil(self.position/self.row_max))
+        elif self.pkey == 47:    # -> /
+            self.search_var(WngMsg)
 
         # Reconnection to socket
-        if self.pkey == 82:    # -> R
+        elif self.pkey == 82:    # -> R
             WngMsg.Display(' Restarting connection ')
-            self.RestartSocketConnection()
-            self.WngSock(WngMsg)
+            self.restart_sockets()
+            self.warning_socket(WngMsg)
 
         # Disconnect from daemon
-        if self.pkey == 68:    # -> D
-            self.CloseSockets()
-            self.WngSock(WngMsg)
+        elif self.pkey == 68:    # -> D
+            self.close_sockets()
+            self.warning_socket(WngMsg)
 
         # Connect to daemon
-        if self.pkey == 67:     # -> C
-            self.InitSockets()
-            self.WngSock(WngMsg)
+        elif self.pkey == 67:     # -> C
+            self.init_sockets()
+            self.warning_socket(WngMsg)
 
         # Restart daemon
-        if self.pkey == 18:    # -> c-r
+        elif self.pkey == 18:    # -> c-r
             restart_daemon()
             WngMsg.Display(' Restarting Daemon ')
-            self.InitSockets()
-            self.WngSock(WngMsg)
+            self.init_sockets()
+            self.warning_socket(WngMsg)
 
         # Force Update VarLst
-        if self.pkey == 114:   # -> r
+        elif self.pkey == 114:   # -> r
             send_msg(self.RequestSock, '<code> ')
             WngMsg.Display('Reloading Variable List...')
 
-    def ArangeVarLst(self):
+    def arange_var_lst(self):
         """ Organize/Arange variable list. """
 
         if self.mk_sort == 'name':
             self.strings = sorted(list(self.variables))
 
         elif self.mk_sort == 'type':
-            self.strings = TypeSort(self.variables)
+            self.strings = type_sort(self.variables)
 
         elif self.mk_sort == 'filter':
-            self.strings = FilterVarLst(self.variables, self.filter)
+            self.strings = filter_var_lst(self.variables, self.filter)
             self.VarLst_wng = 'Filter : ' + self.filter + ' (' + str(len(self.strings)) + ' obj.)'
 
         # Sort variable by name/type
@@ -602,7 +379,7 @@ class MainWin:
 
         # Filter variables
         if self.pkey == 108:    # -> l
-            self.FilterVar()
+            self.filter_var()
             self.mk_sort = 'filter'
             self.position = 1
             self.page = int(ceil(self.position/self.row_max))
@@ -617,7 +394,7 @@ class MainWin:
         # Update number of columns
         self.row_num = len(self.strings)
 
-    def FilterVar(self):
+    def filter_var(self):
         """ Apply filter for the variable list"""
 
         # Init Menu
@@ -649,7 +426,7 @@ class MainWin:
         panel_filter.hide()
         curses.halfdelay(self.curse_delay)  # Relaunch autorefresh !
 
-    def SearchVar(self):
+    def search_var(self, WngMsg):
         """ Search an object in the variable list"""
 
         # Init Menu
@@ -682,7 +459,17 @@ class MainWin:
         panel_search.hide()
         curses.halfdelay(self.curse_delay)  # Relaunch autorefresh !
 
-    def UpdateStatic(self):
+        try:
+            logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
+            self.search_index = min([i for i, s in enumerate(self.strings) if self.search in s])
+        except ValueError:
+            WngMsg.Display('Variable ' + self.search + ' not in kernel')
+            pass
+        else:
+            self.position = self.search_index + 1
+            self.page = int(ceil(self.position/self.row_max))
+
+    def update_static(self):
         """ Update all static windows. """
 
         # Erase all windows
@@ -695,18 +482,18 @@ class MainWin:
 
         # Update all windows (virtually)
         if self.DEBUG:
-            self.QueueInfo()         # Display infos about the process
-            self.TermInfo()         # Display infos about the process
-            self.DebugInfo()        # Display debug infos
+            self.dbg_socket()         # Display infos about the process
+            self.dbg_term()         # Display infos about the process
+            self.dbg_general()        # Display debug infos
 
-        self.UpdateVarLst()     # Update variables list
+        self.update_var_lst()     # Update variables list
 
         # Update display
-        self.BottomInfo()      # Display infos about kernel at bottom
+        self.bottom_bar_info()      # Display infos about kernel at bottom
         self.stdscreen.refresh()
         self.VarLst.refresh()
 
-    def UpdateVarLst(self):
+    def update_var_lst(self):
         """ Update the list of variables display """
 
         # Title
@@ -732,7 +519,7 @@ class MainWin:
                 self.VarLst.addstr(1, 1, "No Variable in kernel", self.c_exp_hh)
 
             else:
-                cell = FormatCell(self.variables, self.strings[i-1], self.screen_width)
+                cell = format_cell(self.variables, self.strings[i-1], self.screen_width)
                 if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
                     self.VarLst.addstr(i-(self.row_max*(self.page-1)), 2,
                                        cell.encode(code), self.c_exp_hh)
@@ -752,18 +539,18 @@ class MainWin:
                                int((self.screen_width-len(self.VarLst_wng))/2),
                                '< ' + self.VarLst_wng + ' >', curses.A_DIM | self.c_exp_ttl)
 
-    def NavigateVarLst(self):
+    def navigate_var_lst(self):
         """ Navigation though the variable list"""
 
         self.pages = int(ceil(self.row_num/self.row_max))
         if self.pkey == curses.KEY_DOWN:
-            self.NavDown()
+            self.navigate_down()
         if self.pkey == curses.KEY_UP:
-            self.NavUp()
+            self.navigate_up()
         if self.pkey in (curses.KEY_LEFT, 339):
-            self.NavLeft()
+            self.navigate_left()
         if self.pkey in (curses.KEY_RIGHT, 338):
-            self.NavRight()
+            self.navigate_right()
         if self.pkey == 262:
             self.position = 1
             self.page = 1
@@ -771,7 +558,7 @@ class MainWin:
             self.position = self.row_num
             self.page = self.pages
 
-    def NavUp(self):
+    def navigate_up(self):
         """ Navigate Up. """
 
         if self.page == 1:
@@ -784,7 +571,7 @@ class MainWin:
                 self.page = self.page - 1
                 self.position = self.row_max + (self.row_max*(self.page-1))
 
-    def NavDown(self):
+    def navigate_down(self):
         """ Navigate Down. """
 
         if self.page == 1:
@@ -804,21 +591,21 @@ class MainWin:
                 self.page = self.page + 1
                 self.position = 1 + (self.row_max * (self.page-1))
 
-    def NavLeft(self):
+    def navigate_left(self):
         """ Navigate Left. """
 
         if self.page > 1:
             self.page = self.page - 1
             self.position = 1 + (self.row_max*(self.page-1))
 
-    def NavRight(self):
+    def navigate_right(self):
         """ Navigate Right. """
 
         if self.page < self.pages:
             self.page = self.page + 1
             self.position = (1+(self.row_max*(self.page-1)))
 
-    def GetVars(self):
+    def get_vars(self):
         """ Get variable from the daemon """
 
         try:
@@ -840,16 +627,7 @@ class MainWin:
                 except KeyError:
                     pass
 
-    def CheckSocket(self):
-        """ Test if connection to daemon is alive. """
-
-        try:
-            send_msg(self.MainSock, '<TEST>')
-            self.connected = True
-        except OSError:
-            self.connected = False
-
-    def ResizeCurses(self):
+    def resize_curses(self):
         """ Check if terminal is resized and adapt screen """
 
         resize = curses.is_term_resized(self.screen_height, self.screen_width)
@@ -863,7 +641,7 @@ class MainWin:
             self.stdscreen.refresh()
             self.VarLst.refresh()
 
-    def SizeWng(self):
+    def check_size(self):
         """ Blank screen and display a warning if size of the terminal is too small. """
 
         self.stdscreen.erase()
@@ -883,7 +661,7 @@ class MainWin:
         self.stdscreen.border(0)
         self.stdscreen.refresh()
 
-    def BottomInfo(self):
+    def bottom_bar_info(self):
         """ Check and display kernel informations """
 
         kernel_info_id = 'kernel ' + self.cf.split('-')[1].split('.')[0] + ' '
@@ -924,7 +702,7 @@ class MainWin:
             self.stdscreen.addstr(self.screen_height-1, self.screen_width-12,
                                   '< h:help >', self.c_bar_hlp | curses.A_BOLD)
 
-    def QueueInfo(self):
+    def dbg_socket(self):
         """ Display queue informations """
 
         self.stdscreen.addstr(self.row_max + 4, int(2*self.screen_width/3),
@@ -932,7 +710,7 @@ class MainWin:
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr('', self.c_main_pwf | curses.A_BOLD)
 
-    def TermInfo(self):
+    def dbg_term(self):
         """ Display terminal informations """
 
         self.stdscreen.addstr(self.row_max + 4, int(self.screen_width/3),
@@ -949,7 +727,7 @@ class MainWin:
                               ' color : ' + str(curses.COLORS),
                               curses.A_DIM | self.c_main_txt)
 
-    def DebugInfo(self):
+    def dbg_general(self):
         """ Display debug informations """
 
         self.stdscreen.addstr(self.row_max + 4, 2, ' Debug ', self.c_main_ttl | curses.A_BOLD)
@@ -960,7 +738,7 @@ class MainWin:
         self.stdscreen.addstr(self.row_max + 7, 3, ' limit : ' + str(self.filter), curses.A_DIM | self.c_main_txt)
         self.stdscreen.addstr(self.row_max + 8, 3, ' sort : ' + str(self.mk_sort), curses.A_DIM | self.c_main_txt)
 
-    def MenuClose(self):
+    def close_menu(self):
         """ Close Menu """
 
         # Init Menu
@@ -987,7 +765,7 @@ class MainWin:
         self.pkey = -1
         while self.pkey not in (121, 110, 113, 89, 78, 27, ord("\n")):
             self.pkey = self.stdscreen.getch()
-            sleep(0.1)
+            sleep(0.5)
 
         # Erase the panel
         menu_close.clear()
@@ -1001,7 +779,7 @@ class MainWin:
         elif self.pkey in (113, 27):  # escape this menu
             self.close_signal = 'continue'
 
-    def ShutdownApp(self):
+    def shutdown(self):
         """ Shutdown CUI, Daemon, and kernel """
 
         curses.endwin()
@@ -1013,11 +791,10 @@ class MainWin:
             send_msg(self.RequestSock, '<_stop>')
             # self.kc.shutdown()
 
-        self.MainSock.close()
-        self.RequestSock.close()
-        self.KillAllFigures()   # Stop all figure subprocesses
+        self.close_sockets()
+        self.kill_all_figs()   # Stop all figure subprocesses
 
-    def KillAllFigures(self):
+    def kill_all_figs(self):
         """ Kill all figures (running in different processes) """
 
         import multiprocessing
@@ -1030,7 +807,7 @@ class MainWin:
         for child in multiprocessing.active_children():
             child.terminate()
 
-    def ExitWithError(self):
+    def exit_with_error(self):
         """ If error, send terminate signal to daemon and resore terminal to
             sane state """
 
@@ -1039,5 +816,5 @@ class MainWin:
         curses.echo()
         curses.nocbreak()
         curses.endwin()
-        self.ShutdownApp()
+        self.shutdown()
         traceback.print_exc()           # Print the exception

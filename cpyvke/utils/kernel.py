@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : mar. 13 mars 2018 11:42:52 CET
+# Last Modified : mar. 13 mars 2018 14:02:48 CET
 """
 -----------
 DOCSTRING
@@ -161,7 +161,7 @@ def init_kernel(kc, backend='tk'):
     kc.execute("_np.set_printoptions(threshold='nan')", store_history=False)
     kc.execute("import json as _json", store_history=False)
     kc.execute("%matplotlib {}".format(backend), store_history=False)
-    kc.execute("import cpyvke.inspector as _inspect", store_history=False)
+    kc.execute("import cpyvke.utils.inspector as _inspect", store_history=False)
 
 
 def restart_daemon():

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 12:01:45 CET
-# Last Modified : mar. 13 mars 2018 12:08:27 CET
+# Last Modified : mar. 13 mars 2018 15:02:49 CET
 """
 -----------
 DOCSTRING
@@ -83,7 +83,7 @@ def dump(obj, nested_level=0, output=[]):
     return output
 
 
-def FilterVarLst(lst, filter):
+def filter_var_lst(lst, filter):
     """ Filter variable list (name|type). """
 
     filtered = []
@@ -94,7 +94,7 @@ def FilterVarLst(lst, filter):
     return sorted(filtered)
 
 
-def TypeSort(lst):
+def type_sort(lst):
     """ Sort variable by type. """
 
     from operator import itemgetter
@@ -108,7 +108,7 @@ def TypeSort(lst):
     return [item[0] for item in types]
 
 
-def FormatCell(variables, name, max_width):
+def format_cell(variables, name, max_width):
     """ Format cells for display """
 
     max_width = int((max_width-7)/5)
