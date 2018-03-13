@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : sam. 10 mars 2018 20:10:51 CET
+# Last Modified : mar. 13 mars 2018 12:42:20 CET
 """
 -----------
 DOCSTRING
@@ -36,10 +36,16 @@ import subprocess
 import sys
 import locale
 
-from .ctools import suspend_curses
+from ..libcpyvke.widgets import suspend_curses
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
+
+
+def inspect_class_instance(class_inst):
+    return {i: {'type': str(type(class_inst.__class__.__dict__[i])),
+                'value': str(class_inst.__class__.__dict__[i])} for i in
+            class_inst.__class__.__dict__ if not i.startswith('_')}
 
 
 def In_Thread(Func):

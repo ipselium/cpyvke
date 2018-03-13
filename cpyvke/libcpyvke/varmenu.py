@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : dim. 11 mars 2018 22:30:38 CET
+# Last Modified : mar. 13 mars 2018 12:41:30 CET
 """
 -----------
 DOCSTRING
@@ -28,18 +28,17 @@ DOCSTRING
 @author: Cyril Desjouy
 """
 
-
-import curses
-import json
-from curses import panel
-from numpy import load
-from time import sleep, time
 import os
 import logging
+import json
+import numpy
+import curses
+from curses import panel
+from time import sleep, time
 
-from .inspector import Inspect
-from .cwidgets import Viewer, WarningMsg
-from .kd5 import send_msg
+from .widgets import Viewer, WarningMsg
+from ..utils.inspector import Inspect
+from ..utils.comm import send_msg
 
 
 logger = logging.getLogger('cpyvke.cvar')
@@ -49,10 +48,10 @@ class MenuVar:
     """ Class to handle variable menus. """
 
     def __init__(self, parent):
+        """ Class constructor. """
 
         # Init parent
         self.stdscreen = parent.stdscreen
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()  # get heigh and width of stdscreen
         self.Config = parent.Config
         self.c_exp_txt = curses.color_pair(21)
         self.c_exp_bdr = curses.color_pair(22)
@@ -61,72 +60,27 @@ class MenuVar:
         self.c_exp_pwf = curses.color_pair(25)
         self.SaveDir = parent.Config['path']['save-dir']
         self.RequestSock = parent.RequestSock
+        self.position = parent.position
+        self.row_max = parent.row_max
+        self.page = parent.page
+
+        # get heigh and width of stdscreen
+        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
 
         # Variables properties
         self.varname = parent.strings[parent.position-1]
         self.vartype = parent.variables[parent.strings[parent.position-1]]['type']
-        self.varval = None
+        self.varval = parent.variables[parent.strings[parent.position-1]]['value']
 
-        # Get variable value
-        if parent.variables[parent.strings[parent.position-1]]['type'] == 'module':
-            self.filename = '/tmp/tmp_' + self.varname
-            code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}.__name__, fcpyvke0)".format(self.filename, self.varname)
-            try:
-                send_msg(self.RequestSock, '<code>' + code)
-                logger.debug("Name of module '{}' asked to kd5".format(self.varname))
-                self.Wait(parent)
-                with open(self.filename, 'r') as f:
-                    self.varval = json.load(f)
-            except Exception:
-                Wng = WarningMsg(self.stdscreen)
-                Wng.Display('Kernel Busy ! Try again...')
-                self.varval = '[Busy]'
-                logger.error('Get Value : ', exc_info=True)
-                self.is_menu = False
-            else:
-                logger.debug('kd5 answer : {}'.format(self.varval))
-                os.remove(self.filename)
-                self.is_menu = True
-
-        elif parent.variables[parent.strings[parent.position-1]]['type'] in ('dict', 'list', 'tuple', 'str', 'unicode'):
-            self.filename = '/tmp/tmp_' + self.varname
-            code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}, fcpyvke0)".format(self.filename, self.varname)
-            try:
-                send_msg(self.RequestSock, '<code>' + code)
-                self.Wait(parent)
-                with open(self.filename, 'r') as f:
-                    self.varval = json.load(f)
-            except Exception:
-                logger.error('Get Value', exc_info=True)
-                self.KernelBusy()
-            else:
-                self.view = Viewer(self)
-                os.remove(self.filename)
-                self.is_menu = True
-
-        elif parent.variables[parent.strings[parent.position-1]]['type'] == 'ndarray':
-            self.filename = '/tmp/tmp_' + self.varname + '.npy'
-            code = "_np.save('" + self.filename + "', " + self.varname + ')'
-            try:
-                send_msg(self.RequestSock, '<code>' + code)
-                self.Wait(parent)
-                self.varval = load(self.filename)
-                os.remove(self.filename)
-            except Exception:
-                logger.error('Get Variable : ', exc_info=True)
-                self.KernelBusy()
-            else:
-                self.is_menu = True
-        else:
-            self.varval = '[Not Impl.]'
-            self.is_menu = True
+        # Get Variable characteristics
+        self.get_variable()
 
         # Init Inspector
         self.inspect = Inspect(self.varval, self.varname, self.vartype)
 
         # Create Menu List
         self.menu_title = self.varname
-        self.menu_lst = self.CreateMenuLst()
+        self.menu_lst = self.create_menu_lst()
         if len(self.menu_lst) == 0:
             self.menu_lst.append(('No Options', 'exit'))
 
@@ -148,18 +102,108 @@ class MenuVar:
 
         # Various variables
         self.menuposition = 0
+        self.quit_menu = False
 
-    def KernelBusy(self):
+    def get_variable(self):
+        """ Get Variable characteristics. """
+        if self.vartype == 'module':
+            self.get_module()
+
+        elif self.vartype in ('dict', 'list', 'tuple', 'str', 'unicode'):
+            self.get_structure()
+
+        elif self.vartype == 'ndarray':
+            self.get_ndarray()
+
+        # Class
+        elif '.' + self.vartype in self.varval:
+            self.get_class()
+        else:
+            self.varval = '[Not Impl.]'
+            self._ismenu = True
+
+    def get_class(self):
+        """ Get Class characteristics. """
+
+        self.vartype = 'class'
+        self.filename = '/tmp/tmp_' + self.varname
+        self.code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump(_inspect.inspect_class_instance({}), fcpyvke0)".format(self.filename, self.varname)
+        self.send_code()
+
+    def get_module(self):
+        """ Get modules characteristics """
+
+        self.filename = '/tmp/tmp_' + self.varname
+        self.code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}.__name__, fcpyvke0)".format(self.filename, self.varname)
+        self.send_code()
+
+    def get_structure(self):
+        """ Get Dict/List/Tuple characteristics """
+
+        self.filename = '/tmp/tmp_' + self.varname
+        self.code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}, fcpyvke0)".format(self.filename, self.varname)
+        self.send_code()
+
+    def get_ndarray(self):
+        """ Get ndarray characteristics. """
+
+        self.filename = '/tmp/tmp_' + self.varname + '.npy'
+        code = "_np.save('" + self.filename + "', " + self.varname + ')'
+        try:
+            send_msg(self.RequestSock, '<code>' + code)
+            logger.debug("Name of module '{}' asked to kd5".format(self.varname))
+            self.wait()
+            self.varval = numpy.load(self.filename)
+        except Exception:
+            logger.error('Get traceback : ', exc_info=True)
+            self.kernel_busy()
+        else:
+            logger.debug('kd5 answered')
+            os.remove(self.filename)
+            self._ismenu = True
+
+    def get_help(self):
+        """ Help item in menu """
+
+        if self.vartype == 'function':
+            self.filename = '/tmp/tmp_' + self.varname
+            self.code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}.__doc__, fcpyvke0)".format(self.filename, self.varname)
+            self.send_code()
+
+        self.inspect = Inspect(self.varval, self.varname, self.vartype)
+        self.inspect.Display('less', 'Help')
+
+    def send_code(self):
+        """ Send code to kernel and except answer ! """
+
+        try:
+            send_msg(self.RequestSock, '<code>' + self.code)
+            logger.debug("Inspecting '{}'".format(self.varname))
+            self.wait()
+            with open(self.filename, 'r') as f:
+                self.varval = json.load(f)
+        except Exception:
+            logger.error('Get traceback', exc_info=True)
+            self.kernel_busy()
+        else:
+            logger.debug('kd5 answered')
+            self.view = Viewer(self)
+            os.remove(self.filename)
+            self._ismenu = True
+
+    def kernel_busy(self):
+        """ Handle silent kernel. """
+
         Wng = WarningMsg(self.stdscreen)
         Wng.Display('Kernel Busy ! Try again...')
         self.varval = '[Busy]'
-        self.is_menu = False
+        self._ismenu = False
 
-    def IsMenu(self):
+    def is_menu(self):
         """ Used in cmain to check if menu is open! """
-        return self.is_menu
+        return self._ismenu
 
-    def Display(self):
+    def display(self):
         """ Display general menu in a panel. """
 
         self.panel_menu.top()        # Push the panel to the bottom of the stack
@@ -191,23 +235,15 @@ class MenuVar:
             menukey = self.menu.getch()
 
             if menukey in [curses.KEY_ENTER, ord('\n')]:
-                Wng = WarningMsg(self.stdscreen)
-                try:
-                    eval(self.menu_lst[self.menuposition][1])
-                    if self.menu_lst[self.menuposition][0] == 'Save':
-                        Wng.Display('Saved !')
-                except Exception:
-                    logger.error('Menu', exc_info=True)
-                    if self.menu_lst[self.menuposition][0] == 'Save':
-                        Wng.Display('Not saved !')
-                else:
+                self.enter_menu()
+                if self.quit_menu:
                     break
 
             elif menukey == curses.KEY_UP:
-                self.Navigate(-1, len(self.menu_lst))
+                self.navigate(-1, len(self.menu_lst))
 
             elif menukey == curses.KEY_DOWN:
-                self.Navigate(1, len(self.menu_lst))
+                self.navigate(1, len(self.menu_lst))
 
             if menukey == curses.KEY_RESIZE:
                 break
@@ -215,7 +251,22 @@ class MenuVar:
         self.menu.clear()
         self.panel_menu.hide()
 
-    def Wait(self, parent):
+    def enter_menu(self):
+        """ Variable menu. """
+
+        Wng = WarningMsg(self.stdscreen)
+        try:
+            eval(self.menu_lst[self.menuposition][1])
+            if self.menu_lst[self.menuposition][0] == 'Save':
+                Wng.Display('Saved !')
+        except Exception:
+            logger.error('Menu', exc_info=True)
+            if self.menu_lst[self.menuposition][0] == 'Save':
+                Wng.Display('Not saved !')
+        else:
+            self.quit_menu = True
+
+    def wait(self):
         """ Wait for variable value. """
 
         i = 0
@@ -247,7 +298,7 @@ class MenuVar:
         ti = time()
         while os.path.exists(self.filename) is False:
             sleep(0.05)
-            self.stdscreen.addstr(parent.position - (parent.page-1)*parent.row_max + 1,
+            self.stdscreen.addstr(self.position - (self.page-1)*self.row_max + 1,
                                   2, spinner[i], self.c_exp_txt | curses.A_BOLD)
 
             self.stdscreen.refresh()
@@ -261,7 +312,7 @@ class MenuVar:
 
         self.stdscreen.refresh()
 
-    def Navigate(self, n, size):
+    def navigate(self, n, size):
         """ Navigate through the general menu. """
 
         self.menuposition += n
@@ -270,7 +321,9 @@ class MenuVar:
         elif self.menuposition >= size:
             self.menuposition = size-1
 
-    def DelVar(self):
+    def del_var(self):
+        """ Delete a variable from kernel. """
+
         code = 'del {}'.format(self.varname)
         try:
             send_msg(self.RequestSock, '<code>' + code)
@@ -283,65 +336,45 @@ class MenuVar:
             Wng = WarningMsg(self.stdscreen)
             Wng.Display('Variable {} deleted'.format(self.varname))
 
-    def CreateMenuLst(self):
+    def create_menu_lst(self):
         """ Create the item list for the general menu. """
 
         if self.varval == '[Busy]':
             return [('Busy', ' ')]
 
         elif self.vartype in ('int', 'float', 'complex'):
-            return [('Del', "self.DelVar()")]
+            return [('Del', "self.del_var()")]
 
         elif self.vartype in ['module', 'function']:
-            return [('Help', "self.Help()")]
+            return [('View', 'self.view.Display()'),
+                    ('Help', "self.get_help()")]
 
         elif self.vartype in ('dict', 'tuple', 'str', 'list', 'unicode'):
             return [('View', 'self.view.Display()'),
                     ('Less', "self.inspect.Display('less')"),
                     ('Edit', "self.inspect.Display('vim')"),
                     ('Save', "self.inspect.Save(self.SaveDir)"),
-                    ('Del', "self.DelVar()")]
+                    ('Del', "self.del_var()")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 1):
             return [('Plot', 'self.inspect.Plot1D()'),
-                    ('Save', 'self.MenuSave()'),
-                    ('Del', "self.DelVar()")]
+                    ('Save', 'self.menu_save()'),
+                    ('Del', "self.del_var()")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 2):
             return [('Plot 2D', 'self.inspect.Plot2D()'),
                     ('Plot (cols)', 'self.inspect.Plot1Dcols()'),
                     ('Plot (lines)', 'self.inspect.Plot1Dlines()'),
-                    ('Save', 'self.MenuSave()'),
-                    ('Del', "self.DelVar()")]
+                    ('Save', 'self.menu_save()'),
+                    ('Del', "self.del_var()")]
+
+        elif self.vartype == 'class':
+            return [('View', 'self.view.Display()')]
 
         else:
             return []
 
-    def Help(self):
-        """ Help item in menu """
-
-        if self.vartype == 'function':
-            self.filename = '/tmp/tmp_' + self.varname
-            code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump({}.__doc__, fcpyvke0)".format(self.filename, self.varname)
-            try:
-                send_msg(self.RequestSock, '<code>' + code)
-                logger.debug("Help of function '{}' asked to kd5".format(self.varname))
-                with open(self.filename, 'r') as f:
-                    self.varval = json.load(f)
-            except Exception:
-                Wng = WarningMsg(self.stdscreen)
-                Wng.Display('Kernel Busy ! Try again...')
-                self.varval = '[Busy]'
-                logger.error('Get Help : ', exc_info=True)
-                self.is_menu = False
-            else:
-                logger.debug('kd5 answer : {}'.format(self.varval))
-                os.remove(self.filename)
-
-        self.inspect = Inspect(self.varval, self.varname, self.vartype)
-        self.inspect.Display('less', 'Help')
-
-    def MenuSave(self):
+    def menu_save(self):
         """ Create the save menu. """
 
         # Init Menu
@@ -393,10 +426,10 @@ class MenuVar:
                     break
 
             elif menukey == curses.KEY_UP:
-                self.Navigate(-1, len(save_lst))
+                self.navigate(-1, len(save_lst))
 
             elif menukey == curses.KEY_DOWN:
-                self.Navigate(1, len(save_lst))
+                self.navigate(1, len(save_lst))
 
             if menukey == curses.KEY_RESIZE:
                 self.menuposition = 0

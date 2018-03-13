@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : dim. 11 mars 2018 22:55:30 CET
+# Last Modified : mar. 13 mars 2018 12:41:18 CET
 """
 -----------
 DOCSTRING
@@ -34,9 +34,9 @@ from curses import panel
 from math import ceil
 from time import sleep
 
-from .ktools import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
-from .cwidgets import WarningMsg, Help
-from .kd5 import send_msg
+from ..utils.kernel import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
+from ..utils.comm import send_msg
+from .widgets import WarningMsg, Help
 
 
 class MenuKernel:

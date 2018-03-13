@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : sam. 10 mars 2018 20:18:20 CET
+# Last Modified : mar. 13 mars 2018 12:51:51 CET
 """
 -----------
 DOCSTRING
@@ -34,7 +34,7 @@ from curses import panel
 from time import sleep
 import locale
 
-from .ctools import dump
+from ..utils.display import dump
 
 
 locale.setlocale(locale.LC_ALL, '')
@@ -175,37 +175,42 @@ class Help:
         self.c_main_pwf = parent.c_main_pwf
 
         # Init Menu
-        self.nb_items = 18
-        self.pad_width = 38
-        self.pad_height = self.nb_items+2
+        item_lst = ['(h) This Help !',
+                    '(ENTER) Selected item menu',
+                    '(q|ESC) Previous menu/quit',
+                    '(/) Search in variable explorer',
+                    '(s) Sort by name/type',
+                    '(l) Limit display to keyword',
+                    '(u) Undo limit',
+                    '(k) Kernel Menu',
+                    '(r) Refresh explorer',
+                    '(c-r) Restart Daemon',
+                    '(R) Restart connection to daemon',
+                    '(D) Disconnect from daemon',
+                    '(C) Connect to daemon',
+                    '(↓) Next line',
+                    '(↑) Previous line',
+                    '(→|↡) Next page',
+                    '(←|↟) Previous page']
 
+        self.nb_items = len(item_lst)
+        self.pad_width = 38
+        self.pad_height = self.nb_items + 6
+
+        # Create pad
         self.menu_help = curses.newpad(self.pad_height, self.pad_width)
         self.menu_help.keypad(1)
         self.menu_help.bkgd(self.c_main_txt)
         self.menu_help.attrset(self.c_main_bdr | curses.A_BOLD)
 
-        # Help Content
+        # Create help content
         self.menu_title = ' Help '
         self.menu_help.addstr(2, 2, 'Bindings :', curses.A_BOLD)
-        self.menu_help.addstr(4, 3, '(h) This Help !', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(5, 3, '(ENTER) Selected item menu', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(6, 3, '(q|ESC) Previous menu/quit', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(7, 3, '(/) Search in variable explorer', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(8, 3, '(s) Sort by name/type', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(9, 3, '(l) Limit display to keyword', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(10, 3, '(u) Undo limit', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(11, 3, '(c) Kernel Menu', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(12, 3, '(r) Refresh explorer', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(13, 3, '(R) Restart connection to daemon', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(14, 3, '(D) disconnect from daemon', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(15, 3, '(C) Connect to daemon', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(16, 3, '(↓) Next line', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(17, 3, '(↑) Previous line', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(18, 3, '(→|↡) Next page', self.c_main_txt | curses.A_DIM)
-        self.menu_help.addstr(19, 3, '(←|↟) Previous page', self.c_main_txt | curses.A_DIM)
+        for i in range(self.nb_items):
+            self.menu_help.addstr(i+4, 3, item_lst[i], self.c_main_txt | curses.A_DIM)
         self.menu_help.border(0)
 
-        # Help Title
+        # Create pad title
         if self.Config['font']['pw-font'] == 'True':
             self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
                                   '', self.c_main_pwf | curses.A_BOLD)
@@ -220,7 +225,7 @@ class Help:
 
         menukey = -1
         padpos = 0
-        pady = max(self.nb_items, self.screen_height - 4) - (self.screen_height - 4)
+        pady = max(self.nb_items, self.screen_height - 8) - (self.screen_height - 8)
 
         while menukey not in (27, 113):
             if menukey == curses.KEY_DOWN:
@@ -248,3 +253,15 @@ class Help:
                 break
 
         self.menu_help.erase()
+
+
+class suspend_curses:
+    """Context Manager to temporarily leave curses mode"""
+
+    def __enter__(self):
+        curses.endwin()
+
+    def __exit__(self, exc_type, exc_val, tb):
+        stdscreen = curses.initscr()
+        stdscreen.refresh()
+        curses.doupdate()

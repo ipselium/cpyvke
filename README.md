@@ -114,12 +114,23 @@ development environment for Python in console.
 
 * bindings:
 	* **h** : help
+	* **ENTER** : Validate/Item menu
+	* **q|ESC** : Previous menu/quit'
 	* **s** : sort by name/type
 	* **l** : limit display to all variable matching the given keyword
 	* **u** : undo limit
-	* **c** : kernel manager
+	* **k** : kernel manager
 	* **/** : Search for variable
 	* **q** : previous menu -- quit
+	* **r** : Refresh explorer
+	* **c-r** : Restart Daemon
+	* **R** : Restart connection to daemon
+	* **D** : Disconnect from daemon
+	* **C** : Connect to daemon
+	* **↓** : Next line
+	* **↑** : Previous line
+	* **→|↡** Next page
+	* **←|↟** Previous page
 
 ### Setup workspace
 

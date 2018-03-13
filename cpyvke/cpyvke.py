@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : sam. 10 mars 2018 20:05:18 CET
+# Last Modified : mar. 13 mars 2018 12:44:03 CET
 """
 -----------
 DOCSTRING
@@ -28,18 +28,18 @@ DOCSTRING
 @author: Cyril Desjouy
 """
 
+import os
+import sys
+import locale
+import logging
 import argparse
 from time import sleep
 from jupyter_client import find_connection_file
-import sys
-import os
-import logging
 from logging.handlers import RotatingFileHandler
-import locale
 
-from .cmain import MainWin
-from .ktools import connect_kernel, print_kernel_list
-from .config import cfg_setup
+from .libcpyvke.mainwin import MainWin
+from .utils.config import cfg_setup
+from .utils.kernel import connect_kernel, print_kernel_list
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : dim. 11 mars 2018 23:45:02 CET
+# Last Modified : mar. 13 mars 2018 12:30:32 CET
 """
 -----------
 DOCSTRING
@@ -39,11 +39,10 @@ from queue import Queue
 from logging.handlers import RotatingFileHandler
 from jupyter_client import find_connection_file
 
-from .ktools import init_kernel, connect_kernel, print_kernel_list, start_new_kernel
-from .stools import send_msg, recv_msg
-from .dtools import disp_data
-from .config import cfg_setup
-from .daemon3x import Daemon
+from .utils.kernel import init_kernel, connect_kernel, print_kernel_list, start_new_kernel
+from .utils.comm import send_msg, recv_msg, disp_data
+from .utils.daemon3x import Daemon
+from .utils.config import cfg_setup
 
 
 logger = logging.getLogger('kd5')

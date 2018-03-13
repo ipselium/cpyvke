@@ -12,15 +12,15 @@
 #
 # cpyvke is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with cpyvke.  If not, see <http://www.gnu.org/licenses/>.
+# along with cpyvke. If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# Creation Date : Mon Nov 21 23:26:57 2016
-# Last Modified : sam. 10 mars 2018 20:06:19 CET
+# Creation Date : mar. 13 mars 2018 12:01:45 CET
+# Last Modified : mar. 13 mars 2018 12:08:27 CET
 """
 -----------
 DOCSTRING
@@ -28,7 +28,59 @@ DOCSTRING
 @author: Cyril Desjouy
 """
 
-import curses
+
+def whos_to_dic(string):
+    """ Format output of daemon to a dictionnary """
+
+    variables = {}
+    for item in string.split('\n')[2:]:
+        tmp = [j for j in item.split(' ') if j is not '']
+        if tmp:
+            var_name = tmp[0]
+            var_typ = tmp[1]
+            var_val = ' '.join(tmp[2:])
+            variables[var_name] = {'value': var_val, 'type': var_typ}
+    return variables
+
+
+def dump(obj, nested_level=0, output=[]):
+    """ Format dict, list and tuples variables for displaying. """
+
+    if nested_level == 0:
+        output = []
+
+    spacing = '   '
+    if type(obj) is dict:
+        output.append('%s{' % ((nested_level) * spacing))
+        for k, v in obj.items():
+            if hasattr(v, '__iter__'):
+                output.append('%s%s:' % ((nested_level + 1) * spacing, k))
+                dump(v, nested_level + 1, output)
+            else:
+                output.append('%s%s: %s' % ((nested_level + 1) * spacing, k, v))
+        output.append('%s}' % (nested_level * spacing))
+
+    elif type(obj) is list:
+        output.append('%s[' % ((nested_level) * spacing))
+        for v in obj:
+            if hasattr(v, '__iter__'):
+                dump(v, nested_level + 1, output)
+            else:
+                output.append('%s%s' % ((nested_level + 1) * spacing, v))
+        output.append('%s]' % ((nested_level) * spacing))
+
+    elif type(obj) is tuple:
+        output.append('%s(' % ((nested_level) * spacing))
+        for v in obj:
+            if hasattr(v, '__iter__'):
+                dump(v, nested_level + 1, output)
+            else:
+                output.append('%s%s' % ((nested_level + 1) * spacing, v))
+        output.append('%s)' % ((nested_level) * spacing))
+
+    else:
+        output.append('%s%s' % (nested_level * spacing, obj))
+    return output
 
 
 def FilterVarLst(lst, filter):
@@ -90,55 +142,3 @@ def FormatCell(variables, name, max_width):
                                                  wval=2*max_width,
                                                  wtype=max_width)
     return s
-
-
-def dump(obj, nested_level=0, output=[]):
-    """ Format dict, list and tuples variables for displaying. """
-
-    if nested_level == 0:
-        output = []
-
-    spacing = '   '
-    if type(obj) is dict:
-        output.append('%s{' % ((nested_level) * spacing))
-        for k, v in obj.items():
-            if hasattr(v, '__iter__'):
-                output.append('%s%s:' % ((nested_level + 1) * spacing, k))
-                dump(v, nested_level + 1, output)
-            else:
-                output.append('%s%s: %s' % ((nested_level + 1) * spacing, k, v))
-        output.append('%s}' % (nested_level * spacing))
-
-    elif type(obj) is list:
-        output.append('%s[' % ((nested_level) * spacing))
-        for v in obj:
-            if hasattr(v, '__iter__'):
-                dump(v, nested_level + 1, output)
-            else:
-                output.append('%s%s' % ((nested_level + 1) * spacing, v))
-        output.append('%s]' % ((nested_level) * spacing))
-
-    elif type(obj) is tuple:
-        output.append('%s(' % ((nested_level) * spacing))
-        for v in obj:
-            if hasattr(v, '__iter__'):
-                dump(v, nested_level + 1, output)
-            else:
-                output.append('%s%s' % ((nested_level + 1) * spacing, v))
-        output.append('%s)' % ((nested_level) * spacing))
-
-    else:
-        output.append('%s%s' % (nested_level * spacing, obj))
-    return output
-
-
-class suspend_curses():
-    """Context Manager to temporarily leave curses mode"""
-
-    def __enter__(self):
-        curses.endwin()
-
-    def __exit__(self, exc_type, exc_val, tb):
-        stdscreen = curses.initscr()
-        stdscreen.refresh()
-        curses.doupdate()

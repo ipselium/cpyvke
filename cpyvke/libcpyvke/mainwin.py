@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : dim. 11 mars 2018 23:16:18 CET
+# Last Modified : mar. 13 mars 2018 12:51:23 CET
 """
 -----------
 DOCSTRING
@@ -37,11 +37,12 @@ import socket
 import logging
 import locale
 
-from .cvar import MenuVar
-from .ckernel import MenuKernel
-from .cwidgets import WarningMsg, Help
-from .ctools import FormatCell, TypeSort, FilterVarLst
-from .stools import WhoToDict, recv_msg, send_msg
+from .varmenu import MenuVar
+from .kernelwin import MenuKernel
+from .widgets import WarningMsg, Help
+from ..utils.display import FormatCell, TypeSort, FilterVarLst, whos_to_dic
+from ..utils.comm import recv_msg, send_msg
+from ..utils.kernel import restart_daemon
 
 
 locale.setlocale(locale.LC_ALL, '')
@@ -521,8 +522,8 @@ class MainWin:
             self.VarLst.refresh()
             # MenuVar
             var_menu = MenuVar(self)
-            if var_menu.IsMenu():
-                var_menu.Display()
+            if var_menu.is_menu():
+                var_menu.display()
             sleep(0.5)
 
         # Menu Help
@@ -531,7 +532,7 @@ class MainWin:
             help_menu.Display()
 
         # Menu KERNEL
-        if self.pkey == 99:    # -> c
+        if self.pkey == 107:    # -> k
             kernel_menu = MenuKernel(self)
             self.cf, self.kc = kernel_menu.Display()
             # Reset cursor location
@@ -567,8 +568,15 @@ class MainWin:
             self.InitSockets()
             self.WngSock(WngMsg)
 
+        # Restart daemon
+        if self.pkey == 18:    # -> c-r
+            restart_daemon()
+            WngMsg.Display(' Restarting Daemon ')
+            self.InitSockets()
+            self.WngSock(WngMsg)
+
         # Force Update VarLst
-        if self.pkey == 114:
+        if self.pkey == 114:   # -> r
             send_msg(self.RequestSock, '<code> ')
             WngMsg.Display('Reloading Variable List...')
 
@@ -823,7 +831,7 @@ class MainWin:
             pass
         else:
             if tmp:
-                self.variables = WhoToDict(tmp)
+                self.variables = whos_to_dic(tmp)
                 logger.info('Variable list updated')
                 logger.debug('\n%s', tmp)
                 try:

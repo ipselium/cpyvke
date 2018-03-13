@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : jeu. 01 mars 2018 15:09:06 CET
-# Last Modified : sam. 10 mars 2018 20:19:21 CET
+# Last Modified : mar. 13 mars 2018 12:15:25 CET
 """
 -----------
 DOCSTRING
@@ -30,20 +30,6 @@ DOCSTRING
 
 
 import struct
-
-
-def WhoToDict(string):
-    """ Format output of daemon to a dictionnary """
-
-    variables = {}
-    for item in string.split('\n')[2:]:
-        tmp = [j for j in item.split(' ') if j is not '']
-        if tmp:
-            var_name = tmp[0]
-            var_typ = tmp[1]
-            var_val = ' '.join(tmp[2:])
-            variables[var_name] = {'value': var_val, 'type': var_typ}
-    return variables
 
 
 def send_msg(sock, msg):
@@ -71,3 +57,22 @@ def recv_all(sock, n):
             return None
         data += packet
     return data
+
+
+def disp_id(data):
+    """ Display first seq of message id only """
+    return data['parent_header']['msg_id'].split('-')[0]
+
+
+def disp_data(data):
+    if data['msg_type'] == 'status':
+        dbg = '{} | status : {}'.format(disp_id(data), data['content']['execution_state'])
+    elif data['msg_type'] == 'execute_input':
+        dbg = '{} | code : {}'.format(disp_id(data), data['content']['code'])
+    elif data['msg_type'] == 'stream':
+        dbg = '{} | stream'.format(disp_id(data))
+    elif data['msg_type'] == 'error':
+        dbg = '{} | error : {}'.format(disp_id(data), data['content']['ename'])
+    else:
+        dbg = '{} {}'.format(disp_id(data), data['msg_type'])
+    return dbg
