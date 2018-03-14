@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mar. 13 mars 2018 12:44:03 CET
+# Last Modified : mer. 14 mars 2018 13:59:42 CET
 """
 -----------
 DOCSTRING
@@ -93,14 +93,18 @@ def ParseArgs(lockfile, pidfile):
 
     elif args.integer:
 
-        try:
-            find_connection_file(str(args.integer))
-        except FileNotFoundError:
-            message = 'Error :\tCannot find kernel id. {} !\n\tExiting\n'
-            sys.stderr.write(message.format(args.integer))
-            sys.exit(2)
+        if args.integer == 'last':
+            cmd = 'kd5 last'
+        else:
+            try:
+                find_connection_file(str(args.integer))
+            except FileNotFoundError:
+                message = 'Error :\tCannot find kernel id. {} !\n\tExiting\n'
+                sys.stderr.write(message.format(args.integer))
+                sys.exit(2)
 
-        cmd = 'kd5 start ' + str(args.integer)
+            cmd = 'kd5 start ' + str(args.integer)
+
         cf = WithDaemon(lockfile, pidfile, cmd)
 
     else:

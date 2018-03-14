@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mar. 13 mars 2018 12:30:32 CET
+# Last Modified : mer. 14 mars 2018 13:55:26 CET
 """
 -----------
 DOCSTRING
@@ -39,7 +39,8 @@ from queue import Queue
 from logging.handlers import RotatingFileHandler
 from jupyter_client import find_connection_file
 
-from .utils.kernel import init_kernel, connect_kernel, print_kernel_list, start_new_kernel
+from .utils.kernel import init_kernel, connect_kernel, print_kernel_list, \
+    start_new_kernel, is_kd_running, read_pid, find_lost_pid
 from .utils.comm import send_msg, recv_msg, disp_data
 from .utils.daemon3x import Daemon
 from .utils.config import cfg_setup
@@ -262,9 +263,30 @@ class Watcher(threading.Thread):
     def kernel_change(self, cf):
         """ Watch kernel changes """
 
-        km, self.kc = connect_kernel(cf)
-        # Force update
+        old_id = self.kc.connection_file.split('/')[-1]
+        _, self.kc = connect_kernel(cf)
+        new_id = self.kc.connection_file.split('/')[-1]
+
+        # Update LastKernel and lock files
+        self.update_files(old_id, new_id)
+        logger.info('Kernel change from {} to {}'.format(old_id, new_id))
+
+        # Force kernel update
         self.send_variables()
+
+    def update_files(self, old_id, new_id):
+        """ Update LastKernel and lock files """
+
+        LogDir = os.path.expanduser("~") + "/.cpyvke/"
+
+        with open(LogDir + 'LastKernel', 'r') as f:
+            cf = f.read()
+
+        with open(LogDir + 'LastKernel', 'w') as f:
+            f.write(cf.replace(old_id, new_id))
+
+        with open(LogDir + 'kd5.lock', 'w') as f:
+            f.write(new_id.replace('kernel-', '').replace('.json', ''))
 
     def send_variables(self):
         """ Send variable to client """
@@ -300,7 +322,6 @@ class Watcher(threading.Thread):
 
             if '<cf>' in tmp:
                 cf = tmp.split('<cf>')[1]
-                km, self.kc = connect_kernel(cf)    # Connect request to new k
                 self.kernel_queue.put(cf)           # Send new k to streamer
 
             elif '<_stop>' in tmp:
@@ -354,7 +375,8 @@ def parse_args(lockfile, pidfile, Config):
     """ Parse arguments. """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('start', 'stop', 'restart', 'list'))
+    parser.add_argument('action', choices=('start', 'stop', 'restart',
+                                           'last', 'status', 'list'))
     parser.add_argument("integer",
                         help="Start up with existing kernel. \
                         INTEGER is the id of the connection file.",
@@ -362,52 +384,120 @@ def parse_args(lockfile, pidfile, Config):
     args = parser.parse_args()
 
     # Start action
-    if args.action == 'start':
+    if args.action == 'start' or args.action == 'last':
         if os.path.exists(pidfile):
-            message = "pidfile {} already exist. Daemon already running?\n"
-            sys.stderr.write(message.format(pidfile))
-            sys.exit(1)
-        else:
-            kernel_id = start_action(args, lockfile, Config)
+            if is_kd_running(pidfile):
+                message = "pidfile {} already exist. Daemon is running !\n"
+                sys.stderr.write(message.format(pidfile))
+                sys.exit(1)
+            else:
+                message = "pidfile {} exists, but daemon is not running !\npidfile removed...\n"
+                sys.stderr.write(message.format(pidfile))
+                os.remove(pidfile)
+
+        kernel_id = start_action(args, lockfile, Config)
 
     # Stop action
     elif args.action == 'stop':
-        kernel_id = stop_action(lockfile)
+        if os.path.exists(pidfile):
+            kernel_id = stop_action(lockfile)
+        else:
+            message = "pidfile {} does not exist. Daemon is not running !\n"
+            sys.stderr.write(message.format(pidfile))
+            sys.exit(1)
 
     # Restart action
     elif args.action == 'restart':
-        kernel_id = restart_action(lockfile)
+        if os.path.exists(pidfile):
+            kernel_id = restart_action(lockfile)
+        elif find_lost_pid():
+            message = "pidfile {} does not exist but kd5 is running!\nTry 'kd5 status' to fix this' !\n"
+            sys.stderr.write(message.format(pidfile))
+            sys.exit(1)
+        elif not find_lost_pid():
+            message = "pidfile {} does not exist !\nkd5 is not running!\nTry 'kd5 start' first!\n"
+            sys.stderr.write(message.format(pidfile))
+            sys.exit(1)
 
     # List action
     elif args.action == 'list':
         print_kernel_list()
         sys.exit(2)
 
+    # Status action
+    elif args.action == 'status':
+        status_action(pidfile)
+        sys.exit(1)
+
     return args, kernel_id
+
+
+def status_action(pidfile):
+    if os.path.exists(pidfile):
+        if is_kd_running(pidfile):
+            message = "kd5 is running (pid {})!\n"
+            sys.stderr.write(message.format(read_pid(pidfile)))
+        else:
+            message = "kd5 is not running, but pidfile still exists !\n{} deleted !\n"
+            sys.stderr.write(message.format(pidfile))
+            os.remove(pidfile)
+    else:
+        pids = find_lost_pid()
+        if len(pids) == 1:
+            message = "kd5 is running (pid {}), but pidfile has been removed !\n{} created\n"
+            sys.stderr.write(message.format(pids[0], pidfile))
+            with open(pidfile, 'w') as f:
+                f.write(str(pids[0]))
+        elif len(pids) == 0:
+            message = "kd5 is not running !\n"
+            sys.stderr.write(message)
+        elif len(pids) > 1:
+            message = "Multiple instances of kd5 are running !\n"
+            sys.stderr.write(message)
 
 
 def start_action(args, lockfile, Config):
     """ Start Parser action. """
 
     if args.integer:
+
         try:
             kernel_id = str(args.integer)
-            message = 'Connecting to kernel id. {}\n'
-            sys.stdout.write(message.format(kernel_id))
             find_connection_file(kernel_id)
-            with open(lockfile, "w") as f:
-                f.write(kernel_id)
+
         except FileNotFoundError:
             message = 'Error :\tCannot find kernel id. {} !\n\tExiting\n'
             sys.stderr.write(message.format(args.integer))
             sys.exit(2)
+
+        else:
+            message = 'Connecting to kernel id. {}\n'
+            sys.stdout.write(message.format(kernel_id))
+
+    elif args.action == 'last':
+        LastKernel = os.path.expanduser('~') + '/.cpyvke/LastKernel'
+        try:
+            with open(LastKernel, 'r') as f:
+                kernel_id = f.readlines()
+            kernel_id = ''.join([i for i in kernel_id[-1] if i.isdecimal()])
+
+        except FileNotFoundError:
+            message = 'Error :\tCannot find last kernel id. {} file not found !\n\tExiting\n'
+            sys.stderr.write(message.format(LastKernel))
+            sys.exit(2)
+
+        else:
+            message = 'Connecting to kernel id. {}\n'
+            sys.stdout.write(message.format(kernel_id))
+
     else:
-        sys.stdout.write('Creating kernel...\n')
+        sys.stdout.write('Creating new kernel...\n')
         kernel_id = start_new_kernel(version=Config['kernel version']['version'])
         message = 'Kernel id {} created (Python {})\n'
         sys.stdout.write(message.format(kernel_id, Config['kernel version']['version']))
-        with open(lockfile, "w") as f:
-            f.write(kernel_id)
+
+    with open(lockfile, "w") as f:
+        f.write(kernel_id)
 
     return kernel_id
 
@@ -415,21 +505,18 @@ def start_action(args, lockfile, Config):
 def stop_action(lockfile):
     """ Parser Stop Action. """
 
-    try:
+    if os.path.exists(lockfile):
         with open(lockfile, "r") as f:
             kernel_id = f.readline()
-    except FileNotFoundError:
-        message = '{} not found. Daemon is not running. Try start action !\n'
-        sys.stderr.write(message.format(lockfile))
-        sys.exit(2)
-    else:
         message = 'Disconnecting from kernel id. {}\n'
         sys.stdout.write(message.format(kernel_id))
-
-    if os.path.exists(lockfile):
         os.remove(lockfile)
+        return kernel_id
 
-    return kernel_id
+    else:
+        message = '{} not found !\n Exiting\n'
+        sys.stderr.write(message.format(lockfile))
+        sys.exit(2)
 
 
 def restart_action(lockfile):
@@ -439,7 +526,7 @@ def restart_action(lockfile):
         with open(lockfile, "r") as f:
             return f.readline()
     except FileNotFoundError:
-        message = '{} not found. Daemon is not running. Try start action !\n'
+        message = '{} not found !\n Exiting !\n'
         sys.stderr.write(message.format(lockfile))
         sys.exit(2)
 
@@ -483,7 +570,7 @@ def main(args=None):
     if args.action == 'stop':
         daemon.stop()
         sys.stdout.write('kd5 stopped !\n')
-    elif args.action == 'start':
+    elif args.action == 'start' or args.action == 'last':
         sys.stdout.write('kd5 starting...\n')
         daemon.start()
     elif args.action == 'restart':
