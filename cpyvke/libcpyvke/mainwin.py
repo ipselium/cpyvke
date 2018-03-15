@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 13 mars 2018 16:34:27 CET
+# Last Modified : jeu. 15 mars 2018 09:27:29 CET
 """
 -----------
 DOCSTRING
@@ -39,6 +39,8 @@ import locale
 
 from .varmenu import MenuVar
 from .kernelwin import KernelWin
+from .classwin import ClassWin
+from .temppad import PadWin
 from .widgets import WarningMsg, Help
 from .colors import Colors
 from ..utils.display import format_cell, type_sort, filter_var_lst, whos_to_dic
@@ -59,7 +61,7 @@ class MainWin:
         # Basics
         self.kc = kc
         self.cf = cf
-        self.curse_delay = 25
+        self.curse_delay = 10
         self.Config = Config
         self.DEBUG = DEBUG
 
@@ -91,11 +93,11 @@ class MainWin:
         if self.DEBUG:
             self.term_min_height = 20
             self.term_min_width = 80
-            self.kernel_info = 12       # Size of the bottom text area
+            self.debug_info = 12       # Size of the bottom text area
         else:
             self.term_min_height = 10
             self.term_min_width = 60
-            self.kernel_info = 4
+            self.debug_info = 4
 
         self.position = 1
         self.page = 1
@@ -110,8 +112,16 @@ class MainWin:
         self.variables = {}
         self.connected = False
 
+        # Bindings :
+        self.kdown = [curses.KEY_DOWN, 106]
+        self.kup = [curses.KEY_UP, 107]
+        self.kleft = [curses.KEY_LEFT, 104, 339]
+        self.kright = [curses.KEY_RIGHT, 108, 338]
+        self.kenter = [curses.KEY_ENTER, ord("\n"), 10, 32]
+        self.kquit = [27, 113]
+
         # Init Variable Box
-        self.row_max = self.screen_height-self.kernel_info  # max number of rows
+        self.row_max = self.screen_height-self.debug_info  # max number of rows
         # newwin(heigh, width, begin_y, begin_x)
         self.VarLst = curses.newwin(self.row_max+2, self.screen_width-2, 1, 1)
         self.VarLst.bkgd(self.c_exp_txt)
@@ -290,7 +300,7 @@ class MainWin:
         self.pkey = self.stdscreen.getch()
 
         # Close menu
-        if self.pkey == 113:
+        if self.pkey in self.kquit:
                 self.close_menu()
 
     def key_bindings(self):
@@ -300,7 +310,7 @@ class MainWin:
         WngMsg = WarningMsg(self.stdscreen)
 
         # Menu Variable
-        if self.pkey == ord("\n") and self.row_num != 0:
+        if self.pkey in self.kenter and self.row_num != 0:
             # First Update VarLst (avoid bug)
             self.VarLst.border(0)
             self.update_var_lst()
@@ -313,17 +323,31 @@ class MainWin:
             sleep(0.5)
 
         # Menu Help
-        elif self.pkey == 104:    # -> h
+        elif self.pkey == 63:    # -> ?
             help_menu = Help(self)
-            help_menu.Display()
+            help_menu.display()
 
         # Menu KERNEL
-        elif self.pkey == 107:    # -> k
+        elif self.pkey == 75:    # -> K
             kernel_win = KernelWin(self)
-            self.cf, self.kc = kernel_win.display()
+            kernel_win.display()
+            self.cf, self.kc = kernel_win.update_connection()
             # Reset cursor location
             self.position = 1
             self.page = int(ceil(self.position/self.row_max))
+
+        # Menu TEST panel
+        elif self.pkey == 116:    # -> t
+            test_panel = ClassWin(self)
+            test_panel.display()
+            # Reset cursor location
+            self.position = 1
+            self.page = int(ceil(self.position/self.row_max))
+
+        # Menu TEST pad
+        elif self.pkey == 84:    # -> T
+            test_pad = PadWin(self)
+            test_pad.display()
 
         # Menu Search
         elif self.pkey == 47:    # -> /
@@ -354,8 +378,13 @@ class MainWin:
 
         # Force Update VarLst
         elif self.pkey == 114:   # -> r
-            send_msg(self.RequestSock, '<code> ')
-            WngMsg.Display('Reloading Variable List...')
+            self.force_update_lst(WngMsg)
+
+    def force_update_lst(self, WngMsg):
+        """ Force update of variable list """
+
+        send_msg(self.RequestSock, '<code> ')
+        WngMsg.Display('Reloading Variable List...')
 
     def arange_var_lst(self):
         """ Organize/Arange variable list. """
@@ -378,14 +407,14 @@ class MainWin:
                 self.mk_sort = 'name'
 
         # Filter variables
-        if self.pkey == 108:    # -> l
+        if self.pkey == 76:    # -> L
             self.filter_var()
             self.mk_sort = 'filter'
             self.position = 1
             self.page = int(ceil(self.position/self.row_max))
 
         # Reinit
-        if self.pkey == 117:
+        if self.pkey == 117:   # -> u
             self.mk_sort = 'name'
             self.VarLst_wng = ''
             self.position = 1
@@ -543,13 +572,13 @@ class MainWin:
         """ Navigation though the variable list"""
 
         self.pages = int(ceil(self.row_num/self.row_max))
-        if self.pkey == curses.KEY_DOWN:
+        if self.pkey in self.kdown:
             self.navigate_down()
-        if self.pkey == curses.KEY_UP:
+        if self.pkey in self.kup:
             self.navigate_up()
-        if self.pkey in (curses.KEY_LEFT, 339):
+        if self.pkey in self.kleft:
             self.navigate_left()
-        if self.pkey in (curses.KEY_RIGHT, 338):
+        if self.pkey in self.kright:
             self.navigate_right()
         if self.pkey == 262:
             self.position = 1
@@ -633,7 +662,7 @@ class MainWin:
         resize = curses.is_term_resized(self.screen_height, self.screen_width)
         if resize is True and self.screen_height >= self.term_min_height and self.screen_width >= self.term_min_width:
             self.screen_height, self.screen_width = self.stdscreen.getmaxyx()  # new heigh and width of object stdscreen
-            self.row_max = self.screen_height-self.kernel_info
+            self.row_max = self.screen_height-self.debug_info
             self.stdscreen.clear()
             self.VarLst.clear()
             self.VarLst.resize(self.row_max+2, self.screen_width-2)
@@ -664,8 +693,8 @@ class MainWin:
     def bottom_bar_info(self):
         """ Check and display kernel informations """
 
-        kernel_info_id = 'kernel ' + self.cf.split('-')[1].split('.')[0] + ' '
-        kernel_info_obj = str(len(list(self.variables))) + ' obj.'
+        debug_info_id = 'kernel ' + self.cf.split('-')[1].split('.')[0] + ' '
+        debug_info_obj = str(len(list(self.variables))) + ' obj.'
 
         # Kernel Info
         if self.Config['font']['pw-font'] == 'True':
@@ -675,9 +704,9 @@ class MainWin:
             if self.connected:
                 self.stdscreen.addstr(' connected ', self.c_bar_co | curses.A_BOLD)
                 self.stdscreen.addstr(' ', self.c_bar_kn_pwfc | curses.A_BOLD)
-                self.stdscreen.addstr(kernel_info_id, self.c_bar_kn)
+                self.stdscreen.addstr(debug_info_id, self.c_bar_kn)
                 self.stdscreen.addstr(' ', self.c_bar_kn | curses.A_BOLD)
-                self.stdscreen.addstr(kernel_info_obj, self.c_bar_kn)
+                self.stdscreen.addstr(debug_info_obj, self.c_bar_kn)
                 self.stdscreen.addstr('', self.c_bar_kn_pwf | curses.A_BOLD)
             else:
                 self.stdscreen.addstr(' disconnected ', self.c_bar_dco | curses.A_BOLD)
@@ -687,7 +716,7 @@ class MainWin:
             self.stdscreen.addstr(self.screen_height-1, 2, '< Kernel : ', self.c_bar_kn | curses.A_BOLD)
             if self.kc.is_alive():
                 self.stdscreen.addstr('connected', self.c_bar_co | curses.A_BOLD)
-                self.stdscreen.addstr(' [' + kernel_info_id + kernel_info_obj + ']', self.c_bar_kn | curses.A_BOLD)
+                self.stdscreen.addstr(' [' + debug_info_id + debug_info_obj + ']', self.c_bar_kn | curses.A_BOLD)
             else:
                 self.stdscreen.addstr('disconnected ', self.c_bar_dco | curses.A_BOLD)
             self.stdscreen.addstr(' >', self.c_bar_kn | curses.A_BOLD)
@@ -696,7 +725,7 @@ class MainWin:
         if self.Config['font']['pw-font'] == 'True':
             self.stdscreen.addstr(self.screen_height-1, self.screen_width-12,
                                   '', self.c_bar_hlp_pwf | curses.A_BOLD)
-            self.stdscreen.addstr(' h:help ', self.c_bar_hlp | curses.A_BOLD)
+            self.stdscreen.addstr(' ?:help ', self.c_bar_hlp | curses.A_BOLD)
             self.stdscreen.addstr('', self.c_bar_hlp_pwf | curses.A_BOLD)
         else:
             self.stdscreen.addstr(self.screen_height-1, self.screen_width-12,

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : mar. 13 mars 2018 12:41:30 CET
+# Last Modified : jeu. 15 mars 2018 00:55:27 CET
 """
 -----------
 DOCSTRING
@@ -36,6 +36,7 @@ import curses
 from curses import panel
 from time import sleep, time
 
+from .classwin import ClassWin
 from .widgets import Viewer, WarningMsg
 from ..utils.inspector import Inspect
 from ..utils.comm import send_msg
@@ -51,6 +52,7 @@ class MenuVar:
         """ Class constructor. """
 
         # Init parent
+        self.parent = parent
         self.stdscreen = parent.stdscreen
         self.Config = parent.Config
         self.c_exp_txt = curses.color_pair(21)
@@ -63,6 +65,15 @@ class MenuVar:
         self.position = parent.position
         self.row_max = parent.row_max
         self.page = parent.page
+        self.debug_info = parent.debug_info
+
+        # Bindings :
+        self.kdown = [curses.KEY_DOWN, 106]
+        self.kup = [curses.KEY_UP, 107]
+        self.kleft = [curses.KEY_LEFT, 104, 339]
+        self.kright = [curses.KEY_RIGHT, 108, 338]
+        self.kenter = [curses.KEY_ENTER, ord("\n"), 10, 32]
+        self.kquit = [27, 113]
 
         # get heigh and width of stdscreen
         self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
@@ -129,6 +140,7 @@ class MenuVar:
         self.filename = '/tmp/tmp_' + self.varname
         self.code = "with open('{}' , 'w') as fcpyvke0:\n\t_json.dump(_inspect.inspect_class_instance({}), fcpyvke0)".format(self.filename, self.varname)
         self.send_code()
+        self.class_win = ClassWin(self)
 
     def get_module(self):
         """ Get modules characteristics """
@@ -220,7 +232,7 @@ class MenuVar:
                              '| ' + self.menu_title + ' |', self.c_exp_ttl | curses.A_BOLD)
 
         menukey = -1
-        while menukey not in (27, 113):
+        while menukey not in self.kquit:
 
             self.menu.refresh()
             for index, item in enumerate(self.menu_lst):
@@ -234,15 +246,15 @@ class MenuVar:
 
             menukey = self.menu.getch()
 
-            if menukey in [curses.KEY_ENTER, ord('\n')]:
+            if menukey in self.kenter:
                 self.enter_menu()
                 if self.quit_menu:
                     break
 
-            elif menukey == curses.KEY_UP:
+            elif menukey in self.kup:
                 self.navigate(-1, len(self.menu_lst))
 
-            elif menukey == curses.KEY_DOWN:
+            elif menukey in self.kdown:
                 self.navigate(1, len(self.menu_lst))
 
             if menukey == curses.KEY_RESIZE:
@@ -346,11 +358,11 @@ class MenuVar:
             return [('Del', "self.del_var()")]
 
         elif self.vartype in ['module', 'function']:
-            return [('View', 'self.view.Display()'),
+            return [('View', 'self.view.display()'),
                     ('Help', "self.get_help()")]
 
         elif self.vartype in ('dict', 'tuple', 'str', 'list', 'unicode'):
-            return [('View', 'self.view.Display()'),
+            return [('View', 'self.view.display()'),
                     ('Less', "self.inspect.Display('less')"),
                     ('Edit', "self.inspect.Display('vim')"),
                     ('Save', "self.inspect.Save(self.SaveDir)"),
@@ -369,7 +381,8 @@ class MenuVar:
                     ('Del', "self.del_var()")]
 
         elif self.vartype == 'class':
-            return [('View', 'self.view.Display()')]
+            return [('View', 'self.view.display()'),
+                    ('Inspect', 'self.class_win.display()')]
 
         else:
             return []
@@ -399,7 +412,7 @@ class MenuVar:
         save_menu.clear()
 
         menukey = -1
-        while menukey not in (27, 113):
+        while menukey not in self.kquit:
             save_menu.border(0)
             save_menu.refresh()
             for index, item in enumerate(save_lst):
@@ -413,7 +426,7 @@ class MenuVar:
 
             menukey = save_menu.getch()
 
-            if menukey in [curses.KEY_ENTER, ord('\n')]:
+            if menukey in self.kenter:
                 Wng = WarningMsg(self.stdscreen)
                 try:
                     eval(save_lst[self.menuposition][1])
@@ -425,10 +438,10 @@ class MenuVar:
                     self.menuposition = 0
                     break
 
-            elif menukey == curses.KEY_UP:
+            elif menukey in self.kup:
                 self.navigate(-1, len(save_lst))
 
-            elif menukey == curses.KEY_DOWN:
+            elif menukey == self.kdown:
                 self.navigate(1, len(save_lst))
 
             if menukey == curses.KEY_RESIZE:

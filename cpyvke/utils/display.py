@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 12:01:45 CET
-# Last Modified : mar. 13 mars 2018 15:02:49 CET
+# Last Modified : jeu. 15 mars 2018 09:26:04 CET
 """
 -----------
 DOCSTRING
@@ -123,6 +123,48 @@ def format_cell(variables, name, max_width):
         val1 = variables[name]['value'].split(":")[0]
         val2 = variables[name]['value'].split("`")[1]
         val = val1 + ' [' + val2 + ']'
+    else:
+        # Repr to avoid interpreting \n in strings
+        val = variables[name]['value']
+
+    # Check length of each entry
+    if len(val) > 2*max_width:
+        val = val[0:2*max_width-4] + '... '
+
+    if len(name) > 2*max_width:
+        name = name[0:2*max_width-4] + '... '
+
+    if len(typ) > max_width:
+        typ = typ[0:max_width-4] + '... '
+
+    s = "{:{wname}} {:{wval}} {:{wtype}}".format(name, val, typ,
+                                                 wname=2*max_width,
+                                                 wval=2*max_width,
+                                                 wtype=max_width)
+    return s
+
+
+def format_class(variables, name, max_width):
+    """ Format class content for display """
+
+    max_width = int((max_width-7)/5)
+    typ = '[' + variables[name]['type'].split("'")[1] + ']'
+
+    # Only display module name
+    if 'module' in variables[name]['value']:
+        val = variables[name]['value'].split("'")[1]
+
+    # Only display dimensions of array
+    elif 'elem' in variables[name]['value']:
+        val1 = variables[name]['value'].split(":")[0]
+        val2 = variables[name]['value'].split("`")[1]
+        val = val1 + ' [' + val2 + ']'
+    elif 'function' in variables[name]['value']:
+        val = variables[name]['value'].split(' ')[1]
+    elif 'classmethod' in variables[name]['value']:
+        val = 'classmethod'
+    elif 'staticmethod' in variables[name]['value']:
+        val = 'staticmethod'
     else:
         # Repr to avoid interpreting \n in strings
         val = variables[name]['value']

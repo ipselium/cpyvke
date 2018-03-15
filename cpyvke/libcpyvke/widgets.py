@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : mar. 13 mars 2018 12:51:51 CET
+# Last Modified : jeu. 15 mars 2018 00:15:10 CET
 """
 -----------
 DOCSTRING
@@ -35,29 +35,36 @@ from time import sleep
 import locale
 
 from ..utils.display import dump
-
+from .temppad import PadWin
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-class Viewer:
+class Viewer(PadWin):
     """ Display variable content in a pad. """
 
     def __init__(self, parent):
+        """ Class constructor """
 
-        # Init Values
-        self.stdscreen = parent.stdscreen
         self.varval = parent.varval
         self.varname = parent.varname
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
-        self.menu_title = ' ' + self.varname + ' '
-        self.Config = parent.Config
-        self.c_exp_txt = parent.c_exp_txt
-        self.c_exp_bdr = parent.c_exp_bdr
-        self.c_exp_ttl = parent.c_exp_ttl
-        self.c_exp_hh = parent.c_exp_hh
-        self.c_exp_pwf = parent.c_exp_pwf
+
+        super(Viewer, self).__init__(parent)
+
+        # Init Values
+        self.c_txt = self.parent.c_exp_txt
+        self.c_bdr = self.parent.c_exp_bdr
+        self.c_ttl = self.parent.c_exp_ttl
+        self.c_hh = self.parent.c_exp_hh
+        self.c_pwf = self.parent.c_exp_pwf
+
+        # Init Menu
+        self.title = ' ' + self.varname + ' '
+        self.content = self.create_content()
+
+    def create_content(self):
+        """ Create content of the pad """
 
         # Format variable
         if type(self.varval) is str:
@@ -65,62 +72,7 @@ class Viewer:
         else:
             dumped = dump(self.varval)
 
-        # Init Menu
-        self.pad_width = max(len(self.menu_title), max([len(elem) for elem in dumped])) + 8
-        self.pad_height = len(dumped) + 2
-        self.menu_viewer = curses.newpad(self.pad_height, self.pad_width)
-        self.menu_viewer.keypad(1)
-        self.menu_viewer.bkgd(self.c_exp_txt)
-        self.menu_viewer.attrset(self.c_exp_bdr | curses.A_BOLD)
-        self.menu_viewer.border(0)
-
-        # Viewer content
-        for i in range(len(dumped)):
-            self.menu_viewer.addstr(1+i, 1, dumped[i].encode(code), self.c_exp_txt)
-
-        # Viewer title
-        if self.Config['font']['pw-font'] == 'True':
-            self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
-                                    '', self.c_exp_pwf | curses.A_BOLD)
-            self.menu_viewer.addstr(self.menu_title, self.c_exp_ttl | curses.A_BOLD)
-            self.menu_viewer.addstr('', self.c_exp_pwf | curses.A_BOLD)
-        else:
-            self.menu_viewer.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
-                                    '|' + self.menu_title + '|', self.c_exp_ttl | curses.A_BOLD)
-
-    def Display(self):
-        """ Create pad to display variable content. """
-
-        menukey = -1
-        padpos = 0
-        pady = max(self.pad_height, self.screen_height - 2) - (self.screen_height - 2)
-
-        while menukey not in (27, 113):
-            if menukey == curses.KEY_DOWN:
-                padpos = min(pady, padpos+1)
-            elif menukey == curses.KEY_UP:
-                padpos = max(0, padpos-1)
-            elif menukey == curses.KEY_RIGHT:
-                padpos = min(pady, padpos+5)
-            elif menukey == curses.KEY_LEFT:
-                padpos = max(0, padpos-5)
-            elif menukey == curses.KEY_NPAGE:
-                padpos = min(pady, padpos+10)
-            elif menukey == curses.KEY_PPAGE:
-                padpos = max(0,  padpos-10)
-            elif menukey == 262:
-                padpos = 0
-            elif menukey == 360:
-                padpos = pady
-
-            self.menu_viewer.refresh(padpos, 0, 1, 1, self.screen_height-2, self.screen_width-2)
-
-            menukey = self.menu_viewer.getch()
-
-            if menukey == curses.KEY_RESIZE:
-                break
-
-        self.menu_viewer.erase()
+        return dumped
 
 
 class WarningMsg:
@@ -160,99 +112,45 @@ class WarningMsg:
         panel_wng.hide()
 
 
-class Help:
+class Help(PadWin):
     """ Display help in a pad. """
 
-    def __init__(self, parent):
+    def __init__(self, *args, **kwargs):
+
+        super(Help, self).__init__(*args, **kwargs)
 
         # Init Values
-        self.stdscreen = parent.stdscreen
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
-        self.Config = parent.Config
-        self.c_main_txt = parent.c_main_txt
-        self.c_main_bdr = parent.c_main_bdr
-        self.c_main_ttl = parent.c_main_ttl
-        self.c_main_pwf = parent.c_main_pwf
+        self.c_txt = self.parent.c_main_txt
+        self.c_bdr = self.parent.c_main_bdr
+        self.c_ttl = self.parent.c_main_ttl
+        self.c_pwf = self.parent.c_main_pwf
 
         # Init Menu
-        item_lst = ['(h) This Help !',
-                    '(ENTER) Selected item menu',
-                    '(q|ESC) Previous menu/quit',
-                    '(/) Search in variable explorer',
-                    '(s) Sort by name/type',
-                    '(l) Limit display to keyword',
-                    '(u) Undo limit',
-                    '(k) Kernel Menu',
-                    '(r) Refresh explorer',
-                    '(c-r) Restart Daemon',
-                    '(R) Restart connection to daemon',
-                    '(D) Disconnect from daemon',
-                    '(C) Connect to daemon',
-                    '(↓) Next line',
-                    '(↑) Previous line',
-                    '(→|↡) Next page',
-                    '(←|↟) Previous page']
+        self.title = 'Help'
+        self.content = self.create_content()
 
-        self.nb_items = len(item_lst)
-        self.pad_width = 38
-        self.pad_height = self.nb_items + 6
+    def create_content(self):
+        """ Create content """
 
-        # Create pad
-        self.menu_help = curses.newpad(self.pad_height, self.pad_width)
-        self.menu_help.keypad(1)
-        self.menu_help.bkgd(self.c_main_txt)
-        self.menu_help.attrset(self.c_main_bdr | curses.A_BOLD)
-
-        # Create help content
-        self.menu_title = ' Help '
-        self.menu_help.addstr(2, 2, 'Bindings :', curses.A_BOLD)
-        for i in range(self.nb_items):
-            self.menu_help.addstr(i+4, 3, item_lst[i], self.c_main_txt | curses.A_DIM)
-        self.menu_help.border(0)
-
-        # Create pad title
-        if self.Config['font']['pw-font'] == 'True':
-            self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
-                                  '', self.c_main_pwf | curses.A_BOLD)
-            self.menu_help.addstr(self.menu_title, self.c_main_ttl | curses.A_BOLD)
-            self.menu_help.addstr('', self.c_main_pwf | curses.A_BOLD)
-        else:
-            self.menu_help.addstr(0, int((self.pad_width - len(self.menu_title) - 2)/2),
-                                  '|' + self.menu_title + '|', self.c_main_ttl | curses.A_BOLD)
-
-    def Display(self):
-        """ Display pad. """
-
-        menukey = -1
-        padpos = 0
-        pady = max(self.nb_items, self.screen_height - 8) - (self.screen_height - 8)
-
-        while menukey not in (27, 113):
-            if menukey == curses.KEY_DOWN:
-                padpos = min(pady, padpos+1)
-            elif menukey == curses.KEY_UP:
-                padpos = max(0, padpos-1)
-            elif menukey == curses.KEY_RIGHT:
-                padpos = min(pady, padpos+5)
-            elif menukey == curses.KEY_LEFT:
-                padpos = max(0, padpos-5)
-            elif menukey == curses.KEY_NPAGE:
-                padpos = min(pady, padpos+10)
-            elif menukey == curses.KEY_PPAGE:
-                padpos = max(0,  padpos-10)
-            elif menukey == 262:
-                padpos = 0
-            elif menukey == 360:
-                padpos = pady
-
-            self.menu_help.refresh(padpos, 0, 1, 1, self.screen_height-2, self.pad_width)
-
-            menukey = self.menu_help.getch()
-
-            if menukey == curses.KEY_RESIZE:
-                break
-
-        self.menu_help.erase()
+        return ['',
+                '(?) This Help !',
+                '(ENTER) Selected item menu',
+                '(q|ESC) Previous menu/quit',
+                '(/) Search in variable explorer',
+                '(s) Sort by name/type',
+                '(L) Limit display to keyword',
+                '(u) Undo limit',
+                '(r) Refresh explorer',
+                '(K) Kernel Menu',
+                '(c-r) Restart Daemon',
+                '(R) Restart connection to daemon',
+                '(D) Disconnect from daemon',
+                '(C) Connect to daemon',
+                '(↓|j) Next line',
+                '(↑|k) Previous line',
+                '(→|↡|l) Next page',
+                '(←|↟|h) Previous page',
+                '']
 
 
 class suspend_curses:
