@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : dim. 18 mars 2018 01:36:46 CET
+# Last Modified : dim. 18 mars 2018 15:40:56 CET
 """
 -----------
 DOCSTRING
@@ -107,6 +107,7 @@ def is_runing(cf):
 #        return False
     return True
 
+
 def check_server(port):
     """ Check if a service is listening on port. """
 
@@ -117,6 +118,10 @@ def check_server(port):
         return False
 
 
+def kernel_id(cf):
+    return cf.split('-')[1].split('.')[0]
+
+
 def kernel_list(cf=None):
     """ List of connection files. """
 
@@ -125,11 +130,28 @@ def kernel_list(cf=None):
 
     try:
         lst = [(item, '[Alive]' if is_runing(item) else '[Died]') for item in lstk]
+#        return {kernel_id(item): {'value': item, 'type':'[Connected]'} if is_runing(item) and item in cf
+#                else {'value': item, 'type': '[Alive]'} if is_runing(item)
+#                else {'value': item,'type':'[Died]'} for item in lstk}
     except Exception:
         logger.error('No kernel available', exc_info=True)
         return []
     else:
         return [(cf, '[Connected]') if cf in item else item for item in lst]
+
+
+def kernel_dic(cf=None):
+
+    path = '/run/user/1000/jupyter/'
+    lstk = [path + item for item in os.listdir(path) if 'kernel' in item]
+
+    try:
+        return {kernel_id(item): {'value': item, 'type': 'Connected'} if is_runing(item) and item == cf
+                else {'value': item, 'type': 'Alive'} if is_runing(item)
+                else {'value': item, 'type': 'Died'} for item in lstk}
+    except Exception:
+        logger.error('No kernel available', exc_info=True)
+        return {}
 
 
 def print_kernel_list():
@@ -146,6 +168,20 @@ def print_kernel_list():
                 print('{0[0]:71}{0[1]:>8}'.format(item))
             else:
                 print('{0[0]:71}{0[1]:>8}\n'.format(item))
+    print(79*'-')
+
+
+def print_kernel_dic():
+    """ Display kernel list. """
+    klst = kernel_dic()
+    print('{:-^79}'.format('| List of available kernels |'))
+
+    if not klst:
+        print('{:^79}'.format('No kernel available'))
+        print('{:^79}'.format('Last run of the daemon may have quit prematurely.'))
+    else:
+        for item in klst:
+            print("{0[value]:71}{0[type]:>8}".format(klst[item]))
     print(79*'-')
 
 

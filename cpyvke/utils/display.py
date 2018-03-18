@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 12:01:45 CET
-# Last Modified : ven. 16 mars 2018 15:13:44 CET
+# Last Modified : dim. 18 mars 2018 23:37:34 CET
 """
 -----------
 DOCSTRING
@@ -118,7 +118,18 @@ def type_sort(lst):
 
 
 def format_cell(variables, name, max_width):
-    """ Format cells for display """
+    """ Format data for display """
+
+    if 'class' in variables[name]['type']:
+        return format_class(variables, name, max_width)
+    elif '/kernel' in variables[name]['value']:
+        return format_kernel(variables, name, max_width)
+    else:
+        return format_variable(variables, name, max_width)
+
+
+def format_variable(variables, name, max_width):
+    """ Format regular variables """
 
     max_width = int((max_width-7)/5)
     typ = '[' + variables[name]['type'] + ']'
@@ -153,8 +164,34 @@ def format_cell(variables, name, max_width):
     return s
 
 
+def format_kernel(variables, name, max_width):
+    """ Format regular variables """
+
+    max_width = int((max_width-7)/5)
+    typ = '[' + variables[name]['type'] + ']'
+
+    # Repr to avoid interpreting \n in strings
+    val = variables[name]['value']
+
+    # Check length of each entry
+    if len(val) > 3*max_width:
+        val = val[0:2*max_width-4] + '... '
+
+    if len(name) > max_width:
+        name = name[0:2*max_width-4] + '... '
+
+    if len(typ) > max_width:
+        typ = typ[0:max_width-4] + '... '
+
+    s = "{:{wname}} {:{wval}} {:{wtype}}".format(name, val, typ,
+                                                 wname=max_width,
+                                                 wval=3*max_width,
+                                                 wtype=max_width)
+    return s
+
+
 def format_class(variables, name, max_width):
-    """ Format class content for display """
+    """ Format class content """
 
     max_width = int((max_width-7)/5)
     typ = '[' + variables[name]['type'].split("'")[1] + ']'

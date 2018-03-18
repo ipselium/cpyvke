@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : sam. 17 mars 2018 12:20:05 CET
+# Last Modified : dim. 18 mars 2018 12:23:38 CET
 """
 -----------
 DOCSTRING
@@ -73,7 +73,8 @@ class ExplorerMenu:
         # Init all Inspectors
         self.inspect = Inspect(self.varval, self.varname, self.vartype)
         self.view = Viewer(self.app, self.varval, self.varname)
-        self.class_win = ClassWin(self.app, self.varval, self.varname)
+        self.class_win = ClassWin(self.app, self.sock, self.logger,
+                                  self.varval, self.varname)
 
         # Create Menu List
         self.menu_title = self.varname

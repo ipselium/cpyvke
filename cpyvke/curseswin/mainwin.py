@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : dim. 18 mars 2018 00:55:04 CET
+# Last Modified : dim. 18 mars 2018 23:10:51 CET
 """
 -----------
 DOCSTRING
@@ -29,13 +29,13 @@ DOCSTRING
 """
 
 import curses
-from math import ceil
 from time import sleep
 import locale
 
 from cpyvke.curseswin.kernelwin import KernelWin
 from cpyvke.curseswin.explorerwin import ExplorerWin
 from cpyvke.curseswin.widgets import WarningMsg, Help
+from cpyvke.objects.panel import PanelWin
 from cpyvke.utils.kernel import restart_daemon
 from cpyvke.utils.ascii import ascii_cpyvke
 
@@ -57,7 +57,6 @@ class MainWin:
         self.search = None
         self.filter = None
         self.search_index = 0
-
         self.mk_sort = 'name'
         self.variables = {}
 
@@ -66,16 +65,18 @@ class MainWin:
         self.mwin = curses.newwin(self.row_max+2, self.app.screen_width-2, 1, 1)
         self.mwin.bkgd(self.app.c_exp_txt)
         self.mwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # border color
+        self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
 
         # Add explorer and kernel panels to self.app !
         self.app.explorer_win = ExplorerWin(self.app, self.sock, self.logger)
-        self.app.kernel_win = KernelWin(self.app, self.sock.RequestSock)
+        self.app.kernel_win = KernelWin(self.app, self.sock, self.logger)
+        self.app.test_win = PanelWin(self.app, self.sock, self.logger)
 
     def run(self):
         """ Run daemon """
 
         try:
-            self.pkey = -1    # Init pressed Key
+            self.pkey = -1
             while self.app.close_signal == 'continue':
                 self.update_curses()
             self.app.shutdown()
@@ -93,15 +94,32 @@ class MainWin:
             self.app.check_size()
             sleep(0.5)
         else:
-            self.tasks()
+            # Check switch panel
+            if self.app.explorer_win.switch:
+                self.app.explorer_win.switch = False
+                self.app.kernel_win.display()
+
+            elif self.app.kernel_win.switch:
+                self.app.kernel_win.switch = False
+                self.app.explorer_win.display()
+
+            else:
+                self.tasks()
 
     def resize_curses(self):
         """ Check if terminal is resized and adapt screen """
 
-        resize = curses.is_term_resized(self.app.screen_height, self.app.screen_width)
-        if resize is True and self.app.screen_height >= self.app.term_min_height and self.app.screen_width >= self.app.term_min_width:
-            self.app.screen_height, self.app.screen_width = self.app.stdscr.getmaxyx()  # new heigh and width of object stdscreen
+        # Check difference between self.screen_height and self.app.screen_height
+        resize = curses.is_term_resized(self.screen_height, self.screen_width)
+        min_size_cond = self.app.screen_height >= self.app.term_min_height and self.app.screen_width >= self.app.term_min_width
+        if min_size_cond and resize:
+            # new heigh and width of object stdscreen
+            self.app.screen_height, self.app.screen_width = self.app.stdscr.getmaxyx()
+            # save also these value locally to check if
+            self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
+            # Update number of lines
             self.row_max = self.app.screen_height-self.app.debug_info
+            # Update display
             self.app.stdscr.clear()
             self.mwin.clear()
             self.mwin.resize(self.row_max+2, self.app.screen_width-2)
@@ -109,7 +127,7 @@ class MainWin:
             self.app.stdscr.refresh()
             self.mwin.refresh()
 
-    def update_static(self):
+    def refresh(self):
         """ Update all static windows. """
 
         # Erase all windows
@@ -153,34 +171,27 @@ class MainWin:
     def tasks(self):
         """ Tasks to update curses """
 
-        # Check switch panel
-        if self.app.explorer_win.switch:
-            self.app.explorer_win.switch = False
-            self.app.kernel_win.display()
-            self.app.cf, self.app.kc = self.app.kernel_win.update_connection()
-
-        if self.app.kernel_win.switch:
-            self.app.kernel_win.switch = False
-            self.app.explorer_win.display()
-
         # Check Connection to daemon
         self.sock.check_main_socket()
 
         # Keys
         self.key_bindings()
 
-        # Update screen size if another menu break because of resizing
-        self.resize_curses()
+        # Skip end of tasks if switching panel !
+        if not self.app.explorer_win.switch and not self.app.kernel_win.switch:
 
-        # Update all static panels
-        self.update_static()
+            # Update screen size if another menu break because of resizing
+            self.resize_curses()
 
-        # Get pressed key
-        self.pkey = self.app.stdscr.getch()
+            # Update all static panels
+            self.refresh()
 
-        # Close menu
-        if self.pkey in self.app.kquit:
-            self.app.close_menu()
+            # Get pressed key
+            self.pkey = self.app.stdscr.getch()
+
+            # Close menu
+            if self.pkey in self.app.kquit:
+                self.app.close_menu()
 
     def key_bindings(self):
         """ Key Actions ! """
@@ -188,7 +199,6 @@ class MainWin:
         # Init Warning Msg
         WngMsg = WarningMsg(self.app.stdscr)
 
-        # Menu Variable
         # Menu Help
         if self.pkey == 63:    # -> ?
             help_menu = Help(self.app)
@@ -197,17 +207,16 @@ class MainWin:
         # Kernel Panel
         elif self.pkey == 75:    # -> K
             self.app.kernel_win.display()
-            self.app.cf, self.app.kc = self.app.kernel_win.update_connection()
-            # Reset cursor location
-            self.position = 1
-            self.page = int(ceil(self.position/self.row_max))
+            if self.app.kernel_change:
+                self.app.cf, self.app.kc = self.app.kernel_win.update_connection()
 
         # Explorer panel
         elif self.pkey == 69:    # -> E
             self.app.explorer_win.display()
-            # Reset cursor location
-            self.position = 1
-            self.page = int(ceil(self.position/self.row_max))
+
+        # Test panel
+        elif self.pkey == 84:    # -> T
+            self.app.test_win.display()
 
         # Reconnection to socket
         elif self.pkey == 82:    # -> R

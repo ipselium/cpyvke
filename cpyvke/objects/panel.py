@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : dim. 18 mars 2018 01:43:29 CET
+# Last Modified : dim. 18 mars 2018 22:39:28 CET
 """
 -----------
 DOCSTRING
@@ -32,8 +32,14 @@ import curses
 from curses import panel
 from math import ceil
 from time import sleep
+import locale
 
-from cpyvke.curseswin.widgets import Help
+from cpyvke.curseswin.widgets import Help, WarningMsg
+from cpyvke.utils.kernel import restart_daemon
+from cpyvke.utils.display import format_cell, type_sort, filter_var_lst
+
+
+code = locale.getpreferredencoding()
 
 
 class PanelWin:
@@ -44,12 +50,14 @@ class PanelWin:
         * create_menu
     """
 
-    def __init__(self, app):
+    def __init__(self, app, sock, logger):
         """ Class Constructor """
 
         # Arguments
         self.app = app
         self.config = app.config
+        self.sock = sock
+        self.logger = logger
 
         # Define Style
         self.c_txt = app.c_exp_txt
@@ -72,7 +80,8 @@ class PanelWin:
 
         # Some strings
         self.win_title = ' template '
-        self.item_empty = "No item available"
+        self.empty_dic = "No item available"
+        self.wng_msg = ''
 
         # Init constants
         self.position = 1
@@ -82,7 +91,12 @@ class PanelWin:
         self.pkey = -1
         self.search = None
         self.filter = None
-        self.mk_sort = None
+        self.mk_sort = 'name'
+        self.search_index = 0
+
+        # Init variables :
+        self.lst = {}
+        self.strings = []
 
         # Init Variable Box
         self.row_max = self.screen_height-self.debug_info  # max number of rows
@@ -106,11 +120,12 @@ class PanelWin:
 
         self.pkey = -1
         while self.pkey not in self.kquit:    # -> q
-            # Listen to resize and adapt Curses
-            self.resize_curses()
 
             if self.switch:
                 break
+
+            # Listen to resize and adapt Curses
+            self.resize_curses()
 
             if self.app.screen_height < self.app.term_min_height or self.app.screen_width < self.app.term_min_width:
                 self.app.check_size()
@@ -121,36 +136,43 @@ class PanelWin:
         self.gwin.clear()
         self.gpan.hide()
 
+    def custom_tasks(self):
+        """ Supplementary tasks """
+
+        pass
+
     def tasks(self):
         """ List of tasks at each iteration """
+
+        # Custom tasks
+        self.custom_tasks()
+
+        # Check Connection to daemon
+        self.sock.check_main_socket()
 
         # Get items
         self.lst = self.get_items()
         self.row_num = len(self.lst)
 
-        # Menu Help
-        if self.pkey == 63:    # -> ?
-            help_menu = Help(self.app)
-            help_menu.display()
+        # Arange item list
+        self.arange_lst()
 
         # Key bindings
-        self.key_bindings()
+        self.common_key_bindings()
 
-        # Navigate in the variable list window
-        self.navigate_lst()
+        if not self.switch:
 
-        # Refresh display
+            # Navigate in the variable list window
+            self.navigate_lst()
 
-        if self.pkey in self.kenter and self.row_num != 0:
-            self.init_menu()
+            # Update screen size if another menu break because of resizing
+            self.resize_curses()
 
-        self.refresh()
+            # Update all
+            self.refresh()
 
-        # Get pressed key
-        self.pkey = self.stdscr.getch()
-
-        # Sleep a while
-        sleep(0.1)
+            # Get pressed key
+            self.pkey = self.stdscr.getch()
 
     def refresh(self):
         """ """
@@ -176,7 +198,76 @@ class PanelWin:
         self.app.stdscr.refresh()
         self.gwin.refresh()
 
-    def key_bindings(self):
+    def common_key_bindings(self):
+        """ Common key bindings """
+
+        # Init Warning Msg
+        wng_msg = WarningMsg(self.app.stdscr)
+
+        # Custom key bindings
+        self.custom_key_bindings()
+
+        # Menu Help
+        if self.pkey == 63:    # -> ?
+            help_menu = Help(self.app)
+            help_menu.display()
+
+        # Reconnection to socket
+        elif self.pkey == 82:    # -> R
+            wng_msg.Display(' Restarting connection ')
+            self.sock.restart_sockets()
+            self.sock.warning_socket(wng_msg)
+
+        # Disconnect from daemon
+        elif self.pkey == 68:    # -> D
+            self.sock.close_sockets()
+            self.sock.warning_socket(wng_msg)
+
+        # Connect to daemon
+        elif self.pkey == 67:     # -> C
+            self.sock.init_sockets()
+            self.sock.warning_socket(wng_msg)
+
+        # Restart daemon
+        elif self.pkey == 18:    # -> c-r
+            restart_daemon()
+            wng_msg.Display(' Restarting Daemon ')
+            self.sock.init_sockets()
+            self.sock.warning_socket(wng_msg)
+
+        # Menu Search
+        elif self.pkey == 47:    # -> /
+            self.search_item('Search for :', wng_msg)
+
+        # Sort variable by name/type
+        elif self.pkey == 115:       # -> s
+            if self.mk_sort == 'name':
+                self.mk_sort = 'type'
+            elif self.mk_sort == 'type':
+                self.mk_sort = 'name'
+            self.arange_lst()
+
+        # Filter variables
+        elif self.pkey == 76:    # -> L
+            self.filter = self.input_panel('Limit to :')
+            self.mk_sort = 'filter'
+            self.position = 1
+            self.page = int(ceil(self.position/self.row_max))
+            self.arange_lst()
+
+        # Reinit
+        elif self.pkey == 117:   # -> u
+            self.mk_sort = 'name'
+            self.wng_msg = ''
+            self.position = 1
+            self.page = int(ceil(self.position/self.row_max))
+            self.arange_lst()
+
+        # Panel Menu
+        elif self.pkey in self.kenter and self.row_num != 0:
+            self.init_menu()
+
+    def custom_key_bindings(self):
         """ Key bindings : To overload """
 
         pass
@@ -184,7 +275,11 @@ class PanelWin:
     def get_items(self):
         """ Return the list of item : To overload """
 
-        return [['This is...'], ['... an example']]
+        return {'name':
+                {'type': 'type', 'value': 'value'},
+                'This is...':
+                {'value': '... a simple...', 'type': '... example'}
+                }
 
     def update_lst(self):
         """ Update the item list """
@@ -200,27 +295,78 @@ class PanelWin:
                              '|' + self.win_title + '|',
                              curses.A_BOLD | self.c_ttl)
 
+        # Reset position if position is greater than the new list of var (reset)
+        self.row_num = len(self.strings)
+        if self.position > self.row_num:
+            self.position = 1
+            self.page = 1
+
         # Items
         for i in range(1+(self.row_max*(self.page-1)),
                        self.row_max+1+(self.row_max*(self.page-1))):
 
             if self.row_num == 0:
-                self.gwin.addstr(1, 1, self.lst_empty,
+                self.gwin.addstr(1, 1, self.empty_dic,
                                  curses.A_BOLD | self.c_hh)
 
             else:
+                cell = format_cell(self.lst, self.strings[i-1], self.app.screen_width)
                 if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
-                    self.gwin.addstr(i, 2, self.lst[i-1][0].ljust(self.screen_width-5),
-                                     curses.A_BOLD | self.c_hh)
+                    self.gwin.addstr(i-(self.row_max*(self.page-1)), 2,
+                                     cell.encode(code), curses.A_BOLD | self.c_hh)
                 else:
-                    self.gwin.addstr(i, 2,
-                                     self.lst[i-1][0].ljust(self.screen_width-5),
+                    self.gwin.addstr(i-(self.row_max*(self.page-1)), 2,
+                                     cell.encode(code),
                                      curses.A_DIM | self.c_txt)
                 if i == self.row_num:
                     break
 
+        # Bottom info
+        if self.app.config['font']['pw-font'] == 'True' and len(self.wng_msg) > 0:
+            self.gwin.addstr(self.row_max+1, int((self.app.screen_width-len(self.wng_msg))/2), '', self.app.c_exp_pwf)
+            self.gwin.addstr(self.wng_msg, self.c_ttl | curses.A_BOLD)
+            self.gwin.addstr('',  self.c_pwf | curses.A_BOLD)
+        elif len(self.wng_msg) > 0:
+            self.gwin.addstr(self.row_max+1,
+                             int((self.app.screen_width-len(self.wng_msg))/2),
+                             '< ' + self.wng_msg + ' >', curses.A_DIM | self.c_ttl)
+
         self.stdscr.refresh()
         self.gwin.refresh()
+
+    def arange_lst(self):
+        """ Organize/Arange variable list. """
+
+        if self.mk_sort == 'name':
+            self.strings = sorted(list(self.lst))
+
+        elif self.mk_sort == 'type':
+            self.strings = type_sort(self.lst)
+
+        elif self.mk_sort == 'filter':
+            self.strings = filter_var_lst(self.lst, self.filter)
+            self.wng_msg = 'Filter : ' + self.filter + ' (' + str(len(self.strings)) + ' obj.)'
+
+        else:
+            self.strings = list(self.lst)
+
+        # Update number of columns
+        self.row_num = len(self.strings)
+
+    def search_item(self, txt_msg, wng_msg):
+        """ Search an object in the variable list """
+
+        self.search = self.input_panel(txt_msg)
+
+        try:
+            self.logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
+            self.search_index = min([i for i, s in enumerate(self.strings) if self.search in s])
+        except ValueError:
+            wng_msg.Display(self.search + ' not found !')
+            pass
+        else:
+            self.position = self.search_index + 1
+            self.page = int(ceil(self.position/self.row_max))
 
     def resize_curses(self, force=False):
         """ Check if terminal is resized and adapt screen """
@@ -295,15 +441,49 @@ class PanelWin:
                 self.page = self.page + 1
                 self.position = 1+(self.row_max*(self.page-1))
 
+    def input_panel(self, txt_msg):
+        """ """
+
+        # Init Menu
+        iwin = self.app.stdscr.subwin(self.row_max+2, self.app.screen_width-2, 1, 1)
+        iwin.keypad(1)
+
+        # Send menu to a panel
+        ipan = panel.new_panel(iwin)
+
+        ipan.top()        # Push the panel to the bottom of the stack.
+        ipan.show()       # Display the panel (which might have been hidden)
+        iwin.clear()
+        iwin.bkgd(self.app.c_exp_txt)
+        iwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # Change border color
+        iwin.border(0)
+        if self.app.config['font']['pw-font'] == 'True':
+            iwin.addstr(0, int((self.app.screen_width-len(self.win_title))/2),
+                        '', self.app.c_exp_pwf)
+            iwin.addstr(self.win_title, self.app.c_exp_ttl | curses.A_BOLD)
+            iwin.addstr('', self.app.c_exp_pwf)
+        else:
+            iwin.addstr(0, int((self.app.screen_width-len(self.win_title))/2),
+                        '| ' + self.win_title + ' |', self.app.c_exp_ttl | curses.A_BOLD)
+
+        curses.echo()
+        iwin.addstr(2, 3, txt_msg, curses.A_BOLD | self.app.c_exp_txt)
+        usr_input = iwin.getstr(2, len(txt_msg) + 4,
+                                self.screen_width - len(txt_msg) - 8).decode('utf-8')
+        curses.noecho()
+        ipan.hide()
+
+        return usr_input
+
     def init_menu(self):
         """ Init the menu """
 
-        self.selected = self.lst[self.position-1]
+        self.selected = self.strings[self.position-1]
         self.menu_lst = self.create_menu()
 
         # Various variables
         self.menu_cursor = 0
-        self.menu_title = ' ' + self.selected[0].split('/')[-1] + ' '
+        self.menu_title = ' ' + self.selected.split('/')[-1] + ' '
 
         # Menu dimensions
         self.menu_width = len(max(
