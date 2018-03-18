@@ -20,13 +20,22 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 12:01:45 CET
-# Last Modified : jeu. 15 mars 2018 09:26:04 CET
+# Last Modified : ven. 16 mars 2018 15:13:44 CET
 """
 -----------
 DOCSTRING
 
 @author: Cyril Desjouy
 """
+
+
+def str_reduce(msg, maxwidth):
+    """ Reduce a string if its length is greater than maxwidth """
+
+    if len(msg) >= maxwidth:
+        return msg[:maxwidth-3] + '...'
+    else:
+        return msg
 
 
 def whos_to_dic(string):

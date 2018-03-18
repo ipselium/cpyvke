@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 15 mars 2018 09:34:32 CET
+# Last Modified : sam. 17 mars 2018 11:43:26 CET
 """
 -----------
 DOCSTRING
@@ -28,26 +28,27 @@ DOCSTRING
 @author: Cyril Desjouy
 """
 
-from .temppanel import PanelWin
-from ..utils.display import format_class
+from cpyvke.objects.panel import PanelWin
+from cpyvke.utils.display import format_class
+
 
 class ClassWin(PanelWin):
 
-    def __init__(self, parent):
+    def __init__(self, app, varval, varname):
         """ Class Constructor """
 
-        super(ClassWin, self).__init__(parent)
+        super(ClassWin, self).__init__(app)
 
         # Define Styles
-        self.c_txt = self.parent.c_exp_txt
-        self.c_bdr = self.parent.c_exp_bdr
-        self.c_ttl = self.parent.c_exp_ttl
-        self.c_hh = self.parent.c_exp_hh
-        self.c_pwf = self.parent.c_exp_pwf
+        self.c_txt = self.app.c_exp_txt
+        self.c_bdr = self.app.c_exp_bdr
+        self.c_ttl = self.app.c_exp_ttl
+        self.c_hh = self.app.c_exp_hh
+        self.c_pwf = self.app.c_exp_pwf
 
         # Values
-        self.varval = self.parent.varval
-        self.varname = self.parent.varname
+        self.varval = varval
+        self.varname = varname
         # Init Menu
         self.win_title = ' {} inspection '.format(self.varname)
 

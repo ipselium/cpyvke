@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mer. 14 mars 2018 23:39:31 CET
+# Last Modified : dim. 18 mars 2018 01:17:38 CET
 """
 -----------
 DOCSTRING
@@ -31,48 +31,44 @@ DOCSTRING
 import os
 import curses
 
-from ..utils.kernel import kernel_list, start_new_kernel, shutdown_kernel, connect_kernel
-from ..utils.comm import send_msg
-from .widgets import WarningMsg
-from .temppanel import PanelWin
+from cpyvke.utils.kernel import kernel_list, start_new_kernel, \
+    shutdown_kernel, connect_kernel
+from cpyvke.utils.comm import send_msg
+from cpyvke.curseswin.widgets import WarningMsg
+from cpyvke.objects.panel import PanelWin
 
 
 class KernelWin(PanelWin):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, app, RequestSock):
         """ Class constructor """
 
-        # Inherit parent class attributes
-        super(KernelWin, self).__init__(*args, **kwargs)
-
-        # Socket
-        self.RequestSock = self.parent.RequestSock
-
-        # Queue for kernel changes
-        self.kc = self.parent.kc
+        super(KernelWin, self).__init__(app)
+        self.RequestSock = RequestSock
 
         # Define Styles
-        self.Config = self.parent.Config
-        self.c_txt = self.parent.c_kern_txt
-        self.c_bdr = self.parent.c_kern_bdr
-        self.c_ttl = self.parent.c_kern_ttl
-        self.c_hh = self.parent.c_kern_hh
-        self.c_co = self.parent.c_kern_co
-        self.c_al = self.parent.c_kern_al
-        self.c_di = self.parent.c_kern_di
-        self.c_pwf = self.parent.c_kern_pwf
+        self.c_txt = self.app.c_kern_txt
+        self.c_bdr = self.app.c_kern_bdr
+        self.c_ttl = self.app.c_kern_ttl
+        self.c_hh = self.app.c_kern_hh
+        self.c_co = self.app.c_kern_co
+        self.c_al = self.app.c_kern_al
+        self.c_di = self.app.c_kern_di
+        self.c_pwf = self.app.c_kern_pwf
+
+        self.win_title = ' Kernel Manager '
 
     def get_items(self):
         """ Get items ! """
 
-        self.cf = self.kc.connection_file
+        self.app.cf = self.app.kc.connection_file
 
-        return kernel_list(self.cf)
+        return kernel_list(self.app.cf)
 
     def update_lst(self):
         """ Update the kernel list """
 
-        if self.Config['font']['pw-font'] == 'True':
+        if self.config['font']['pw-font'] == 'True':
             self.gwin.addstr(0, int((self.screen_width-len(self.win_title))/2),
                              '', curses.A_BOLD | self.c_pwf)
             self.gwin.addstr(self.win_title, curses.A_BOLD | self.c_ttl)
@@ -124,13 +120,21 @@ class KernelWin(PanelWin):
                 if i == self.row_num:
                     break
 
-        self.stdscreen.refresh()
+        self.app.stdscr.refresh()
         self.gwin.refresh()
+
+    def key_bindings(self):
+        """ Key actions """
+
+        # Menu EXPLORER
+        if self.pkey in [9, 69, ord('\t')]:    # -> TAB/E
+            self.switch = True
+#            self.app.explorer_win.display()
 
     def update_connection(self):
         """ Return cf and kc """
 
-        return self.cf, self.kc
+        return self.app.cf, self.app.kc
 
     def create_menu(self):
         """ Create the item list for the kernel menu  """
@@ -160,25 +164,26 @@ class KernelWin(PanelWin):
     def _new_k(self):
         """ Create a new kernel. """
 
-        kid = start_new_kernel(version=self.Config['kernel version']['version'])
-        msg = WarningMsg(self.stdscreen)
+        kid = start_new_kernel(version=self.app.config['kernel version']['version'])
+        msg = WarningMsg(self.app.stdscr)
         msg.Display('Kernel id {} created (Python {})'.format(kid,
-                    self.Config['kernel version']['version']))
+                    self.app.config['kernel version']['version']))
 
     def _connect_k(self):
         """ Connect to a kernel. """
 
-        km, self.kc = connect_kernel(self.selected[0])
+        km, self.app.kc = connect_kernel(self.selected[0])
         send_msg(self.RequestSock, '<cf>' + self.selected[0])
 
         # Update kernels connection file and set new kernel flag
-        self.cf = self.kc.connection_file
-        self.quit = True
+        self.app.cf = self.app.kc.connection_file
+        self.switch = True
+        self.app.kernel_change = True
 
     def _restart_k(self):
         """ Restart a died kernel. """
 
-        msg = WarningMsg(self.stdscreen)
+        msg = WarningMsg(self.app.stdscr)
         msg.Display('Not Implement yet!')
 
     def _kill_k(self):

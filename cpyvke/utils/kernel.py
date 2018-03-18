@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : mer. 14 mars 2018 13:32:22 CET
+# Last Modified : dim. 18 mars 2018 01:36:46 CET
 """
 -----------
 DOCSTRING
@@ -97,15 +97,15 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
 def is_runing(cf):
     """ Check if kernel is alive. """
 
-    kc = BlockingKernelClient()
-    kc.load_connection_file(cf)
-    port = kc.get_connection_info()['iopub_port']
-
-    if check_server(port):
-        return True
-    else:
-        return False
-
+#    kc = BlockingKernelClient()
+#    kc.load_connection_file(cf)
+#    port = kc.get_connection_info()['iopub_port']
+#
+#    if check_server(port):
+#        return True
+#    else:
+#        return False
+    return True
 
 def check_server(port):
     """ Check if a service is listening on port. """

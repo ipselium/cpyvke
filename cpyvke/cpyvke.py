@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 14 mars 2018 13:59:42 CET
+# Last Modified : sam. 17 mars 2018 11:50:43 CET
 """
 -----------
 DOCSTRING
@@ -37,13 +37,14 @@ from time import sleep
 from jupyter_client import find_connection_file
 from logging.handlers import RotatingFileHandler
 
-from .libcpyvke.mainwin import MainWin
-from .utils.config import cfg_setup
-from .utils.kernel import connect_kernel, print_kernel_list
+from cpyvke.curseswin.app import InitApp
+from cpyvke.curseswin.mainwin import MainWin
+from cpyvke.utils.config import cfg_setup
+from cpyvke.utils.kernel import connect_kernel, print_kernel_list
+from cpyvke.utils.sockets import SocketManager
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
-logger = logging.getLogger("cpyvke")
 
 
 def InitCf(lockfile, pidfile):
@@ -137,7 +138,7 @@ def main(args=None):
 
     # Parse Config
     cfg = cfg_setup()
-    Config = cfg.RunCfg()
+    config = cfg.RunCfg()
 
     # Define Paths
     logdir = os.path.expanduser('~') + '/.cpyvke/'
@@ -146,6 +147,7 @@ def main(args=None):
     logfile = logdir + 'cpyvke.log'
 
     # Logger
+    logger = logging.getLogger("cpyvke")
     logger.setLevel(logging.DEBUG)
 
     # create the logging file handler
@@ -162,10 +164,13 @@ def main(args=None):
     # Init kernel
     km, kc = connect_kernel(cf)
 
+    # Init Curses App
+    sock = SocketManager(config, logger)
+    app = InitApp(kc, cf, config, sock, args.debug)
     # Run App
     logger.info('cpyvke started')
-    App = MainWin(kc, cf, Config, args.debug)
-    App.run()
+    main_curse = MainWin(app, sock, logger)
+    main_curse.run()
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 15 mars 2018 00:54:14 CET
+# Last Modified : dim. 18 mars 2018 01:43:29 CET
 """
 -----------
 DOCSTRING
@@ -33,7 +33,7 @@ from curses import panel
 from math import ceil
 from time import sleep
 
-from .widgets import Help
+from cpyvke.curseswin.widgets import Help
 
 
 class PanelWin:
@@ -44,42 +44,49 @@ class PanelWin:
         * create_menu
     """
 
-    def __init__(self, parent):
+    def __init__(self, app):
         """ Class Constructor """
 
-        self.parent = parent
-        self.Config = parent.Config
+        # Arguments
+        self.app = app
+        self.config = app.config
 
-        # Define Styles
-        self.c_txt = parent.c_exp_txt
-        self.c_bdr = parent.c_exp_bdr
-        self.c_ttl = parent.c_exp_ttl
-        self.c_hh = parent.c_exp_hh
-        self.c_pwf = parent.c_exp_pwf
+        # Define Style
+        self.c_txt = app.c_exp_txt
+        self.c_bdr = app.c_exp_bdr
+        self.c_ttl = app.c_exp_ttl
+        self.c_hh = app.c_exp_hh
+        self.c_pwf = app.c_exp_pwf
 
         # Bindings
-        self.kup = parent.kup
-        self.kdown = parent.kdown
-        self.kleft = parent.kleft
-        self.kright = parent.kright
-        self.kenter = parent.kenter
-        self.kquit = parent.kquit
+        self.kup = app.kup
+        self.kdown = app.kdown
+        self.kleft = app.kleft
+        self.kright = app.kright
+        self.kenter = app.kenter
+        self.kquit = app.kquit
 
-        self.stdscreen = parent.stdscreen
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
-        self.debug_info = parent.debug_info
+        self.stdscr = app.stdscr
+        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
+        self.debug_info = app.debug_info
 
-        # Init Menu
-        self.win_title = ' Kernel Manager '
+        # Some strings
+        self.win_title = ' template '
+        self.item_empty = "No item available"
 
         # Init constants
         self.position = 1
         self.page = 1
-        self.quit = False
+        self.switch = False
+        self.resize = False
+        self.pkey = -1
+        self.search = None
+        self.filter = None
+        self.mk_sort = None
 
         # Init Variable Box
         self.row_max = self.screen_height-self.debug_info  # max number of rows
-        self.gwin = self.stdscreen.subwin(self.row_max+2, self.screen_width-2, 1, 1)
+        self.gwin = self.stdscr.subwin(self.row_max+2, self.screen_width-2, 1, 1)
         self.gwin.keypad(1)
         self.gwin.bkgd(self.c_txt)
         self.gwin.attrset(self.c_bdr | curses.A_BOLD)  # Change border color
@@ -93,53 +100,81 @@ class PanelWin:
         self.gpan.show()    # Display the panel
         self.gwin.clear()
 
+        # Update size if it has change when panel was hidden
+        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
+        self.resize_curses(True)
+
         self.pkey = -1
         while self.pkey not in self.kquit:    # -> q
+            # Listen to resize and adapt Curses
+            self.resize_curses()
 
-            # Get items
-            self.lst = self.get_items()
-            self.row_num = len(self.lst)
-
-            # Menu Help
-            if self.pkey == 63:    # -> ?
-                help_menu = Help(self.parent)
-                help_menu.Display()
-
-            # Key bindings
-            self.key_bindings()
-
-            # Navigate in the variable list window
-            self.navigate_lst()
-
-            if self.pkey in self.kenter and self.row_num != 0:
-                self.init_menu()
-
-            # Erase all windows
-            self.gwin.erase()
-
-            # Create border before updating fields
-            self.gwin.border(0)
-
-            # Update all windows (virtually)
-            self.update_lst()     # Update variables list
-
-            # Update display
-            self.gwin.refresh()
-
-            # Get pressed key
-            self.pkey = self.stdscreen.getch()
-
-            # Sleep a while
-            sleep(0.1)
-
-            if self.quit:
+            if self.switch:
                 break
 
-            if self.pkey == curses.KEY_RESIZE:
-                break
+            if self.app.screen_height < self.app.term_min_height or self.app.screen_width < self.app.term_min_width:
+                self.app.check_size()
+                sleep(0.5)
+            else:
+                self.tasks()
 
         self.gwin.clear()
         self.gpan.hide()
+
+    def tasks(self):
+        """ List of tasks at each iteration """
+
+        # Get items
+        self.lst = self.get_items()
+        self.row_num = len(self.lst)
+
+        # Menu Help
+        if self.pkey == 63:    # -> ?
+            help_menu = Help(self.app)
+            help_menu.display()
+
+        # Key bindings
+        self.key_bindings()
+
+        # Navigate in the variable list window
+        self.navigate_lst()
+
+        # Refresh display
+
+        if self.pkey in self.kenter and self.row_num != 0:
+            self.init_menu()
+
+        self.refresh()
+
+        # Get pressed key
+        self.pkey = self.stdscr.getch()
+
+        # Sleep a while
+        sleep(0.1)
+
+    def refresh(self):
+        """ """
+
+        # Erase all windows
+        self.gwin.erase()
+        self.app.stdscr.erase()
+
+        # Create border before updating fields
+        self.app.stdscr.border(0)
+        self.gwin.border(0)
+
+        # Update all windows (virtually)
+        if self.app.DEBUG:
+            self.app.dbg_socket()         # Display infos about the process
+            self.app.dbg_term()         # Display infos about the process
+            self.app.dbg_general(self.pkey, self.search, self.filter, self.mk_sort)        # Display debug infos
+
+        self.update_lst()     # Update variables list
+
+        # Update infos -- Bottom
+        self.app.bottom_bar_info(len(self.lst))
+        self.app.stdscr.refresh()
+        self.gwin.refresh()
 
     def key_bindings(self):
         """ Key bindings : To overload """
@@ -155,7 +190,7 @@ class PanelWin:
         """ Update the item list """
 
         # Title
-        if self.Config['font']['pw-font'] == 'True':
+        if self.config['font']['pw-font'] == 'True':
             self.gwin.addstr(0, int((self.screen_width-len(self.win_title))/2),
                              '', curses.A_BOLD | self.c_pwf)
             self.gwin.addstr(self.win_title, curses.A_BOLD | self.c_ttl)
@@ -170,22 +205,37 @@ class PanelWin:
                        self.row_max+1+(self.row_max*(self.page-1))):
 
             if self.row_num == 0:
-                self.gwin.addstr(1, 1, "No kernel available",
-                                 self.c_hh | curses.A_BOLD)
+                self.gwin.addstr(1, 1, self.lst_empty,
+                                 curses.A_BOLD | self.c_hh)
 
             else:
                 if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
                     self.gwin.addstr(i, 2, self.lst[i-1][0].ljust(self.screen_width-5),
-                                     self.c_hh | curses.A_BOLD)
+                                     curses.A_BOLD | self.c_hh)
                 else:
                     self.gwin.addstr(i, 2,
                                      self.lst[i-1][0].ljust(self.screen_width-5),
-                                     self.c_txt | curses.A_DIM)
+                                     curses.A_DIM | self.c_txt)
                 if i == self.row_num:
                     break
 
-        self.stdscreen.refresh()
+        self.stdscr.refresh()
         self.gwin.refresh()
+
+    def resize_curses(self, force=False):
+        """ Check if terminal is resized and adapt screen """
+
+        resize = curses.is_term_resized(self.app.screen_height, self.app.screen_width)
+        cond = resize is True and self.app.screen_height >= self.app.term_min_height and self.app.screen_width >= self.app.term_min_width
+        if cond or force:
+            self.app.screen_height, self.app.screen_width = self.app.stdscr.getmaxyx()  # new heigh and width of object stdscreen
+            self.row_max = self.app.screen_height-self.app.debug_info
+            self.app.stdscr.clear()
+            self.gwin.clear()
+            self.gwin.resize(self.row_max+2, self.app.screen_width-2)
+            curses.resizeterm(self.app.screen_height, self.app.screen_width)
+            self.app.stdscr.refresh()
+            self.gwin.refresh()
 
     def navigate_lst(self):
         """ Navigation though the item list"""
@@ -263,9 +313,9 @@ class PanelWin:
         self.title_pos = int((self.menu_width - len(self.menu_title) - 2)/2)
 
         # Init Menu
-        self.gwin_menu = self.stdscreen.subwin(self.menu_height,
-                                               self.menu_width, 2,
-                                               self.screen_width-self.menu_width-2)
+        self.gwin_menu = self.stdscr.subwin(self.menu_height,
+                                            self.menu_width, 2,
+                                            self.screen_width-self.menu_width-2)
         self.gwin_menu.border(0)
         self.gwin_menu.bkgd(self.c_txt)
         self.gwin_menu.attrset(self.c_bdr | curses.A_BOLD)  # Change border color
@@ -297,7 +347,7 @@ class PanelWin:
             self.gwin_menu.border(0)
 
             # Title
-            if self.Config['font']['pw-font'] == 'True':
+            if self.config['font']['pw-font'] == 'True':
                 self.gwin_menu.addstr(0, self.title_pos,
                                       '', curses.A_BOLD | self.c_pwf)
                 self.gwin_menu.addstr(self.menu_title,
@@ -331,6 +381,10 @@ class PanelWin:
 
             elif menukey in self.kdown:
                 self.navigate_menu(1)
+
+            if menukey == curses.KEY_RESIZE:
+                self.resize = True
+                break
 
         self.gwin_menu.clear()
         self.gpan_menu.hide()

@@ -203,7 +203,5 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 
 ## TODO
 
-* cpyvke : Add vim bindings
 * cpyvke : Kernel manager : implement dead kernel restart
 * Starting kernel options (matplotlib backend in configrc)
-* Class instance explorer -> sub-variable explorer

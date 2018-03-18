@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 15 mars 2018 00:05:44 CET
+# Last Modified : jeu. 15 mars 2018 22:36:44 CET
 """
 -----------
 DOCSTRING
@@ -37,26 +37,30 @@ code = locale.getpreferredencoding()
 class PadWin:
     """ General Pad example """
 
-    def __init__(self, parent):
+    def __init__(self, app):
         """ CLass constructor """
 
-        # Init Values
-        self.parent = parent
-        self.stdscreen = parent.stdscreen
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
-        self.Config = parent.Config
-        self.c_txt = parent.c_exp_txt
-        self.c_bdr = parent.c_exp_bdr
-        self.c_ttl = parent.c_exp_ttl
-        self.c_hh = parent.c_exp_hh
-        self.c_pwf = parent.c_exp_pwf
+        # Arguments
+        self.app = app
+        self.config = app.config
+
+        # Define Style
+        self.c_txt = app.c_exp_txt
+        self.c_bdr = app.c_exp_bdr
+        self.c_ttl = app.c_exp_ttl
+        self.c_hh = app.c_exp_hh
+        self.c_pwf = app.c_exp_pwf
 
         # Bindings
-        self.kup = parent.kup
-        self.kdown = parent.kdown
-        self.kright = parent.kright
-        self.kleft = parent.kleft
-        self.kquit = parent.kquit
+        self.kup = app.kup
+        self.kdown = app.kdown
+        self.kright = app.kright
+        self.kleft = app.kleft
+        self.kquit = app.kquit
+
+        # Screen
+        self.stdscr = app.stdscr
+        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
 
         # Create content
         self.title = ' ' + 'Pad Test' + ' '
@@ -89,7 +93,7 @@ class PadWin:
             self.gpad.addstr(1+i, 3, j.encode(code), self.c_txt)
 
         # Pad title
-        if self.Config['font']['pw-font'] == 'True':
+        if self.config['font']['pw-font'] == 'True':
             self.gpad.addstr(0, self.title_loc,
                              '', self.c_pwf | curses.A_BOLD)
             self.gpad.addstr(self.title, self.c_ttl | curses.A_BOLD)

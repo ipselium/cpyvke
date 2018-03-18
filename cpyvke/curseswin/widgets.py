@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : jeu. 15 mars 2018 00:15:10 CET
+# Last Modified : sam. 17 mars 2018 11:47:43 CET
 """
 -----------
 DOCSTRING
@@ -34,8 +34,8 @@ from curses import panel
 from time import sleep
 import locale
 
-from ..utils.display import dump
-from .temppad import PadWin
+from cpyvke.utils.display import dump, str_reduce
+from cpyvke.objects.pad import PadWin
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
@@ -44,20 +44,20 @@ code = locale.getpreferredencoding()
 class Viewer(PadWin):
     """ Display variable content in a pad. """
 
-    def __init__(self, parent):
+    def __init__(self, app, varval, varname):
         """ Class constructor """
 
-        self.varval = parent.varval
-        self.varname = parent.varname
+        self.varval = varval
+        self.varname = varname
 
-        super(Viewer, self).__init__(parent)
+        super(Viewer, self).__init__(app)
 
         # Init Values
-        self.c_txt = self.parent.c_exp_txt
-        self.c_bdr = self.parent.c_exp_bdr
-        self.c_ttl = self.parent.c_exp_ttl
-        self.c_hh = self.parent.c_exp_hh
-        self.c_pwf = self.parent.c_exp_pwf
+        self.c_txt = self.app.c_exp_txt
+        self.c_bdr = self.app.c_exp_bdr
+        self.c_ttl = self.app.c_exp_ttl
+        self.c_hh = self.app.c_exp_hh
+        self.c_pwf = self.app.c_exp_pwf
 
         # Init Menu
         self.title = ' ' + self.varname + ' '
@@ -91,6 +91,7 @@ class WarningMsg:
         """ Display **wng_msg** in a panel. """
 
         # Init Menu
+        wng_msg = str_reduce(wng_msg, self.screen_width - 2)
         wng_width = len(wng_msg) + 2
         menu_wng = self.stdscreen.subwin(3, wng_width, 3, int((self.screen_width-wng_width)/2))
         menu_wng.bkgd(self.c_warn_txt | curses.A_BOLD)
@@ -115,15 +116,15 @@ class WarningMsg:
 class Help(PadWin):
     """ Display help in a pad. """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, app):
 
-        super(Help, self).__init__(*args, **kwargs)
+        super(Help, self).__init__(app)
 
         # Init Values
-        self.c_txt = self.parent.c_main_txt
-        self.c_bdr = self.parent.c_main_bdr
-        self.c_ttl = self.parent.c_main_ttl
-        self.c_pwf = self.parent.c_main_pwf
+        self.c_txt = self.app.c_main_txt
+        self.c_bdr = self.app.c_main_bdr
+        self.c_ttl = self.app.c_main_ttl
+        self.c_pwf = self.app.c_main_pwf
 
         # Init Menu
         self.title = 'Help'
