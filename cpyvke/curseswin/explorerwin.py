@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : dim. 18 mars 2018 22:38:49 CET
+# Last Modified : lun. 19 mars 2018 19:52:53 CET
 """
 -----------
 DOCSTRING
@@ -31,10 +31,10 @@ DOCSTRING
 import curses
 import locale
 
-from cpyvke.curseswin.varmenu import ExplorerMenu
+from cpyvke.curseswin.explorermenu import ExplorerMenu
 from cpyvke.curseswin.widgets import WarningMsg
 from cpyvke.utils.display import whos_to_dic
-from cpyvke.utils.comm import recv_msg
+from cpyvke.utils.comm import recv_msg, send_msg
 from cpyvke.objects.panel import PanelWin
 
 locale.setlocale(locale.LC_ALL, '')
@@ -61,10 +61,13 @@ class ExplorerWin(PanelWin):
     def custom_tasks(self):
         """ Additional Explorer tasks """
 
-        if self.app.kernel_change:
-            self.app.kernel_change = False
-            wng_msg = WarningMsg(self.app.stdscr)
-            self.sock.force_update(wng_msg)
+        # Update variable number in bottom bar:
+        self.app.var_nb = len(self.lst)
+
+# Bug :/
+#        if self.app.kernel_change:
+#            self.app.kernel_change = False
+#            send_msg(self.sock.RequestSock, '<code> ')
 
     def custom_key_bindings(self):
         """ Key Actions ! """

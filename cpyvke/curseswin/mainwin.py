@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : dim. 18 mars 2018 23:10:51 CET
+# Last Modified : lun. 19 mars 2018 23:37:03 CET
 """
 -----------
 DOCSTRING
@@ -61,8 +61,8 @@ class MainWin:
         self.variables = {}
 
         # Init Variable Box
-        self.row_max = self.app.screen_height-self.app.debug_info
-        self.mwin = curses.newwin(self.row_max+2, self.app.screen_width-2, 1, 1)
+        self.app.row_max = self.app.screen_height-self.app.debug_info
+        self.mwin = curses.newwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
         self.mwin.bkgd(self.app.c_exp_txt)
         self.mwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # border color
         self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
@@ -118,11 +118,11 @@ class MainWin:
             # save also these value locally to check if
             self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
             # Update number of lines
-            self.row_max = self.app.screen_height-self.app.debug_info
+            self.app.row_max = self.app.screen_height-self.app.debug_info
             # Update display
             self.app.stdscr.clear()
             self.mwin.clear()
-            self.mwin.resize(self.row_max+2, self.app.screen_width-2)
+            self.mwin.resize(self.app.row_max+2, self.app.screen_width-2)
             curses.resizeterm(self.app.screen_height, self.app.screen_width)
             self.app.stdscr.refresh()
             self.mwin.refresh()
@@ -141,14 +141,14 @@ class MainWin:
         # Update all windows (virtually)
         if self.app.DEBUG:
             self.app.dbg_socket()         # Display infos about the process
-            self.app.dbg_term()         # Display infos about the process
-            self.app.dbg_general(self.pkey, self.search, self.filter, self.mk_sort)        # Display debug infos
+            self.app.dbg_term(self.pkey)         # Display infos about the process
+            self.app.dbg_general(self.search, self.filter, self.mk_sort)        # Display debug infos
 
         # Welcome screen
         self.welcome()
 
         # Update display  -- Bottom : Display infos about kernel at bottom
-        self.app.bottom_bar_info(len(self.variables))
+        self.app.bottom_bar_info()
         self.app.stdscr.refresh()
         self.mwin.refresh()
 
@@ -158,10 +158,10 @@ class MainWin:
         msg = ascii_cpyvke()
         msg_size = max([len(i) for i in msg])
 
-        for i in range(len(ascii_cpyvke())):
+        for i in range(len(msg)):
             self.mwin.addstr(i+1,
                              int((self.app.screen_width - msg_size)/2),
-                             msg[i], self.app.c_main_txt | curses.A_BOLD)
+                             msg[i], self.app.c_warn_txt | curses.A_BOLD)
 
         self.mwin.addstr(i+3, 1,
                          'E : Variable Inspector'.center(self.app.screen_width-4))

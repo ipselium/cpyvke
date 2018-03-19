@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : sam. 17 mars 2018 11:22:56 CET
-# Last Modified : dim. 18 mars 2018 23:44:56 CET
+# Last Modified : lun. 19 mars 2018 00:24:52 CET
 """
 -----------
 DOCSTRING
@@ -28,9 +28,24 @@ DOCSTRING
 @author: Cyril Desjouy
 """
 
-def ascii_cpyvke():
-    return ["  ___               _       ",
-            " / __|_ __ _  ___ _| |_____ ",
-            "| (__| '_ \ || \ V / / / -_)",
-            " \___| .__/\_, |\_/|_\_\___|  v2.0",
-            "     |_|   |__/             "]
+def ascii_cpyvke(font='small'):
+    """ figlet -f font "Cpyvke" """
+
+    if font == 'small':
+        return ["  ___               _       ",
+                " / __|_ __ _  ___ _| |_____ ",
+                "| (__| '_ \ || \ V / / / -_)",
+                " \___| .__/\_, |\_/|_\_\___|  v2.0",
+                "     |_|   |__/             "]
+    elif font == 'smshadow':
+        return ["   __|              |        ",
+                "  (    _ \ |  |\ \ /| /  -_) ",
+                " \___|.__/\_, | \_/_\_\\___| ",
+                "     _|   ___/               "]
+    elif font == 'pagga':
+        return ["░█▀▀░█▀█░█░█░█░█░█░█░█▀▀",
+                "░█░░░█▀▀░░█░░▀▄▀░█▀▄░█▀▀",
+                "░▀▀▀░▀░░░░▀░░░▀░░▀░▀░▀▀▀"]
+
+
+

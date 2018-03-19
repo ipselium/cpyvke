@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : jeu. 15 mars 2018 18:07:10 CET
-# Last Modified : dim. 18 mars 2018 23:46:02 CET
+# Last Modified : lun. 19 mars 2018 16:22:15 CET
 """
 -----------
 DOCSTRING
@@ -51,8 +51,8 @@ class SocketManager:
             self.MainSock.connect((hote, sport))
             self.MainSock.setblocking(0)
             self.logger.debug('Connected to main socket')
-        except Exception:
-            self.logger.error('Connection to stream socket failed : \n', exc_info=True)
+        except ConnectionRefusedError:
+            self.logger.error('Connection to stream socket failed ')
 
     def init_request_socket(self):
         """ Init Request Socket. """
@@ -110,6 +110,8 @@ class SocketManager:
 
         try:
             send_msg(self.MainSock, '<TEST>')
+            self.connected = True
+        except BlockingIOError:
             self.connected = True
         except OSError:
             self.connected = False

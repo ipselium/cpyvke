@@ -198,6 +198,8 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 *cpyvke* is still in developpement and may present unexpected behavior !
 
 * cpyvke : crash when "brutal" resize
+* kd5 : crash when client asks a kernel change
+
 
 - - -
 
@@ -205,3 +207,4 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 
 * cpyvke : Kernel manager : implement dead kernel restart
 * Starting kernel options (matplotlib backend in configrc)
+* utils.kernel.is_running : slow - to improve !

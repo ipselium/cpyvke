@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : dim. 18 mars 2018 22:38:24 CET
+# Last Modified : lun. 19 mars 2018 16:31:23 CET
 """
 -----------
 DOCSTRING
@@ -123,8 +123,8 @@ class KernelWin(PanelWin):
 
         # Update kernels connection file and set new kernel flag
         self.app.cf = self.app.kc.connection_file
-        self.switch = True
         self.app.kernel_change = True
+        self.switch = True
 
     def _restart_k(self):
         """ Restart a died kernel. """

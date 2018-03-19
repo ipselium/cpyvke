@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : dim. 18 mars 2018 01:15:31 CET
+# Last Modified : lun. 19 mars 2018 23:14:45 CET
 """
 -----------
 DOCSTRING
@@ -28,11 +28,13 @@ DOCSTRING
 @author: Cyril Desjouy
 """
 
-import curses
-from curses import panel
-from time import sleep
+import os
+import time
+import psutil
 import locale
 import traceback
+import curses
+from curses import panel
 
 from cpyvke.utils.colors import Colors
 from cpyvke.utils.comm import send_msg
@@ -61,13 +63,16 @@ class InitApp:
         self.stdscr.border(0)            # draw a border around screen
         self.screen_height, self.screen_width = self.stdscr.getmaxyx()
 
+        # Ressources
+        self.ressources = psutil.Process(os.getpid())
+
         # Curses options
-        curse_delay = 10
-        curses.noecho()             # Wont print the input
+        self.curse_delay = 10            # 1s timer on each getch
+        curses.noecho()             # Wont print the input og getch (keys)
         curses.cbreak()             #
         curses.curs_set(0)          #
         # How many tenths of second are waited to refresh screen, from 1 to 255
-        curses.halfdelay(curse_delay)
+        curses.halfdelay(self.curse_delay)
         # Init color pairs
         Colors(self.config)
         # Assign color pairs to variables
@@ -80,7 +85,7 @@ class InitApp:
         if self.DEBUG:
             self.term_min_height = 20
             self.term_min_width = 80
-            self.debug_info = 12       # Size of the bottom text area
+            self.debug_info = 10       # Size of the bottom text area
         else:
             self.term_min_height = 10
             self.term_min_width = 60
@@ -88,6 +93,7 @@ class InitApp:
 
         self.row_max = self.screen_height-self.debug_info  # max number of rows
         self.kernel_change = False
+        self.var_nb = 0
 
         # Bindings :
         self.kdown = [curses.KEY_DOWN, 106]
@@ -139,11 +145,20 @@ class InitApp:
         """ Display queue informations """
 
         self.stdscr.addstr(self.row_max + 4, int(2*self.screen_width/3),
-                           ' Socket ', self.c_main_ttl | curses.A_BOLD)
+                           ' Ressources ', self.c_main_ttl | curses.A_BOLD)
         if self.config['font']['pw-font'] == 'True':
             self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
+        self.stdscr.addstr(self.row_max + 5, 2*int(self.screen_width/3) + 1,
+                           ' cpu : {} %'.format(self.ressources.cpu_percent()),
+                           curses.A_DIM | self.c_main_txt)
+        self.stdscr.addstr(self.row_max + 6, 2*int(self.screen_width/3) + 1,
+                           ' memory : {:.2f} %'.format(self.ressources.memory_percent()),
+                           curses.A_DIM | self.c_main_txt)
+        self.stdscr.addstr(self.row_max + 7, 2*int(self.screen_width/3) + 1,
+                           ' threads : {} '.format(self.ressources.num_threads()),
+                           curses.A_DIM | self.c_main_txt)
 
-    def dbg_term(self):
+    def dbg_term(self, pkey):
         """ Display terminal informations """
 
         self.stdscr.addstr(self.row_max + 4, int(self.screen_width/3),
@@ -151,29 +166,28 @@ class InitApp:
         if self.config['font']['pw-font'] == 'True':
             self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
         self.stdscr.addstr(self.row_max + 5, int(self.screen_width/3) + 1,
-                           ' width : ' + str(self.screen_width),
+                           ' key : {}'.format(pkey),
                            curses.A_DIM | self.c_main_txt)
         self.stdscr.addstr(self.row_max + 6, int(self.screen_width/3) + 1,
-                           ' heigh : ' + str(self.screen_height),
+                           ' size : {}x{}'.format(self.screen_width,
+                                                   self.screen_height),
                            curses.A_DIM | self.c_main_txt)
         self.stdscr.addstr(self.row_max + 7, int(self.screen_width/3) + 1,
-                           ' color : ' + str(curses.COLORS),
+                           ' colors : ' + str(curses.COLORS),
                            curses.A_DIM | self.c_main_txt)
 
-    def dbg_general(self, pkey, search, filter, mk_sort):
+    def dbg_general(self, search, filter, mk_sort):
         """ Display debug informations """
 
         self.stdscr.addstr(self.row_max + 4, 2, ' Debug ',
                            self.c_main_ttl | curses.A_BOLD)
         if self.config['font']['pw-font'] == 'True':
             self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscr.addstr(self.row_max + 5, 3, ' key : {}'.format(pkey),
+        self.stdscr.addstr(self.row_max + 5, 3, ' search : {}'.format(search),
                            curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 6, 3, ' search : {}'.format(search),
+        self.stdscr.addstr(self.row_max + 6, 3, ' limit : {}'.format(filter),
                            curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 7, 3, ' limit : {}'.format(filter),
-                           curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 8, 3, ' sort : {}'.format(mk_sort),
+        self.stdscr.addstr(self.row_max + 7, 3, ' sort : {}'.format(mk_sort),
                            curses.A_DIM | self.c_main_txt)
 
     def check_size(self):
@@ -196,11 +210,11 @@ class InitApp:
         self.stdscr.border(0)
         self.stdscr.refresh()
 
-    def bottom_bar_info(self, item_number):
+    def bottom_bar_info(self):
         """ Check and display kernel informations """
 
         debug_info_id = 'kernel ' + self.cf.split('-')[1].split('.')[0] + ' '
-        debug_info_obj = str(item_number) + ' obj.'
+        debug_info_obj = str(self.var_nb) + ' obj.'
 
         # Kernel Info
         if self.config['font']['pw-font'] == 'True':
@@ -266,7 +280,7 @@ class InitApp:
         self.pkey = -1
         while self.pkey not in (121, 110, 113, 89, 78, 27, ord("\n")):
             self.pkey = self.stdscr.getch()
-            sleep(0.5)
+            time.sleep(0.5)
 
         # Erase the panel
         menu_close.clear()

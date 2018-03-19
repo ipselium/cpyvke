@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : sam. 17 mars 2018 11:47:43 CET
+# Last Modified : lun. 19 mars 2018 21:54:45 CET
 """
 -----------
 DOCSTRING
@@ -140,9 +140,12 @@ class Help(PadWin):
                 '(/) Search in variable explorer',
                 '(s) Sort by name/type',
                 '(L) Limit display to keyword',
+                '(S) Send code to IPython kernel',
                 '(u) Undo limit',
                 '(r) Refresh explorer',
-                '(K) Kernel Menu',
+                '(E) Variable Explorer',
+                '(K) Kernel Manager',
+                '(TAB) Kernel <-> Variable',
                 '(c-r) Restart Daemon',
                 '(R) Restart connection to daemon',
                 '(D) Disconnect from daemon',

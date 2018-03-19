@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : dim. 18 mars 2018 12:23:38 CET
+# Last Modified : lun. 19 mars 2018 23:42:15 CET
 """
 -----------
 DOCSTRING
@@ -50,7 +50,6 @@ class ExplorerMenu:
         # Init parent
         self.save_dir = self.app.config['path']['save-dir']
         self.position = parent.position
-        self.row_max = parent.row_max
         self.page = parent.page
 
         # Warning messages
@@ -67,7 +66,7 @@ class ExplorerMenu:
         # Get Variable characteristics
         proc = ProceedInspection(self.app, self.sock, self.logger,
                                  self.varname, self.varval, self.vartype,
-                                 self.position, self.page, self.row_max, self.wng)
+                                 self.position, self.page, self.app.row_max, self.wng)
         self._ismenu, self.varname, self.varval, self.vartype = proc.get_variable()
 
         # Init all Inspectors

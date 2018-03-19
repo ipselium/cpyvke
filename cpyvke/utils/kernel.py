@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : dim. 18 mars 2018 15:40:56 CET
+# Last Modified : lun. 19 mars 2018 22:44:02 CET
 """
 -----------
 DOCSTRING
@@ -67,15 +67,6 @@ def is_kd_running(pidfile):
         return False
 
 
-def ProcInfo(init=0):
-    pid = os.getpid()
-    py = psutil.Process(pid)
-    mem = py.memory_percent()  # py.memory_info()[0]/2.**30
-    if init != mem:
-        print('Memory :', mem)  # memory use in GB...I think
-    return mem
-
-
 def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
     """ Start a new kernel and return the kernel_id """
 
@@ -95,16 +86,19 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
 
 
 def is_runing(cf):
-    """ Check if kernel is alive. """
+    """ Check if kernel is alive.
+    Note : Very slow process that make bad curse display !
+    I have to find another way to check for died kernels
+    """
 
-#    kc = BlockingKernelClient()
-#    kc.load_connection_file(cf)
-#    port = kc.get_connection_info()['iopub_port']
-#
-#    if check_server(port):
-#        return True
-#    else:
-#        return False
+    kc = BlockingKernelClient()
+    kc.load_connection_file(cf)
+    port = kc.get_connection_info()['iopub_port']
+
+    if check_server(port):
+        return True
+    else:
+        return False
     return True
 
 
@@ -130,9 +124,6 @@ def kernel_list(cf=None):
 
     try:
         lst = [(item, '[Alive]' if is_runing(item) else '[Died]') for item in lstk]
-#        return {kernel_id(item): {'value': item, 'type':'[Connected]'} if is_runing(item) and item in cf
-#                else {'value': item, 'type': '[Alive]'} if is_runing(item)
-#                else {'value': item,'type':'[Died]'} for item in lstk}
     except Exception:
         logger.error('No kernel available', exc_info=True)
         return []
@@ -141,6 +132,9 @@ def kernel_list(cf=None):
 
 
 def kernel_dic(cf=None):
+    """ Dictionnary of connection files. The keys are :
+        {'name': {'value': val, 'type': 'type'}}
+    """
 
     path = '/run/user/1000/jupyter/'
     lstk = [path + item for item in os.listdir(path) if 'kernel' in item]
@@ -188,7 +182,7 @@ def print_kernel_dic():
 def connect_kernel(cf):
     """ Connect a kernel. """
 
-    if is_runing(cf) is True:
+    if is_runing(cf):
         kc = BlockingKernelClient(connection_file=cf)
         kc.load_connection_file(cf)
         km = None
@@ -206,6 +200,8 @@ def connect_kernel(cf):
 
 
 def connect_kernel_as_manager(cf):
+    """ Connect a kernel """
+
     # Kernel manager
     km = manager.KernelManager(connection_file=cf)
     km.start_kernel()

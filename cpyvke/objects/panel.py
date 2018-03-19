@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : dim. 18 mars 2018 22:39:28 CET
+# Last Modified : lun. 19 mars 2018 23:38:20 CET
 """
 -----------
 DOCSTRING
@@ -37,7 +37,7 @@ import locale
 from cpyvke.curseswin.widgets import Help, WarningMsg
 from cpyvke.utils.kernel import restart_daemon
 from cpyvke.utils.display import format_cell, type_sort, filter_var_lst
-
+from cpyvke.utils.comm import send_msg
 
 code = locale.getpreferredencoding()
 
@@ -99,8 +99,8 @@ class PanelWin:
         self.strings = []
 
         # Init Variable Box
-        self.row_max = self.screen_height-self.debug_info  # max number of rows
-        self.gwin = self.stdscr.subwin(self.row_max+2, self.screen_width-2, 1, 1)
+        self.app.row_max = self.screen_height-self.debug_info  # max number of rows
+        self.gwin = self.stdscr.subwin(self.app.row_max+2, self.screen_width-2, 1, 1)
         self.gwin.keypad(1)
         self.gwin.bkgd(self.c_txt)
         self.gwin.attrset(self.c_bdr | curses.A_BOLD)  # Change border color
@@ -188,15 +188,18 @@ class PanelWin:
         # Update all windows (virtually)
         if self.app.DEBUG:
             self.app.dbg_socket()         # Display infos about the process
-            self.app.dbg_term()         # Display infos about the process
-            self.app.dbg_general(self.pkey, self.search, self.filter, self.mk_sort)        # Display debug infos
+            self.app.dbg_term(self.pkey)         # Display infos about the process
+            self.app.dbg_general(self.search, self.filter, self.mk_sort)        # Display debug infos
 
         self.update_lst()     # Update variables list
 
         # Update infos -- Bottom
-        self.app.bottom_bar_info(len(self.lst))
+        self.app.bottom_bar_info()
         self.app.stdscr.refresh()
         self.gwin.refresh()
+
+        # Reactive timeout for getch
+        curses.halfdelay(self.app.curse_delay)
 
     def common_key_bindings(self):
         """ Common key bindings """
@@ -252,15 +255,19 @@ class PanelWin:
             self.filter = self.input_panel('Limit to :')
             self.mk_sort = 'filter'
             self.position = 1
-            self.page = int(ceil(self.position/self.row_max))
+            self.page = int(ceil(self.position/self.app.row_max))
             self.arange_lst()
+
+        # Send code
+        elif self.pkey == 83:    # -> S
+            self.send_code()
 
         # Reinit
         elif self.pkey == 117:   # -> u
             self.mk_sort = 'name'
             self.wng_msg = ''
             self.position = 1
-            self.page = int(ceil(self.position/self.row_max))
+            self.page = int(ceil(self.position/self.app.row_max))
             self.arange_lst()
 
         # Panel Menu
@@ -302,8 +309,8 @@ class PanelWin:
             self.page = 1
 
         # Items
-        for i in range(1+(self.row_max*(self.page-1)),
-                       self.row_max+1+(self.row_max*(self.page-1))):
+        for i in range(1+(self.app.row_max*(self.page-1)),
+                       self.app.row_max+1+(self.app.row_max*(self.page-1))):
 
             if self.row_num == 0:
                 self.gwin.addstr(1, 1, self.empty_dic,
@@ -311,11 +318,11 @@ class PanelWin:
 
             else:
                 cell = format_cell(self.lst, self.strings[i-1], self.app.screen_width)
-                if (i+(self.row_max*(self.page-1)) == self.position+(self.row_max*(self.page-1))):
-                    self.gwin.addstr(i-(self.row_max*(self.page-1)), 2,
+                if (i+(self.app.row_max*(self.page-1)) == self.position+(self.app.row_max*(self.page-1))):
+                    self.gwin.addstr(i-(self.app.row_max*(self.page-1)), 2,
                                      cell.encode(code), curses.A_BOLD | self.c_hh)
                 else:
-                    self.gwin.addstr(i-(self.row_max*(self.page-1)), 2,
+                    self.gwin.addstr(i-(self.app.row_max*(self.page-1)), 2,
                                      cell.encode(code),
                                      curses.A_DIM | self.c_txt)
                 if i == self.row_num:
@@ -323,11 +330,13 @@ class PanelWin:
 
         # Bottom info
         if self.app.config['font']['pw-font'] == 'True' and len(self.wng_msg) > 0:
-            self.gwin.addstr(self.row_max+1, int((self.app.screen_width-len(self.wng_msg))/2), '', self.app.c_exp_pwf)
+            self.gwin.addstr(self.app.row_max+1,
+                             int((self.app.screen_width-len(self.wng_msg))/2),
+                             '', self.c_pwf)
             self.gwin.addstr(self.wng_msg, self.c_ttl | curses.A_BOLD)
             self.gwin.addstr('',  self.c_pwf | curses.A_BOLD)
         elif len(self.wng_msg) > 0:
-            self.gwin.addstr(self.row_max+1,
+            self.gwin.addstr(self.app.row_max+1,
                              int((self.app.screen_width-len(self.wng_msg))/2),
                              '< ' + self.wng_msg + ' >', curses.A_DIM | self.c_ttl)
 
@@ -353,6 +362,13 @@ class PanelWin:
         # Update number of columns
         self.row_num = len(self.strings)
 
+    def send_code(self):
+        """ Send code to current kernel """
+
+        code = self.input_panel('>>')
+        send_msg(self.sock.RequestSock, '<code>' + code)
+        self.logger.info('code sent to kernel : {}'.format(code))
+
     def search_item(self, txt_msg, wng_msg):
         """ Search an object in the variable list """
 
@@ -366,7 +382,7 @@ class PanelWin:
             pass
         else:
             self.position = self.search_index + 1
-            self.page = int(ceil(self.position/self.row_max))
+            self.page = int(ceil(self.position/self.app.row_max))
 
     def resize_curses(self, force=False):
         """ Check if terminal is resized and adapt screen """
@@ -375,10 +391,10 @@ class PanelWin:
         cond = resize is True and self.app.screen_height >= self.app.term_min_height and self.app.screen_width >= self.app.term_min_width
         if cond or force:
             self.app.screen_height, self.app.screen_width = self.app.stdscr.getmaxyx()  # new heigh and width of object stdscreen
-            self.row_max = self.app.screen_height-self.app.debug_info
+            self.app.row_max = self.app.screen_height-self.app.debug_info
             self.app.stdscr.clear()
             self.gwin.clear()
-            self.gwin.resize(self.row_max+2, self.app.screen_width-2)
+            self.gwin.resize(self.app.row_max+2, self.app.screen_width-2)
             curses.resizeterm(self.app.screen_height, self.app.screen_width)
             self.app.stdscr.refresh()
             self.gwin.refresh()
@@ -386,7 +402,7 @@ class PanelWin:
     def navigate_lst(self):
         """ Navigation though the item list"""
 
-        self.pages = int(ceil(self.row_num/self.row_max))
+        self.pages = int(ceil(self.row_num/self.app.row_max))
         if self.pkey in self.kdown:
             self.navigate_down()
         if self.pkey in self.kup:
@@ -400,13 +416,13 @@ class PanelWin:
         """ Navigate Right. """
 
         self.page = self.page + 1
-        self.position = (1+(self.row_max*(self.page-1)))
+        self.position = (1+(self.app.row_max*(self.page-1)))
 
     def navigate_left(self):
         """ Navigate Left. """
 
         self.page = self.page - 1
-        self.position = 1+(self.row_max*(self.page-1))
+        self.position = 1+(self.app.row_max*(self.page-1))
 
     def navigate_up(self):
         """ Navigate Up. """
@@ -415,37 +431,37 @@ class PanelWin:
             if self.position > 1:
                 self.position = self.position - 1
         else:
-            if self.position > (1+(self.row_max*(self.page-1))):
+            if self.position > (1+(self.app.row_max*(self.page-1))):
                 self.position = self.position - 1
             else:
                 self.page = self.page - 1
-                self.position = self.row_max+(self.row_max*(self.page-1))
+                self.position = self.app.row_max+(self.app.row_max*(self.page-1))
 
     def navigate_down(self):
         """ Navigate Down. """
 
         if self.page == 1:
-            if (self.position < self.row_max) and (self.position < self.row_num):
+            if (self.position < self.app.row_max) and (self.position < self.row_num):
                 self.position = self.position + 1
             else:
                 if self.pages > 1:
                     self.page = self.page + 1
-                    self.position = 1+(self.row_max*(self.page-1))
+                    self.position = 1+(self.app.row_max*(self.page-1))
         elif self.page == self.pages:
             if self.position < self.row_num:
                 self.position = self.position + 1
         else:
-            if self.position < self.row_max+(self.row_max*(self.page-1)):
+            if self.position < self.app.row_max+(self.app.row_max*(self.page-1)):
                 self.position = self.position + 1
             else:
                 self.page = self.page + 1
-                self.position = 1+(self.row_max*(self.page-1))
+                self.position = 1+(self.app.row_max*(self.page-1))
 
     def input_panel(self, txt_msg):
         """ """
 
         # Init Menu
-        iwin = self.app.stdscr.subwin(self.row_max+2, self.app.screen_width-2, 1, 1)
+        iwin = self.app.stdscr.subwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
         iwin.keypad(1)
 
         # Send menu to a panel
@@ -454,20 +470,20 @@ class PanelWin:
         ipan.top()        # Push the panel to the bottom of the stack.
         ipan.show()       # Display the panel (which might have been hidden)
         iwin.clear()
-        iwin.bkgd(self.app.c_exp_txt)
-        iwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # Change border color
+        iwin.bkgd(self.c_txt)
+        iwin.attrset(self.c_bdr | curses.A_BOLD)  # Change border color
         iwin.border(0)
         if self.app.config['font']['pw-font'] == 'True':
             iwin.addstr(0, int((self.app.screen_width-len(self.win_title))/2),
-                        '', self.app.c_exp_pwf)
-            iwin.addstr(self.win_title, self.app.c_exp_ttl | curses.A_BOLD)
-            iwin.addstr('', self.app.c_exp_pwf)
+                        '', self.c_pwf)
+            iwin.addstr(self.win_title, self.c_ttl | curses.A_BOLD)
+            iwin.addstr('', self.c_pwf)
         else:
             iwin.addstr(0, int((self.app.screen_width-len(self.win_title))/2),
-                        '| ' + self.win_title + ' |', self.app.c_exp_ttl | curses.A_BOLD)
+                        '| ' + self.win_title + ' |', self.c_ttl | curses.A_BOLD)
 
         curses.echo()
-        iwin.addstr(2, 3, txt_msg, curses.A_BOLD | self.app.c_exp_txt)
+        iwin.addstr(2, 3, txt_msg, curses.A_BOLD | self.c_txt)
         usr_input = iwin.getstr(2, len(txt_msg) + 4,
                                 self.screen_width - len(txt_msg) - 8).decode('utf-8')
         curses.noecho()
