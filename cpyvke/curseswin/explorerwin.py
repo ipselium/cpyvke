@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : lun. 19 mars 2018 19:52:53 CET
+# Last Modified : mar. 20 mars 2018 23:14:42 CET
 """
 -----------
 DOCSTRING
@@ -116,3 +116,4 @@ class ExplorerWin(PanelWin):
         var_menu = ExplorerMenu(self.app, self.sock, self.logger, self)
         if var_menu.is_menu():
             var_menu.display()
+            self.resize_curses(True)  # Fix brutal resize crash

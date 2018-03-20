@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : lun. 19 mars 2018 23:38:20 CET
+# Last Modified : mar. 20 mars 2018 23:16:57 CET
 """
 -----------
 DOCSTRING
@@ -66,16 +66,7 @@ class PanelWin:
         self.c_hh = app.c_exp_hh
         self.c_pwf = app.c_exp_pwf
 
-        # Bindings
-        self.kup = app.kup
-        self.kdown = app.kdown
-        self.kleft = app.kleft
-        self.kright = app.kright
-        self.kenter = app.kenter
-        self.kquit = app.kquit
-
         self.stdscr = app.stdscr
-        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
         self.debug_info = app.debug_info
 
         # Some strings
@@ -99,11 +90,12 @@ class PanelWin:
         self.strings = []
 
         # Init Variable Box
-        self.app.row_max = self.screen_height-self.debug_info  # max number of rows
-        self.gwin = self.stdscr.subwin(self.app.row_max+2, self.screen_width-2, 1, 1)
+        self.app.row_max = self.app.screen_height-self.debug_info  # max number of rows
+        self.gwin = self.app.stdscr.subwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
         self.gwin.keypad(1)
         self.gwin.bkgd(self.c_txt)
         self.gwin.attrset(self.c_bdr | curses.A_BOLD)  # Change border color
+        self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
         self.gpan = panel.new_panel(self.gwin)
         self.gpan.hide()
 
@@ -115,14 +107,10 @@ class PanelWin:
         self.gwin.clear()
 
         # Update size if it has change when panel was hidden
-        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
         self.resize_curses(True)
 
         self.pkey = -1
-        while self.pkey not in self.kquit:    # -> q
-
-            if self.switch:
-                break
+        while self.pkey not in self.app.kquit and not self.switch:    # -> q or switch
 
             # Listen to resize and adapt Curses
             self.resize_curses()
@@ -165,14 +153,14 @@ class PanelWin:
             # Navigate in the variable list window
             self.navigate_lst()
 
-            # Update screen size if another menu break because of resizing
+            # Update screen size
             self.resize_curses()
 
             # Update all
             self.refresh()
 
-            # Get pressed key
-            self.pkey = self.stdscr.getch()
+            # Get key
+            self.pkey = self.app.stdscr.getch()
 
     def refresh(self):
         """ """
@@ -185,7 +173,7 @@ class PanelWin:
         self.app.stdscr.border(0)
         self.gwin.border(0)
 
-        # Update all windows (virtually)
+        # Update all windows
         if self.app.DEBUG:
             self.app.dbg_socket()         # Display infos about the process
             self.app.dbg_term(self.pkey)         # Display infos about the process
@@ -271,7 +259,7 @@ class PanelWin:
             self.arange_lst()
 
         # Panel Menu
-        elif self.pkey in self.kenter and self.row_num != 0:
+        elif self.pkey in self.app.kenter and self.row_num != 0:
             self.init_menu()
 
     def custom_key_bindings(self):
@@ -293,12 +281,12 @@ class PanelWin:
 
         # Title
         if self.config['font']['pw-font'] == 'True':
-            self.gwin.addstr(0, int((self.screen_width-len(self.win_title))/2),
+            self.gwin.addstr(0, int((self.app.screen_width-len(self.win_title))/2),
                              '', curses.A_BOLD | self.c_pwf)
             self.gwin.addstr(self.win_title, curses.A_BOLD | self.c_ttl)
             self.gwin.addstr('', curses.A_BOLD | self.c_pwf)
         else:
-            self.gwin.addstr(0, int((self.screen_width-len(self.win_title))/2),
+            self.gwin.addstr(0, int((self.app.screen_width-len(self.win_title))/2),
                              '|' + self.win_title + '|',
                              curses.A_BOLD | self.c_ttl)
 
@@ -317,14 +305,16 @@ class PanelWin:
                                  curses.A_BOLD | self.c_hh)
 
             else:
-                cell = format_cell(self.lst, self.strings[i-1], self.app.screen_width)
+                self.cell1, self.cell2 = format_cell(self.lst, self.strings[i-1], self.app.screen_width)
                 if (i+(self.app.row_max*(self.page-1)) == self.position+(self.app.row_max*(self.page-1))):
                     self.gwin.addstr(i-(self.app.row_max*(self.page-1)), 2,
-                                     cell.encode(code), curses.A_BOLD | self.c_hh)
+                                     self.cell1.encode(code), curses.A_BOLD | self.c_hh)
+                    self.setup_type_display_select(i)
                 else:
                     self.gwin.addstr(i-(self.app.row_max*(self.page-1)), 2,
-                                     cell.encode(code),
+                                     self.cell1.encode(code),
                                      curses.A_DIM | self.c_txt)
+                    self.setup_type_display_unselect(i)
                 if i == self.row_num:
                     break
 
@@ -340,8 +330,36 @@ class PanelWin:
                              int((self.app.screen_width-len(self.wng_msg))/2),
                              '< ' + self.wng_msg + ' >', curses.A_DIM | self.c_ttl)
 
-        self.stdscr.refresh()
+        self.app.stdscr.refresh()
         self.gwin.refresh()
+
+    def setup_type_display_select(self, i):
+        if "[Died]" in self.cell2:
+            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+                             self.cell2, curses.A_BOLD | self.c_di)
+        elif "[Alive]" in self.cell2:
+            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+                             self.cell2, curses.A_BOLD | self.c_al)
+        elif "[Connected]" in self.cell2:
+            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+                             self.cell2, curses.A_BOLD | self.c_co)
+        else:
+            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+                             self.cell2, curses.A_BOLD | self.c_hh)
+
+    def setup_type_display_unselect(self, i):
+        if "[Died]" in self.cell2:
+            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+                             self.cell2, curses.A_BOLD | self.c_di)
+        elif "[Alive]" in self.cell2:
+            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+                             self.cell2, curses.A_BOLD | self.c_al)
+        elif "[Connected]" in self.cell2:
+            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+                             self.cell2, curses.A_BOLD | self.c_co)
+        else:
+            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+                             self.cell2, curses.A_BOLD | self.c_txt)
 
     def arange_lst(self):
         """ Organize/Arange variable list. """
@@ -352,7 +370,7 @@ class PanelWin:
         elif self.mk_sort == 'type':
             self.strings = type_sort(self.lst)
 
-        elif self.mk_sort == 'filter':
+        elif self.mk_sort == 'filter' and self.filter:
             self.strings = filter_var_lst(self.lst, self.filter)
             self.wng_msg = 'Filter : ' + self.filter + ' (' + str(len(self.strings)) + ' obj.)'
 
@@ -387,10 +405,11 @@ class PanelWin:
     def resize_curses(self, force=False):
         """ Check if terminal is resized and adapt screen """
 
-        resize = curses.is_term_resized(self.app.screen_height, self.app.screen_width)
+        resize = curses.is_term_resized(self.screen_height, self.screen_width)
         cond = resize is True and self.app.screen_height >= self.app.term_min_height and self.app.screen_width >= self.app.term_min_width
         if cond or force:
             self.app.screen_height, self.app.screen_width = self.app.stdscr.getmaxyx()  # new heigh and width of object stdscreen
+            self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()  # new heigh and width of object stdscreen
             self.app.row_max = self.app.screen_height-self.app.debug_info
             self.app.stdscr.clear()
             self.gwin.clear()
@@ -403,13 +422,13 @@ class PanelWin:
         """ Navigation though the item list"""
 
         self.pages = int(ceil(self.row_num/self.app.row_max))
-        if self.pkey in self.kdown:
+        if self.pkey in self.app.kdown:
             self.navigate_down()
-        if self.pkey in self.kup:
+        if self.pkey in self.app.kup:
             self.navigate_up()
-        if self.pkey in self.kleft and self.page > 1:
+        if self.pkey in self.app.kleft and self.page > 1:
             self.navigate_left()
-        if self.pkey in self.kright and self.page < self.pages:
+        if self.pkey in self.app.kright and self.page < self.pages:
             self.navigate_right()
 
     def navigate_right(self):
@@ -485,7 +504,7 @@ class PanelWin:
         curses.echo()
         iwin.addstr(2, 3, txt_msg, curses.A_BOLD | self.c_txt)
         usr_input = iwin.getstr(2, len(txt_msg) + 4,
-                                self.screen_width - len(txt_msg) - 8).decode('utf-8')
+                                self.app.screen_width - len(txt_msg) - 8).decode('utf-8')
         curses.noecho()
         ipan.hide()
 
@@ -509,9 +528,9 @@ class PanelWin:
         self.title_pos = int((self.menu_width - len(self.menu_title) - 2)/2)
 
         # Init Menu
-        self.gwin_menu = self.stdscr.subwin(self.menu_height,
-                                            self.menu_width, 2,
-                                            self.screen_width-self.menu_width-2)
+        self.gwin_menu = self.app.stdscr.subwin(self.menu_height,
+                                                self.menu_width, 2,
+                                                self.app.screen_width-self.menu_width-2)
         self.gwin_menu.border(0)
         self.gwin_menu.bkgd(self.c_txt)
         self.gwin_menu.attrset(self.c_bdr | curses.A_BOLD)  # Change border color
@@ -539,7 +558,7 @@ class PanelWin:
         self.gwin_menu.clear()
 
         menukey = -1
-        while menukey not in self.kquit:
+        while menukey not in self.app.kquit:
             self.gwin_menu.border(0)
 
             # Title
@@ -568,14 +587,14 @@ class PanelWin:
             # Wait for keyboard event
             menukey = self.gwin_menu.getch()
 
-            if menukey in self.kenter:
+            if menukey in self.app.kenter:
                 eval(self.menu_lst[self.menu_cursor][1])
                 break
 
-            elif menukey in self.kup:
+            elif menukey in self.app.kup:
                 self.navigate_menu(-1)
 
-            elif menukey in self.kdown:
+            elif menukey in self.app.kdown:
                 self.navigate_menu(1)
 
             if menukey == curses.KEY_RESIZE:

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Thu Nov 17 12:09:09 2016
-# Last Modified : mar. 13 mars 2018 16:22:30 CET
+# Last Modified : mar. 20 mars 2018 12:39:59 CET
 """
 -----------
 
@@ -79,18 +79,29 @@ class_inst2 = MyClass2()
 
 array1 = np.random.rand(50, 50)
 array2 = np.sin(2*np.pi*100*linspace(0, 0.01, 1000))
+range1 = range(10)
 dict1 = {'air': {'c': 344., 'rho': 1.2}, 'water': {'c': 1000., 'rho': 1000}}
 dict2 = {'cube': 6, 'penta': 8}
 lst1 = ['january', 'february', 'march', '...']
 lst2 = [('monday', 1), ('tuesday', 2), ('wednesday', 3), ('thursday', 4), ('friday', 5)]
-alonglist1 = list(range(100))
-alonglist2 = list(range(500))
+list3 = [i for i in range(100)]
+set1 = {i for i in range(100)}
+set2 = {1, 2}
+frozenset1 = frozenset((1, 2))
 tuple1 = ('dolphin', 'mamif')
 tuple2 = (('imaginary', 1), ('real', 1))
+iter_tup1 = iter(tuple1)
+iter_tup2 = iter(tuple2)
+generator = (i for i in range(100))
 string1 = 'yop'
 string2 = 'éô'
 unicode1 = u'éô'
 bytes1 = b'eo'
+bytearray1 = bytearray(bytes1)
+memoryview1 = memoryview(bytes1)
 float1 = np.pi
 wint1 = 1
 wint2 = 2**1024
+complex1 = 1+1j
+bool1 = True
+bool2 = False

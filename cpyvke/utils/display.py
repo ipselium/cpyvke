@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 12:01:45 CET
-# Last Modified : lun. 19 mars 2018 22:35:59 CET
+# Last Modified : mar. 20 mars 2018 16:31:47 CET
 """
 -----------
 DOCSTRING
@@ -117,22 +117,27 @@ def type_sort(lst):
     return [item[0] for item in types]
 
 
-def format_cell(variables, name, max_width):
+def format_cell(variables, name, screen_width):
     """ Format data for display """
 
-    if 'class' in variables[name]['type']:
-        return format_class(variables, name, max_width)
-    elif '/kernel' in variables[name]['value']:
-        return format_kernel(variables, name, max_width)
+    screen_width = screen_width - 4
+
+    if '/kernel' in variables[name]['value']:
+        return format_kernel(variables, name, screen_width)
     else:
-        return format_variable(variables, name, max_width)
+        return format_variable(variables, name, screen_width)
 
 
-def format_variable(variables, name, max_width):
+def format_variable(variables, name, screen_width):
     """ Format regular variables """
 
-    max_width = int((max_width-7)/5)
-    typ = '[' + variables[name]['type'] + ']'
+    max_width = int(screen_width/5)
+
+    # Types
+    if "<class '" in variables[name]['type']:
+        typ = '[' + variables[name]['type'].split("'")[1] + ']'
+    else:
+        typ = '[' + variables[name]['type'] + ']'
 
     # Only display module name
     if 'module' in variables[name]['value']:
@@ -143,31 +148,46 @@ def format_variable(variables, name, max_width):
         val1 = variables[name]['value'].split(":")[0]
         val2 = variables[name]['value'].split("`")[1]
         val = val1 + ' [' + val2 + ']'
+
+    elif 'classmethod' in variables[name]['value']:
+        val = 'classmethod'
+
+    elif 'staticmethod' in variables[name]['value']:
+        val = 'staticmethod'
+
+    elif ' at' in variables[name]['value']:
+        val = variables[name]['value'].split(' at ')[0] + '>'
+
+    elif 'frozenset' in variables[name]['value']:
+        val = variables[name]['value'].split('(')[1].split(')')[0]
+
+    elif '<...>' in variables[name]['value']:
+        val = variables[name]['value'].split('<')[0] + '...'
+
     else:
         # Repr to avoid interpreting \n in strings
         val = variables[name]['value']
 
     # Check length of each entry
-    if len(val) > 2*max_width:
-        val = val[0:2*max_width-4] + '... '
+    if len(val) > 3*max_width:
+        val = val[0:3*max_width-4] + '... '
 
-    if len(name) > 2*max_width:
-        name = name[0:2*max_width-4] + '... '
+    if len(name) > max_width:
+        name = name[0:max_width-4] + '... '
 
     if len(typ) > max_width:
         typ = typ[0:max_width-4] + '... '
 
-    s = "{:{wname}} {:{wval}} {:{wtype}}".format(name, val, typ,
-                                                 wname=2*max_width,
-                                                 wval=2*max_width,
-                                                 wtype=max_width)
-    return s
+    s1 = "{:{wname}} {:{wval}}".format(name, val, wname=max_width, wval=3*max_width)
+    s2 = "{:{wtype}}".format(typ, wtype=screen_width-len(s1))
+
+    return s1, s2
 
 
-def format_kernel(variables, name, max_width):
+def format_kernel(variables, name, screen_width):
     """ Format regular variables """
 
-    max_width = int((max_width-7)/5)
+    max_width = int(screen_width/5)
     typ = '[' + variables[name]['type'] + ']'
 
     # Repr to avoid interpreting \n in strings
@@ -175,58 +195,15 @@ def format_kernel(variables, name, max_width):
 
     # Check length of each entry
     if len(val) > 3*max_width:
-        val = val[0:2*max_width-4] + '... '
+        val = val[0:3*max_width-4] + '... '
 
     if len(name) > max_width:
-        name = name[0:2*max_width-4] + '... '
+        name = name[0:max_width-4] + '... '
 
     if len(typ) > max_width:
         typ = typ[0:max_width-4] + '... '
 
-    s = "{:{wname}} {:{wval}} {:{wtype}}".format(name, val, typ,
-                                                 wname=max_width,
-                                                 wval=3*max_width,
-                                                 wtype=max_width)
-    return s
+    s1 = "{:{wname}} {:{wval}}".format(name, val, wname=max_width, wval=3*max_width)
+    s2 = "{:{wtype}}".format(typ, wtype=screen_width-len(s1))
 
-
-def format_class(variables, name, max_width):
-    """ Format class content """
-
-    max_width = int((max_width-7)/5)
-    typ = '[' + variables[name]['type'].split("'")[1] + ']'
-
-    # Only display module name
-    if 'module' in variables[name]['value']:
-        val = variables[name]['value'].split("'")[1]
-
-    # Only display dimensions of array
-    elif 'elem' in variables[name]['value']:
-        val1 = variables[name]['value'].split(":")[0]
-        val2 = variables[name]['value'].split("`")[1]
-        val = val1 + ' [' + val2 + ']'
-    elif 'function' in variables[name]['value']:
-        val = variables[name]['value'].split(' ')[1]
-    elif 'classmethod' in variables[name]['value']:
-        val = 'classmethod'
-    elif 'staticmethod' in variables[name]['value']:
-        val = 'staticmethod'
-    else:
-        # Repr to avoid interpreting \n in strings
-        val = variables[name]['value']
-
-    # Check length of each entry
-    if len(val) > 2*max_width:
-        val = val[0:2*max_width-4] + '... '
-
-    if len(name) > 2*max_width:
-        name = name[0:2*max_width-4] + '... '
-
-    if len(typ) > max_width:
-        typ = typ[0:max_width-4] + '... '
-
-    s = "{:{wname}} {:{wval}} {:{wtype}}".format(name, val, typ,
-                                                 wname=2*max_width,
-                                                 wval=2*max_width,
-                                                 wtype=max_width)
-    return s
+    return s1, s2

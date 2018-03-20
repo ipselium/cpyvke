@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : lun. 19 mars 2018 23:37:03 CET
+# Last Modified : mar. 20 mars 2018 23:19:31 CET
 """
 -----------
 DOCSTRING
@@ -98,21 +98,23 @@ class MainWin:
             if self.app.explorer_win.switch:
                 self.app.explorer_win.switch = False
                 self.app.kernel_win.display()
+                self.resize_curses(True)
 
             elif self.app.kernel_win.switch:
                 self.app.kernel_win.switch = False
                 self.app.explorer_win.display()
+                self.resize_curses(True)
 
             else:
                 self.tasks()
 
-    def resize_curses(self):
+    def resize_curses(self, force=False):
         """ Check if terminal is resized and adapt screen """
 
         # Check difference between self.screen_height and self.app.screen_height
         resize = curses.is_term_resized(self.screen_height, self.screen_width)
         min_size_cond = self.app.screen_height >= self.app.term_min_height and self.app.screen_width >= self.app.term_min_width
-        if min_size_cond and resize:
+        if (min_size_cond and resize) or force:
             # new heigh and width of object stdscreen
             self.app.screen_height, self.app.screen_width = self.app.stdscr.getmaxyx()
             # save also these value locally to check if
@@ -207,16 +209,19 @@ class MainWin:
         # Kernel Panel
         elif self.pkey == 75:    # -> K
             self.app.kernel_win.display()
+            self.resize_curses(True)  # Fix brutal resize crash
             if self.app.kernel_change:
                 self.app.cf, self.app.kc = self.app.kernel_win.update_connection()
 
         # Explorer panel
         elif self.pkey == 69:    # -> E
             self.app.explorer_win.display()
+            self.resize_curses(True)  # Fix brutal resize crash
 
         # Test panel
         elif self.pkey == 84:    # -> T
             self.app.test_win.display()
+            self.resize_curses(True)  # Fix brutal resize crash
 
         # Reconnection to socket
         elif self.pkey == 82:    # -> R

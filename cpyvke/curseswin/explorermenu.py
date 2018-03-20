@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : lun. 19 mars 2018 23:42:15 CET
+# Last Modified : mar. 20 mars 2018 21:16:28 CET
 """
 -----------
 DOCSTRING
@@ -67,19 +67,21 @@ class ExplorerMenu:
         proc = ProceedInspection(self.app, self.sock, self.logger,
                                  self.varname, self.varval, self.vartype,
                                  self.position, self.page, self.app.row_max, self.wng)
-        self._ismenu, self.varname, self.varval, self.vartype = proc.get_variable()
+        self._ismenu, self.varname, self.varval, self.vartype, self.doc = proc.get_variable()
 
         # Init all Inspectors
         self.inspect = Inspect(self.varval, self.varname, self.vartype)
+        self.class_win = ClassWin(self.app, self.sock, self.logger, self.varval, self.varname)
         self.view = Viewer(self.app, self.varval, self.varname)
-        self.class_win = ClassWin(self.app, self.sock, self.logger,
-                                  self.varval, self.varname)
+        if self.doc:
+            self.view_doc = Viewer(self.app, self.doc, self.varname)
+            self.inspect_doc = Inspect(self.doc, self.varname, self.vartype)
 
         # Create Menu List
         self.menu_title = self.varname
         self.menu_lst = self.create_menu_lst()
         if len(self.menu_lst) == 0:
-            self.menu_lst.append(('No Options', 'exit'))
+            self.menu_lst.append(('No Option', 'exit'))
 
         # Menu dimensions
         self.menu_width = len(max([self.menu_lst[i][0] for i in range(len(self.menu_lst))], key=len))
@@ -182,31 +184,40 @@ class ExplorerMenu:
         if self.varval == '[Busy]':
             return [('Busy', ' ')]
 
-        elif self.vartype in ('int', 'float', 'complex'):
-            return [('Del', "self.sock.del_var(self.varname, self.wng)")]
+        elif self.vartype in self.inspect.type_numeric():
+            return [('Delete', "self.sock.del_var(self.varname, self.wng)")]
 
-        elif self.vartype in ['module', 'function']:
-            return [('View', 'self.view.display()'),
-                    ('Help', "self.get_help()")]
+        elif self.vartype in ['module']:
+            return [('Help', "self.inspect.display('less', 'help')")]
 
-        elif self.vartype in ('dict', 'tuple', 'str', 'list', 'unicode'):
+        elif self.vartype in ['function']:
+            return [('Help', 'self.view_doc.display()'),
+                    ('Code', 'self.view.display()'),
+                    ('Less help', "self.inspect_doc.display('less', 'help')"),
+                    ('Less code', "self.inspect.display('less', 'help')")]
+
+        elif self.vartype in ['builtin_function_or_method']:
+            return [('Help', 'self.view_doc.display()'),
+                    ('Less', "self.inspect_doc.display('less', 'help')")]
+
+        elif self.vartype in self.inspect.type_struct():
             return [('View', 'self.view.display()'),
-                    ('Less', "self.inspect.Display('less')"),
-                    ('Edit', "self.inspect.Display('vim')"),
-                    ('Save', "self.inspect.Save(self.save_dir)"),
-                    ('Del', "self.sock.del_var(self.varname, self.wng)")]
+                    ('Less', "self.inspect.display('less')"),
+                    ('Edit', "self.inspect.display('vim')"),
+                    ('Save', "self.inspect.save(self.save_dir)"),
+                    ('Delete', "self.sock.del_var(self.varname, self.wng)")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 1):
-            return [('Plot', 'self.inspect.Plot1D()'),
+            return [('Plot', 'self.inspect.plot1D()'),
                     ('Save', 'self.menu_save()'),
-                    ('Del', "self.sock.del_var(self.varname, self.wng)")]
+                    ('Delete', "self.sock.del_var(self.varname, self.wng)")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 2):
-            return [('Plot 2D', 'self.inspect.Plot2D()'),
-                    ('Plot (cols)', 'self.inspect.Plot1Dcols()'),
-                    ('Plot (lines)', 'self.inspect.Plot1Dlines()'),
+            return [('Plot 2D', 'self.inspect.plot2D()'),
+                    ('Plot (cols)', 'self.inspect.plot1Dcols()'),
+                    ('Plot (lines)', 'self.inspect.plot1Dlines()'),
                     ('Save', 'self.menu_save()'),
-                    ('Del', "self.sock.del_var(self.varname, self.wng)")]
+                    ('Delete', "self.sock.del_var(self.varname, self.wng)")]
 
         elif self.vartype == 'class':
             return [('View', 'self.view.display()'),
@@ -232,9 +243,9 @@ class ExplorerMenu:
         # Various variables
         self.menuposition = 0
 
-        save_lst = [('txt', "self.inspect.SaveNP(self.varname, self.save_dir, 'txt')"),
-                    ('npy', "self.inspect.SaveNP(self.varname, self.save_dir, 'npy')"),
-                    ('npz', "self.inspect.SaveNP(self.varname, self.save_dir, 'npz')")]
+        save_lst = [('txt', "self.inspect.save_np(self.varname, self.save_dir, 'txt')"),
+                    ('npy', "self.inspect.save_np(self.varname, self.save_dir, 'npy')"),
+                    ('npz', "self.inspect.save_np(self.varname, self.save_dir, 'npz')")]
         panel_save.top()        # Push the panel to the bottom of the stack.
         panel_save.show()       # Display the panel (which might have been hidden)
         save_menu.clear()
