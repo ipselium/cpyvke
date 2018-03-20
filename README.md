@@ -198,13 +198,14 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 *cpyvke* is still in developpement and may present unexpected behavior !
 
 * cpyvke : crash when "brutal" resize
-* kd5 : crash when client asks a kernel change
-
+* cpyvke : double 'q' to close panel when <TAB> is used
 
 - - -
 
 ## TODO
 
+* cpyvke : Send multilines code and add completion
+* cpyvke : Use ExplorerMenu with ClassWin
+* cpyvke : mainwin : config file !
 * cpyvke : Kernel manager : implement dead kernel restart
-* Starting kernel options (matplotlib backend in configrc)
-* utils.kernel.is_running : slow - to improve !
+* cpyvke.utils.kernel.is_running : way too slow - to improve !

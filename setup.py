@@ -20,7 +20,7 @@
 #
 #
 # Creation Date :
-# Last Modified : mar. 13 mars 2018 12:58:33 CET
+# Last Modified : mar. 20 mars 2018 10:28:57 CET
 """
 -----------
 DOCSTRING
@@ -36,7 +36,7 @@ if sys.version_info < (2,7):
     raise NotImplementedError(
         "Sorry, you need at least Python 2.7 to use cpyvke.")
 
-VERSION = '1.1'
+VERSION = '2.0.1'
 
 __doc__ = """\
 A Curses PYthon Variable and Kernel Explorer
