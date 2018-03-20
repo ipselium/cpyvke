@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 15 mars 2018 22:36:44 CET
+# Last Modified : mer. 21 mars 2018 00:42:06 CET
 """
 -----------
 DOCSTRING
@@ -80,6 +80,7 @@ class PadWin:
 
         self.pad_width = max(len(self.title),
                              max([len(elem) for elem in self.content])) + 8
+        self.pad_width = min(self.pad_width, self.screen_width-2)
         self.pad_height = len(self.content) + 2
         self.gpad = curses.newpad(self.pad_height, self.pad_width)
         self.gpad.keypad(1)
