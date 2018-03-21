@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : mar. 20 mars 2018 21:14:19 CET
+# Last Modified : mer. 21 mars 2018 12:25:13 CET
 """
 -----------
 DOCSTRING
@@ -38,8 +38,6 @@ import subprocess
 import sys
 import locale
 from inspect import getsource
-
-
 from cpyvke.curseswin.widgets import suspend_curses
 from cpyvke.utils.comm import send_msg
 
@@ -48,10 +46,35 @@ locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
+def get_source_code(code):
+    return getsource(code)
+
+
 def inspect_class_instance(class_inst):
-    return {i: {'type': str(type(class_inst.__class__.__dict__[i])),
-                'value': str(class_inst.__class__.__dict__[i])} for i in
-            class_inst.__class__.__dict__ if not i.startswith('_')}
+    """ Return a dictionnary of :
+        * class attributes    : inst.__class__.__dict__
+        * instance attributes : int.__dict__
+    """
+    class_attr = {i: {'type': str(type(class_inst.__class__.__dict__[i])),
+                      'value': str(class_inst.__class__.__dict__[i])} for i in
+                  class_inst.__class__.__dict__ if not i.startswith('_')}
+
+    inst_attr = {i: {'type': '@' + str(type(class_inst.__dict__[i])),
+                     'value': str(class_inst.__dict__[i])} for i in
+                 class_inst.__dict__ if not i.startswith('_')}
+
+    return dict(class_attr, **inst_attr)
+
+
+def inspect_class(class_inst):
+    """ Return a dictionnary of :
+        * class attributes    : inst.__class__.__dict__
+    """
+    class_attr = {i: {'type': str(type(class_inst.__dict__[i])),
+                      'value': str(class_inst.__dict__[i])} for i in
+                  class_inst.__dict__ if not i.startswith('_')}
+
+    return class_attr
 
 
 def In_Thread(Func):
@@ -215,7 +238,11 @@ class ProceedInspection:
         elif self.vartype == 'ndarray':
             self.get_ndarray()
 
-        elif '.' + self.vartype in self.varval:     # Class
+        elif '.' + self.vartype in self.varval:     # Class instance
+            self.vartype = 'class'
+            self.get_class_instance()
+
+        elif self.vartype == 'type':                # Class
             self.get_class()
 
         else:
@@ -249,12 +276,18 @@ class ProceedInspection:
         self.code = "with open('{}' , 'w') as fcpyvke0:\n\tfcpyvke0.write(str(_inspect.getsource({})))".format(self.filename, self.varname)
         self.send_code()
 
+    def get_class_instance(self):
+        """ Get Class characteristics. """
+
+        self.filename = '/tmp/tmp_' + self.varname
+        self.code = "with open('{}' , 'w') as fcpyvke0:\n\tfcpyvke0.write(str(_inspect.inspect_class_instance({})))".format(self.filename, self.varname)
+        self.send_code()
+
     def get_class(self):
         """ Get Class characteristics. """
 
-        self.vartype = 'class'
         self.filename = '/tmp/tmp_' + self.varname
-        self.code = "with open('{}' , 'w') as fcpyvke0:\n\tfcpyvke0.write(str(_inspect.inspect_class_instance({})))".format(self.filename, self.varname)
+        self.code = "with open('{}' , 'w') as fcpyvke0:\n\tfcpyvke0.write(str(_inspect.inspect_class({})))".format(self.filename, self.varname)
         self.send_code()
 
     def get_module(self):

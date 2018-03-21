@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : mar. 20 mars 2018 21:16:28 CET
+# Last Modified : mer. 21 mars 2018 11:58:47 CET
 """
 -----------
 DOCSTRING
@@ -219,7 +219,7 @@ class ExplorerMenu:
                     ('Save', 'self.menu_save()'),
                     ('Delete', "self.sock.del_var(self.varname, self.wng)")]
 
-        elif self.vartype == 'class':
+        elif self.vartype in ['class', 'type']:
             return [('View', 'self.view.display()'),
                     ('Inspect', 'self.class_win.display()')]
 

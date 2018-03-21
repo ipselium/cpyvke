@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Thu Nov 17 12:09:09 2016
-# Last Modified : mar. 20 mars 2018 12:39:59 CET
+# Last Modified : mer. 21 mars 2018 10:43:51 CET
 """
 -----------
 
@@ -34,6 +34,7 @@ import numpy as np
 from numpy import linspace
 from mymod import MyClass2
 from math import ceil
+from libtxt.random import txt
 
 
 def myfct(x):
@@ -93,7 +94,7 @@ tuple2 = (('imaginary', 1), ('real', 1))
 iter_tup1 = iter(tuple1)
 iter_tup2 = iter(tuple2)
 generator = (i for i in range(100))
-string1 = 'yop'
+string1 = txt(30)
 string2 = 'éô'
 unicode1 = u'éô'
 bytes1 = b'eo'

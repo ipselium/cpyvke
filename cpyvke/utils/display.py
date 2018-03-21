@@ -20,13 +20,15 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 12:01:45 CET
-# Last Modified : mar. 20 mars 2018 16:31:47 CET
+# Last Modified : mer. 21 mars 2018 11:49:20 CET
 """
 -----------
 DOCSTRING
 
 @author: Cyril Desjouy
 """
+
+import textwrap
 
 
 def str_reduce(msg, maxwidth):
@@ -36,6 +38,18 @@ def str_reduce(msg, maxwidth):
         return msg[:maxwidth-3] + '...'
     else:
         return msg
+
+
+def str_format(string, width):
+    """ Convert a string into a list whose elements length do not exceed a given width. """
+
+    output = []
+    for seq in string.split('\n'):
+        tmp = textwrap.wrap(seq, width)
+        for split in tmp:
+            output.append(split)
+
+    return output
 
 
 def whos_to_dic(string):
@@ -87,8 +101,18 @@ def dump(obj, nested_level=0, output=[]):
                 output.append('%s%s' % ((nested_level + 1) * spacing, v))
         output.append('%s)' % ((nested_level) * spacing))
 
+    elif type(obj) in [set, frozenset]:
+        output.append('%s{' % ((nested_level) * spacing))
+        for v in obj:
+            if hasattr(v, '__iter__'):
+                dump(v, nested_level + 1, output)
+            else:
+                output.append('%s%s' % ((nested_level + 1) * spacing, v))
+        output.append('%s}' % ((nested_level) * spacing))
+
     else:
         output.append('%s%s' % (nested_level * spacing, obj))
+
     return output
 
 
@@ -134,7 +158,9 @@ def format_variable(variables, name, screen_width):
     max_width = int(screen_width/5)
 
     # Types
-    if "<class '" in variables[name]['type']:
+    if "@<class '" in variables[name]['type']:
+        typ = '[inst. ' + variables[name]['type'].split("'")[1] + ']'
+    elif "<class '" in variables[name]['type']:
         typ = '[' + variables[name]['type'].split("'")[1] + ']'
     else:
         typ = '[' + variables[name]['type'] + ']'

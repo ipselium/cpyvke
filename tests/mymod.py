@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : lun. 12 mars 2018 20:16:31 CET
-# Last Modified : lun. 12 mars 2018 21:55:25 CET
+# Last Modified : mer. 21 mars 2018 02:02:14 CET
 """
 -----------
 DOCSTRING
@@ -34,4 +34,4 @@ class MyClass2:
     a = 'c1'
 
     def __init__(self):
-        b = 'i1'
+        self.b = 'i1'

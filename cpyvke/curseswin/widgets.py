@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : lun. 19 mars 2018 21:54:45 CET
+# Last Modified : mer. 21 mars 2018 11:49:06 CET
 """
 -----------
 DOCSTRING
@@ -34,7 +34,7 @@ from curses import panel
 from time import sleep
 import locale
 
-from cpyvke.utils.display import dump, str_reduce
+from cpyvke.utils.display import dump, str_reduce, str_format
 from cpyvke.objects.pad import PadWin
 
 locale.setlocale(locale.LC_ALL, '')
@@ -68,7 +68,7 @@ class Viewer(PadWin):
 
         # Format variable
         if type(self.varval) is str:
-            dumped = self.varval.split('\n')
+            dumped = str_format(self.varval, self.screen_width-6)
         else:
             dumped = dump(self.varval)
 
