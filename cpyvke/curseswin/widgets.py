@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : mer. 21 mars 2018 11:49:06 CET
+# Last Modified : jeu. 22 mars 2018 22:49:33 CET
 """
 -----------
 DOCSTRING
@@ -81,14 +81,15 @@ class WarningMsg:
     def __init__(self, stdscreen):
 
         self.stdscreen = stdscreen
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
 
         # Define Styles
         self.c_warn_txt = curses.color_pair(1)
         self.c_warn_bdr = curses.color_pair(2)
 
-    def Display(self, wng_msg):
+    def display(self, wng_msg):
         """ Display **wng_msg** in a panel. """
+
+        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
 
         # Init Menu
         wng_msg = str_reduce(wng_msg, self.screen_width - 2)
@@ -139,8 +140,8 @@ class Help(PadWin):
                 '(q|ESC) Previous menu/quit',
                 '(/) Search in variable explorer',
                 '(s) Sort by name/type',
-                '(L) Limit display to keyword',
-                '(S) Send code to IPython kernel',
+                '(f) filter',
+                '(x) Execute code in current IPython kernel',
                 '(u) Undo limit',
                 '(r) Refresh explorer',
                 '(E) Variable Explorer',

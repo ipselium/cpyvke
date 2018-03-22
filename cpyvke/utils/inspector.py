@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : mer. 21 mars 2018 12:25:13 CET
+# Last Modified : jeu. 22 mars 2018 14:41:20 CET
 """
 -----------
 DOCSTRING
@@ -190,6 +190,7 @@ class Inspect:
 
         elif self.vartype == 'module':
             if arg == 'help':
+                exec('import {}'.format(self.varval))
                 sys.stdout = open(filename, 'w')
                 print(help(self.varval))
 
@@ -353,7 +354,7 @@ class ProceedInspection:
     def kernel_busy(self):
         """ Handle silent kernel. """
 
-        self.wng.Display('Kernel Busy ! Try again...')
+        self.wng.display('Kernel Busy ! Try again...')
         self.varval = '[Busy]'
         self._ismenu = False
 

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 20 mars 2018 23:19:31 CET
+# Last Modified : jeu. 22 mars 2018 23:23:20 CET
 """
 -----------
 DOCSTRING
@@ -34,24 +34,20 @@ import locale
 
 from cpyvke.curseswin.kernelwin import KernelWin
 from cpyvke.curseswin.explorerwin import ExplorerWin
-from cpyvke.curseswin.widgets import WarningMsg, Help
 from cpyvke.objects.panel import PanelWin
-from cpyvke.utils.kernel import restart_daemon
 from cpyvke.utils.ascii import ascii_cpyvke
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-class MainWin:
+class MainWin(PanelWin):
     """ Main window. """
 
     def __init__(self, app, sock, logger):
         """ Main window constructor """
 
-        self.app = app
-        self.sock = sock
-        self.logger = logger
+        super(MainWin, self).__init__(app, sock, logger)
 
         # Various Variables :
         self.search = None
@@ -59,21 +55,20 @@ class MainWin:
         self.search_index = 0
         self.mk_sort = 'name'
         self.variables = {}
+        self.panel_name = 'main'
 
         # Init Variable Box
-        self.app.row_max = self.app.screen_height-self.app.debug_info
-        self.mwin = curses.newwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
-        self.mwin.bkgd(self.app.c_exp_txt)
-        self.mwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # border color
-        self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
+        self.gwin = curses.newwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
+        self.gwin.bkgd(self.app.c_exp_txt)
+        self.gwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # border color
 
         # Add explorer and kernel panels to self.app !
         self.app.explorer_win = ExplorerWin(self.app, self.sock, self.logger)
         self.app.kernel_win = KernelWin(self.app, self.sock, self.logger)
         self.app.test_win = PanelWin(self.app, self.sock, self.logger)
 
-    def run(self):
-        """ Run daemon """
+    def display(self):
+        """ Run app ! """
 
         try:
             self.pkey = -1
@@ -94,80 +89,35 @@ class MainWin:
             self.app.check_size()
             sleep(0.5)
         else:
+
             # Check switch panel
-            if self.app.explorer_win.switch:
-                self.app.explorer_win.switch = False
+            if self.app.explorer_switch:
+                self.app.explorer_switch = False
                 self.app.kernel_win.display()
                 self.resize_curses(True)
 
-            elif self.app.kernel_win.switch:
-                self.app.kernel_win.switch = False
+            elif self.app.kernel_switch:
+                self.app.kernel_switch = False
                 self.app.explorer_win.display()
                 self.resize_curses(True)
 
             else:
                 self.tasks()
 
-    def resize_curses(self, force=False):
-        """ Check if terminal is resized and adapt screen """
-
-        # Check difference between self.screen_height and self.app.screen_height
-        resize = curses.is_term_resized(self.screen_height, self.screen_width)
-        min_size_cond = self.app.screen_height >= self.app.term_min_height and self.app.screen_width >= self.app.term_min_width
-        if (min_size_cond and resize) or force:
-            # new heigh and width of object stdscreen
-            self.app.screen_height, self.app.screen_width = self.app.stdscr.getmaxyx()
-            # save also these value locally to check if
-            self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
-            # Update number of lines
-            self.app.row_max = self.app.screen_height-self.app.debug_info
-            # Update display
-            self.app.stdscr.clear()
-            self.mwin.clear()
-            self.mwin.resize(self.app.row_max+2, self.app.screen_width-2)
-            curses.resizeterm(self.app.screen_height, self.app.screen_width)
-            self.app.stdscr.refresh()
-            self.mwin.refresh()
-
-    def refresh(self):
-        """ Update all static windows. """
-
-        # Erase all windows
-        self.mwin.erase()
-        self.app.stdscr.erase()
-
-        # Create border before updating fields
-        self.app.stdscr.border(0)
-        self.mwin.border(0)
-
-        # Update all windows (virtually)
-        if self.app.DEBUG:
-            self.app.dbg_socket()         # Display infos about the process
-            self.app.dbg_term(self.pkey)         # Display infos about the process
-            self.app.dbg_general(self.search, self.filter, self.mk_sort)        # Display debug infos
-
-        # Welcome screen
-        self.welcome()
-
-        # Update display  -- Bottom : Display infos about kernel at bottom
-        self.app.bottom_bar_info()
-        self.app.stdscr.refresh()
-        self.mwin.refresh()
-
-    def welcome(self):
-        """ """
+    def fill_main_box(self):
+        """ Welcome message """
 
         msg = ascii_cpyvke()
         msg_size = max([len(i) for i in msg])
 
         for i in range(len(msg)):
-            self.mwin.addstr(i+1,
+            self.gwin.addstr(i+1,
                              int((self.app.screen_width - msg_size)/2),
                              msg[i], self.app.c_warn_txt | curses.A_BOLD)
 
-        self.mwin.addstr(i+3, 1,
+        self.gwin.addstr(i+3, 1,
                          'E : Variable Inspector'.center(self.app.screen_width-4))
-        self.mwin.addstr(i+4, 1,
+        self.gwin.addstr(i+4, 1,
                          'K : Kernel Manager'.center(self.app.screen_width-4))
 
     def tasks(self):
@@ -177,10 +127,14 @@ class MainWin:
         self.sock.check_main_socket()
 
         # Keys
-        self.key_bindings()
+        self.common_key_bindings()
+
+        # Close menu
+        if self.pkey in self.app.kquit:
+            self.app.close_menu()
 
         # Skip end of tasks if switching panel !
-        if not self.app.explorer_win.switch and not self.app.kernel_win.switch:
+        if not self.app.explorer_switch and not self.app.kernel_switch and self.app.close_signal == "continue":
 
             # Update screen size if another menu break because of resizing
             self.resize_curses()
@@ -188,33 +142,30 @@ class MainWin:
             # Update all static panels
             self.refresh()
 
-            # Get pressed key
-            self.pkey = self.app.stdscr.getch()
+        else:
+            # lowest timeout for getch if switch or close
+            self.stdscr.nodelay(True)
 
-            # Close menu
-            if self.pkey in self.app.kquit:
-                self.app.close_menu()
+        # Get pressed key (even in case of switch)
+        self.pkey = self.app.stdscr.getch()
 
-    def key_bindings(self):
-        """ Key Actions ! """
+    def list_key_bindings(self):
+        """ Overload this method with nothing ! """
 
-        # Init Warning Msg
-        WngMsg = WarningMsg(self.app.stdscr)
+        pass
 
-        # Menu Help
-        if self.pkey == 63:    # -> ?
-            help_menu = Help(self.app)
-            help_menu.display()
+    def custom_key_bindings(self):
+        """ Custom Key Actions ! """
 
         # Kernel Panel
-        elif self.pkey == 75:    # -> K
+        if self.pkey == 75:    # -> K
             self.app.kernel_win.display()
             self.resize_curses(True)  # Fix brutal resize crash
             if self.app.kernel_change:
                 self.app.cf, self.app.kc = self.app.kernel_win.update_connection()
 
         # Explorer panel
-        elif self.pkey == 69:    # -> E
+        elif self.pkey in [9, 69]:    # -> TAB/E
             self.app.explorer_win.display()
             self.resize_curses(True)  # Fix brutal resize crash
 
@@ -222,30 +173,3 @@ class MainWin:
         elif self.pkey == 84:    # -> T
             self.app.test_win.display()
             self.resize_curses(True)  # Fix brutal resize crash
-
-        # Reconnection to socket
-        elif self.pkey == 82:    # -> R
-            WngMsg.Display(' Restarting connection ')
-            self.sock.restart_sockets()
-            self.sock.warning_socket(WngMsg)
-
-        # Disconnect from daemon
-        elif self.pkey == 68:    # -> D
-            self.sock.close_sockets()
-            self.sock.warning_socket(WngMsg)
-
-        # Connect to daemon
-        elif self.pkey == 67:     # -> C
-            self.sock.init_sockets()
-            self.sock.warning_socket(WngMsg)
-
-        # Restart daemon
-        elif self.pkey == 18:    # -> c-r
-            restart_daemon()
-            WngMsg.Display(' Restarting Daemon ')
-            self.sock.init_sockets()
-            self.sock.warning_socket(WngMsg)
-
-        # Force Update Variable List sending fake code to daemon
-        elif self.pkey == 114:   # -> r
-            self.sock.force_update(WngMsg)

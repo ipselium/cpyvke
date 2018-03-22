@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : jeu. 15 mars 2018 18:07:10 CET
-# Last Modified : lun. 19 mars 2018 16:22:15 CET
+# Last Modified : jeu. 22 mars 2018 14:39:39 CET
 """
 -----------
 DOCSTRING
@@ -116,20 +116,20 @@ class SocketManager:
         except OSError:
             self.connected = False
 
-    def warning_socket(self, WngMsg):
+    def warning_socket(self, wng):
         """ Check connection and display warning. """
 
         self.check_main_socket()
         if self.connected:
-            WngMsg.Display('  Connected to socket  ')
+            wng.display('  Connected to socket  ')
         else:
-            WngMsg.Display(' Disconnected from socket ')
+            wng.display(' Disconnected from socket ')
 
-    def force_update(self, WngMsg):
+    def force_update(self, wng):
         """ Force update of variable list sending fake code to Daemon """
 
         send_msg(self.RequestSock, '<code> ')
-        WngMsg.Display('Reloading Variable List...')
+        wng.display('Reloading Variable List...')
 
     def del_var(self, varname, wng):
         """ Delete a variable from kernel. """
@@ -140,6 +140,6 @@ class SocketManager:
             self.logger.debug("Send delete signal for variable {}".format(varname))
         except Exception:
             self.logger.error('Delete variable :', exc_info=True)
-            wng.Display('Kernel Busy ! Try again...')
+            wng.display('Kernel Busy ! Try again...')
         else:
-            wng.Display('Variable {} deleted'.format(varname))
+            wng.display('Variable {} deleted'.format(varname))

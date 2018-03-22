@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : mer. 21 mars 2018 11:58:47 CET
+# Last Modified : jeu. 22 mars 2018 14:31:54 CET
 """
 -----------
 DOCSTRING
@@ -161,11 +161,11 @@ class ExplorerMenu:
         try:
             eval(self.menu_lst[self.menuposition][1])
             if self.menu_lst[self.menuposition][0] == 'Save':
-                self.wng.Display('Saved !')
+                self.wng.display('Saved !')
         except Exception:
             self.logger.error('Menu', exc_info=True)
             if self.menu_lst[self.menuposition][0] == 'Save':
-                self.wng.Display('Not saved !')
+                self.wng.display('Not saved !')
         else:
             self.quit_menu = True
 
@@ -268,9 +268,9 @@ class ExplorerMenu:
             if menukey in self.app.kenter:
                 try:
                     eval(save_lst[self.menuposition][1])
-                    self.wng.Display('Saved !')
+                    self.wng.display('Saved !')
                 except Exception:
-                    self.wng.Display('Not saved !')
+                    self.wng.display('Not saved !')
                     self.logger.error('Menu save', exc_info=True)
                 else:
                     self.menuposition = 0

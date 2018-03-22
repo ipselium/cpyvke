@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 20 mars 2018 23:14:42 CET
+# Last Modified : jeu. 22 mars 2018 23:23:35 CET
 """
 -----------
 DOCSTRING
@@ -32,9 +32,8 @@ import curses
 import locale
 
 from cpyvke.curseswin.explorermenu import ExplorerMenu
-from cpyvke.curseswin.widgets import WarningMsg
 from cpyvke.utils.display import whos_to_dic
-from cpyvke.utils.comm import recv_msg, send_msg
+from cpyvke.utils.comm import recv_msg
 from cpyvke.objects.panel import PanelWin
 
 locale.setlocale(locale.LC_ALL, '')
@@ -53,6 +52,7 @@ class ExplorerWin(PanelWin):
         self.win_title = "Variable Explorer"
         self.empty_dic = "Interactive namespace is empty"
         self.wng_msg = ""
+        self.panel_name = 'variable'
 
         # Init Variable Box
         self.gwin.bkgd(self.app.c_exp_txt)
@@ -64,24 +64,16 @@ class ExplorerWin(PanelWin):
         # Update variable number in bottom bar:
         self.app.var_nb = len(self.lst)
 
-# Bug :/
-#        if self.app.kernel_change:
-#            self.app.kernel_change = False
-#            send_msg(self.sock.RequestSock, '<code> ')
-
     def custom_key_bindings(self):
         """ Key Actions ! """
 
-        # Init Warning Msg
-        wng_msg = WarningMsg(self.app.stdscr)
-
         # Menu KERNEL
         if self.pkey in [9, 75, ord('\t')]:    # -> TAB/K
-            self.switch = True
+            self.app.explorer_switch = True
 
         # Force Update Variable List sending fake code to daemon
         elif self.pkey == 114:   # -> r
-            self.sock.force_update(wng_msg)
+            self.sock.force_update(self.wng)
 
     def get_items(self):
         """ Get variable from the daemon """

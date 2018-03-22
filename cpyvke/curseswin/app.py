@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 20 mars 2018 23:21:26 CET
+# Last Modified : jeu. 22 mars 2018 22:37:39 CET
 """
 -----------
 DOCSTRING
@@ -91,8 +91,11 @@ class InitApp:
             self.term_min_width = 60
             self.debug_info = 4
 
+        # Some variables
         self.row_max = self.screen_height-self.debug_info  # max number of rows
         self.kernel_change = False
+        self.explorer_switch = False
+        self.kernel_switch = False
         self.var_nb = 0
 
         # Bindings :

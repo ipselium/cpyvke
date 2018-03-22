@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : sam. 17 mars 2018 11:50:43 CET
+# Last Modified : jeu. 22 mars 2018 17:27:47 CET
 """
 -----------
 DOCSTRING
@@ -170,7 +170,7 @@ def main(args=None):
     # Run App
     logger.info('cpyvke started')
     main_curse = MainWin(app, sock, logger)
-    main_curse.run()
+    main_curse.display()
 
 
 if __name__ == "__main__":

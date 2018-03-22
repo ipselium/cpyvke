@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : lun. 19 mars 2018 16:31:23 CET
+# Last Modified : jeu. 22 mars 2018 23:22:18 CET
 """
 -----------
 DOCSTRING
@@ -34,7 +34,6 @@ import curses
 from cpyvke.utils.kernel import kernel_dic, start_new_kernel, \
     shutdown_kernel, connect_kernel
 from cpyvke.utils.comm import send_msg
-from cpyvke.curseswin.widgets import WarningMsg
 from cpyvke.objects.panel import PanelWin
 
 
@@ -58,6 +57,7 @@ class KernelWin(PanelWin):
         # Some strings
         self.win_title = ' Kernel Manager '
         self.empty_dic = 'No Kernels !'
+        self.panel_name = 'kernel'
 
         # Init Variable Box
         self.gwin.bkgd(self.c_txt)
@@ -75,7 +75,7 @@ class KernelWin(PanelWin):
 
         # Menu EXPLORER
         if self.pkey in [9, 69, ord('\t')]:    # -> TAB/E
-            self.switch = True
+            self.app.kernel_switch = True
 
     def update_connection(self):
         """ Return cf and kc """
@@ -111,9 +111,8 @@ class KernelWin(PanelWin):
         """ Create a new kernel. """
 
         kid = start_new_kernel(version=self.app.config['kernel version']['version'])
-        msg = WarningMsg(self.app.stdscr)
-        msg.Display('Kernel id {} created (Python {})'.format(kid,
-                    self.app.config['kernel version']['version']))
+        self.wng.display('Kernel id {} created (Python {})'.format(kid,
+                                                                   self.app.config['kernel version']['version']))
 
     def _connect_k(self):
         """ Connect to a kernel. """
@@ -124,13 +123,12 @@ class KernelWin(PanelWin):
         # Update kernels connection file and set new kernel flag
         self.app.cf = self.app.kc.connection_file
         self.app.kernel_change = True
-        self.switch = True
+        self.app.kernel_switch = True
 
     def _restart_k(self):
         """ Restart a died kernel. """
 
-        msg = WarningMsg(self.app.stdscr)
-        msg.Display('Not Implement yet!')
+        self.wng.display('Not Implement yet!')
 
     def _kill_k(self):
         """ Kill kernel. """
