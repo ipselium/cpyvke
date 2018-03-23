@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 22 mars 2018 23:50:11 CET
+# Last Modified : ven. 23 mars 2018 16:43:06 CET
 """
 -----------
 DOCSTRING
@@ -34,10 +34,10 @@ import curses
 from curses import panel
 from math import ceil
 from cpyvke.curseswin.widgets import Help, WarningMsg
+from cpyvke.curseswin.prompt import Prompt
 from cpyvke.utils.kernel import restart_daemon
 from cpyvke.utils.display import format_cell, type_sort, filter_var_lst
 from cpyvke.utils.comm import send_msg
-from cpyvke.objects.pad import Prompt
 
 
 code = locale.getpreferredencoding()
@@ -82,10 +82,11 @@ class PanelWin:
         self.page = 1
         self.resize = False
         self.pkey = -1
-        self.search = None
         self.filter = None
         self.mk_sort = 'name'
+        self.search = None
         self.search_index = 0
+        self.search_lst = []
         self.prompt_time = 0
         # Init variables :
         self.lst = {}
@@ -220,7 +221,7 @@ class PanelWin:
 
         # Prompt
         elif self.pkey == 58:     # -> :
-            self.cmd = self.prompt.display(chr(self.pkey))
+            self.cmd = self.prompt.complete(chr(self.pkey))
             self.prompt_cmd()
 
         # Send code
@@ -233,6 +234,10 @@ class PanelWin:
         # Menu Search
         if self.pkey == 47:    # -> /
             self.search_item('Search for :')
+
+        # Next item (search)
+        if self.pkey == 110:    # -> n
+            self.search_item_next()
 
         # Sort variable by name/type
         elif self.pkey == 115:       # -> s
@@ -418,7 +423,10 @@ class PanelWin:
     def prompt_cmd(self):
         """ Actions for prompt """
 
-        if self.cmd in ["q", "quit"]:
+        if not self.cmd:
+            pass
+
+        elif self.cmd in ["q", "quit"]:
             self.app.close_signal = 'close'
 
         elif self.cmd in ["Q", "Quit"]:
@@ -459,15 +467,27 @@ class PanelWin:
 
         self.search = self.prompt.display(txt_msg)
 
-        try:
-            self.logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
-            self.search_index = min([i for i, s in enumerate(self.strings) if self.search in s])
-        except ValueError:
-            self.wng.display(self.search + ' not found !')
-            pass
-        else:
-            self.position = self.search_index + 1
+        self.logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
+        self.search_lst = [i for i, s in enumerate(self.strings) if self.search in s]
+        self.search_index = 0
+        if self.search_lst:
+            self.position = self.search_lst[self.search_index] + 1
             self.page = int(ceil(self.position/self.app.row_max))
+        else:
+            self.wng.display(self.search + ' not found !')
+
+    def search_item_next(self):
+        """ Next occurence of the searching. """
+
+        self.search_lst = [i for i, s in enumerate(self.strings) if self.search in s]
+
+        if self.search_lst and self.search_index < len(self.search_lst) - 1:
+            self.search_index += 1
+        else:
+            self.search_index = 0
+
+        self.position = self.search_lst[self.search_index] + 1
+        self.page = int(ceil(self.position/self.app.row_max))
 
     def resize_curses(self, force=False):
         """ Check if terminal is resized and adapt screen """

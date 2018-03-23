@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : jeu. 22 mars 2018 22:37:39 CET
+# Last Modified : ven. 23 mars 2018 16:15:29 CET
 """
 -----------
 DOCSTRING
@@ -85,11 +85,11 @@ class InitApp:
         if self.DEBUG:
             self.term_min_height = 20
             self.term_min_width = 80
-            self.debug_info = 10       # Size of the bottom text area
+            self.debug_info = 11       # Size of the bottom text area
         else:
             self.term_min_height = 12
             self.term_min_width = 60
-            self.debug_info = 4
+            self.debug_info = 5
 
         # Some variables
         self.row_max = self.screen_height-self.debug_info  # max number of rows

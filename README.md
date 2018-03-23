@@ -197,6 +197,4 @@ The `version` can be 2 or 3 for python 2.x kernel or 3.x kernel, respectively.
 
 *cpyvke* is still in developpement and may present unexpected behavior !
 
-* cpyvke : double 'q' to close panel when <TAB> is used
-
 - - -

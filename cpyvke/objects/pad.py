@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 22 mars 2018 23:51:43 CET
+# Last Modified : ven. 23 mars 2018 16:06:05 CET
 """
 -----------
 DOCSTRING
@@ -29,7 +29,6 @@ DOCSTRING
 """
 
 import curses
-from curses import panel
 import locale
 
 code = locale.getpreferredencoding()
@@ -109,117 +108,35 @@ class PadWin:
 
         self.init_pad()
 
-        key = -1
+        pkey = -1
         pad_pos = 0
         pad_y = max(self.pad_height,
                     self.screen_height - 2) - (self.screen_height - 2)
 
-        while key not in self.kquit:
-            if key in self.kdown:
+        while pkey not in self.kquit:
+            if pkey in self.kdown:
                 pad_pos = min(pad_y, pad_pos+1)
-            elif key in self.kup:
+            elif pkey in self.kup:
                 pad_pos = max(0, pad_pos-1)
-            elif key in self.kright:
+            elif pkey in self.kright:
                 pad_pos = min(pad_y, pad_pos+5)
-            elif key in self.kleft:
+            elif pkey in self.kleft:
                 pad_pos = max(0, pad_pos-5)
-            elif key == curses.KEY_NPAGE:
+            elif pkey == curses.KEY_NPAGE:
                 pad_pos = min(pad_y, pad_pos+10)
-            elif key == curses.KEY_PPAGE:
+            elif pkey == curses.KEY_PPAGE:
                 pad_pos = max(0, pad_pos-10)
-            elif key == 262:
+            elif pkey == 262:
                 pad_pos = 0
-            elif key == 360:
+            elif pkey == 360:
                 pad_pos = pad_y
 
             self.gpad.refresh(pad_pos, 0, 1, 1,
                               self.screen_height-2, self.screen_width-2)
 
-            key = self.gpad.getch()
+            pkey = self.gpad.getch()
 
-            if key == curses.KEY_RESIZE:
+            if pkey == curses.KEY_RESIZE:
                 break
 
         self.gpad.erase()
-
-
-class Prompt:
-    """ Prompt class. """
-
-    def __init__(self, app):
-        """ CLass constructor """
-
-        # Arguments
-        self.app = app
-        self.config = app.config
-
-        # Screen
-        self.stdscr = app.stdscr
-
-    def display(self, key):
-        """ Display prompt and return user input. """
-
-        # Dimensions of the main window
-        self.app.screen_height, self.app.screen_width = self.stdscr.getmaxyx()
-
-        # Enable echoing of characters
-        curses.echo()
-        self.app.stdscr.attrset(self.app.c_main_txt | curses.A_DIM)
-        # Erase before ! (overwrite with spaces)
-        self.app.stdscr.addstr(self.app.screen_height-2, 2,
-                               ' '*(self.app.screen_width-4),
-                               curses.A_DIM | self.app.c_main_txt)
-
-        self.app.stdscr.addstr(self.app.screen_height-2, 2, key, curses.A_DIM | self.app.c_main_txt)
-        usr_input = self.app.stdscr.getstr(self.app.screen_height-2, 2 + len(key),
-                                           self.app.screen_width - len(key) - 8).decode('utf-8')
-        # Disable echoing of characters
-        curses.noecho()
-        # Restore color of the main window
-        self.app.stdscr.attrset(self.app.c_main_bdr | curses.A_BOLD)
-
-        return usr_input
-
-    def message(self, msg):
-        """ display message in prompt. """
-
-        self.app.stdscr.addstr(self.app.screen_height-2, 2,
-                               msg, curses.A_BOLD | self.app.c_warn_txt)
-
-    def input_panel(self, txt_msg, win_title):
-        """ Prompt on a dedicated panel """
-
-        # Dimensions of the main window
-        self.app.screen_height, self.app.screen_width = self.stdscr.getmaxyx()
-
-        # Init Menu
-        self.win_title = win_title
-        iwin = self.app.stdscr.subwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
-        iwin.keypad(1)
-
-        # Send menu to a panel
-        ipan = panel.new_panel(iwin)
-
-        ipan.top()        # Push the panel to the bottom of the stack.
-        ipan.show()       # Display the panel (which might have been hidden)
-        iwin.clear()
-        iwin.bkgd(self.app.c_main_txt)
-        iwin.attrset(self.app.c_main_bdr | curses.A_BOLD)  # Change border color
-        iwin.border(0)
-        if self.app.config['font']['pw-font'] == 'True':
-            iwin.addstr(0, int((self.app.screen_width-len(self.win_title))/2),
-                        '', self.app.c_main_pwf)
-            iwin.addstr(self.win_title, self.app.c_main_ttl | curses.A_BOLD)
-            iwin.addstr('', self.app.c_main_pwf)
-        else:
-            iwin.addstr(0, int((self.app.screen_width-len(self.win_title))/2),
-                        '| ' + self.win_title + ' |', self.app.c_main_ttl | curses.A_BOLD)
-
-        curses.echo()
-        iwin.addstr(2, 3, txt_msg, curses.A_BOLD | self.app.c_main_txt)
-        usr_input = iwin.getstr(2, len(txt_msg) + 4,
-                                self.app.screen_width - len(txt_msg) - 8).decode('utf-8')
-        curses.noecho()
-        ipan.hide()
-
-        return usr_input
