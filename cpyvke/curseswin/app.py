@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : ven. 23 mars 2018 16:15:29 CET
+# Last Modified : ven. 23 mars 2018 17:12:59 CET
 """
 -----------
 DOCSTRING
@@ -87,8 +87,8 @@ class InitApp:
             self.term_min_width = 80
             self.debug_info = 11       # Size of the bottom text area
         else:
-            self.term_min_height = 12
-            self.term_min_width = 60
+            self.term_min_height = 15
+            self.term_min_width = 70
             self.debug_info = 5
 
         # Some variables

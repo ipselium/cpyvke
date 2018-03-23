@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : jeu. 22 mars 2018 23:23:20 CET
+# Last Modified : ven. 23 mars 2018 17:09:11 CET
 """
 -----------
 DOCSTRING
@@ -115,10 +115,13 @@ class MainWin(PanelWin):
                              int((self.app.screen_width - msg_size)/2),
                              msg[i], self.app.c_warn_txt | curses.A_BOLD)
 
-        self.gwin.addstr(i+3, 1,
-                         'E : Variable Inspector'.center(self.app.screen_width-4))
-        self.gwin.addstr(i+4, 1,
-                         'K : Kernel Manager'.center(self.app.screen_width-4))
+        tmp = "Type   {:25} {:30}"
+        self.gwin.addstr(i+3, 1, tmp.format(':help<Enter> or ?',
+                                            'for help').center(self.app.screen_width-4))
+        self.gwin.addstr(i+4, 1, tmp.format(':q<Enter> or q',
+                                            'to exit').center(self.app.screen_width-4))
+        self.gwin.addstr(i+5, 1, tmp.format(':Q<Enter> or q',
+                                            'to exit and shutdown daemon').center(self.app.screen_width-4))
 
     def tasks(self):
         """ Tasks to update curses """

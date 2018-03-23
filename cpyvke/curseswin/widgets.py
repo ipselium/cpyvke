@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : jeu. 22 mars 2018 22:49:33 CET
+# Last Modified : ven. 23 mars 2018 16:51:37 CET
 """
 -----------
 DOCSTRING
@@ -138,7 +138,9 @@ class Help(PadWin):
                 '(?) This Help !',
                 '(ENTER) Selected item menu',
                 '(q|ESC) Previous menu/quit',
-                '(/) Search in variable explorer',
+                '(:) Prompt access',
+                '(/) Search a pattern',
+                '(n) Next occurence of pattern',
                 '(s) Sort by name/type',
                 '(f) filter',
                 '(x) Execute code in current IPython kernel',
@@ -147,7 +149,7 @@ class Help(PadWin):
                 '(E) Variable Explorer',
                 '(K) Kernel Manager',
                 '(TAB) Kernel <-> Variable',
-                '(c-r) Restart Daemon',
+                '(c-r) Restart daemon',
                 '(R) Restart connection to daemon',
                 '(D) Disconnect from daemon',
                 '(C) Connect to daemon',
