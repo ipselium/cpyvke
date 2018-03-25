@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : sam. 24 mars 2018 12:49:40 CET
+# Last Modified : lun. 26 mars 2018 00:46:32 CEST
 """
 -----------
 DOCSTRING
@@ -66,7 +66,7 @@ class ExplorerMenu:
         # Get Variable characteristics
         proc = ProceedInspection(self.app, self.sock, self.logger,
                                  self.varname, self.varval, self.vartype,
-                                 self.position, self.page, self.app.panel_height, self.wng)
+                                 self.position, self.page, self.wng)
         self._ismenu, self.varname, self.varval, self.vartype, self.doc = proc.get_variable()
 
         # Init all Inspectors

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : jeu. 22 mars 2018 23:23:35 CET
+# Last Modified : dim. 25 mars 2018 23:11:21 CEST
 """
 -----------
 DOCSTRING
@@ -52,7 +52,7 @@ class ExplorerWin(PanelWin):
         self.win_title = "Variable Explorer"
         self.empty_dic = "Interactive namespace is empty"
         self.wng_msg = ""
-        self.panel_name = 'variable'
+        self.panel_name = 'variable-explorer'
 
         # Init Variable Box
         self.gwin.bkgd(self.app.c_exp_txt)

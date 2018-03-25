@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 12:01:45 CET
-# Last Modified : mer. 21 mars 2018 11:49:20 CET
+# Last Modified : lun. 26 mars 2018 00:04:53 CEST
 """
 -----------
 DOCSTRING
@@ -116,12 +116,12 @@ def dump(obj, nested_level=0, output=[]):
     return output
 
 
-def filter_var_lst(lst, filter):
+def filter_var_lst(lst, filt):
     """ Filter variable list (name|type). """
 
     filtered = []
     for key in list(lst):
-        if filter in lst[key]['type'] or filter in key:
+        if filt in lst[key]['type'] or filt in key:
             filtered.append(key)
 
     return sorted(filtered)

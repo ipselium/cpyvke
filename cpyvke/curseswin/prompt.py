@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : dim. 25 mars 2018 09:55:46 CEST
+# Last Modified : lun. 26 mars 2018 00:01:49 CEST
 """
 -----------
 DOCSTRING
@@ -36,8 +36,9 @@ def cmd_lst():
     """ Prompt command list """
 
     lst = ['kernel-manager',
-#           'daemon-restart-connection', 'daemon-connect', 'daemon-disconnect',
-#           'daemon-restart',
+           'daemon-restart-connection', 'daemon-connect', 'daemon-disconnect',
+           'daemon-restart',
+           'help',
            'variable-explorer']
     lst.sort()
 
@@ -45,7 +46,13 @@ def cmd_lst():
 
 
 class Prompt:
-    """ Prompt class. """
+    """ Prompt class.
+
+    Prompt.simple : simple prompt that returns a user input
+    Prompt.with_completion : Prompt with completion capabitilies that returns a user input
+    Prompt.panel : a simple prompt in a panel that returns a user input
+
+    """
 
     def __init__(self, app):
         """ Class constructor """
@@ -60,7 +67,7 @@ class Prompt:
         # Screen
         self.stdscr = app.stdscr
 
-    def display(self, key):
+    def simple(self, prefix):
         """ Display prompt and return user input. """
 
         # Reinit input
@@ -77,9 +84,9 @@ class Prompt:
                                ' '*(self.app.screen_width-1),
                                curses.A_DIM | self.app.c_main_txt)
 
-        self.app.stdscr.addstr(self.app.screen_height-1, 0, key, curses.A_DIM | self.app.c_main_txt)
-        self.usr_input = self.app.stdscr.getstr(self.app.screen_height-1, len(key),
-                                                self.app.screen_width - len(key) - 1).decode('utf-8')
+        self.app.stdscr.addstr(self.app.screen_height-1, 0, prefix, curses.A_DIM | self.app.c_main_txt)
+        self.usr_input = self.app.stdscr.getstr(self.app.screen_height-1, len(prefix),
+                                                self.app.screen_width - len(prefix) - 1).decode('utf-8')
         # Disable echoing of characters
         curses.noecho()
         # Restore color of the main window
@@ -87,8 +94,8 @@ class Prompt:
 
         return self.usr_input
 
-    def complete(self, key):
-        """ Display prompt and return user input. """
+    def with_completion(self, prefix):
+        """ Display prompt with completion and return user input. """
 
         # Reinit input
         self.usr_input = ''
@@ -126,7 +133,7 @@ class Prompt:
                     elif len(match) == 1:
                         self.usr_input = match[0]
                     else:
-                        mkey = self.proposal(match, key)
+                        mkey = self._complete(match, prefix)
 
                 elif pkey in [263]:    # DEL
                     self.usr_input = self.usr_input[:-1]
@@ -145,7 +152,7 @@ class Prompt:
                                    curses.A_BOLD | self.app.c_main_txt)
 
             self.app.stdscr.addstr(self.app.screen_height-1, 0,
-                                   key + self.usr_input,
+                                   prefix + self.usr_input,
                                    curses.A_BOLD | self.app.c_main_txt)
 
         # Restore color of the main window and switch of echo !
@@ -154,7 +161,8 @@ class Prompt:
 
         return self.usr_input
 
-    def proposal(self, match, key):
+    def _complete(self, match, prefix):
+        """ Completion method """
 
         mkey = -1
         i = 0
@@ -176,20 +184,21 @@ class Prompt:
                                    ' '*(self.app.screen_width-1),
                                    curses.A_BOLD | self.app.c_main_txt)
             self.app.stdscr.addstr(self.app.screen_height-1, 0,
-                                   key + proposal, curses.A_DIM | self.app.c_main_txt)
+                                   prefix + proposal, curses.A_DIM | self.app.c_main_txt)
             self.app.stdscr.addstr(self.app.screen_height-1, 0,
-                                   key + self.usr_input, curses.A_BOLD | self.app.c_exp_txt)
+                                   prefix + self.usr_input, curses.A_BOLD | self.app.c_exp_txt)
 
         self.usr_input = match[i]
         return mkey
 
-    def message(self, msg):
+    def display(self, msg):
         """ display message in prompt. """
 
+        self.app.screen_height, self.app.screen_width = self.stdscr.getmaxyx()
         self.app.stdscr.addstr(self.app.screen_height-1, 0,
                                msg, curses.A_BOLD | self.app.c_warn_txt)
 
-    def input_panel(self, txt_msg, win_title):
+    def panel(self, txt_msg, win_title):
         """ Prompt on a dedicated panel """
 
         # Dimensions of the main window

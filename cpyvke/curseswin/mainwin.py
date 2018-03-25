@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : sam. 24 mars 2018 09:19:55 CET
+# Last Modified : dim. 25 mars 2018 23:52:40 CEST
 """
 -----------
 DOCSTRING
@@ -143,10 +143,6 @@ class MainWin(PanelWin):
 
             # Update all static panels
             self.refresh()
-
-        else:
-            # lowest timeout for getch if switch or close
-            self.stdscr.nodelay(True)
 
         # Get pressed key (even in case of switch)
         self.pkey = self.app.stdscr.getch()

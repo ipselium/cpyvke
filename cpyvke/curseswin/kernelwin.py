@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 22 mars 2018 23:22:18 CET
+# Last Modified : dim. 25 mars 2018 23:12:24 CEST
 """
 -----------
 DOCSTRING
@@ -57,7 +57,7 @@ class KernelWin(PanelWin):
         # Some strings
         self.win_title = ' Kernel Manager '
         self.empty_dic = 'No Kernels !'
-        self.panel_name = 'kernel'
+        self.panel_name = 'kernel-manager'
 
         # Init Variable Box
         self.gwin.bkgd(self.c_txt)

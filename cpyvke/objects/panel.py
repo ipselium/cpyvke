@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : dim. 25 mars 2018 10:02:10 CEST
+# Last Modified : lun. 26 mars 2018 00:55:57 CEST
 """
 -----------
 DOCSTRING
@@ -67,9 +67,6 @@ class PanelWin:
         self.c_hh = app.c_exp_hh
         self.c_pwf = app.c_exp_pwf
 
-        self.stdscr = app.stdscr
-        self.debug_info = app.debug_info
-
         # Some strings
         self.win_title = ' template '
         self.empty_dic = "No item available"
@@ -88,17 +85,19 @@ class PanelWin:
         self.search_index = 0
         self.search_lst = []
         self.prompt_time = 0
+
         # Init variables :
         self.lst = {}
         self.strings = []
 
         # Prompt
         self.prompt = Prompt(self.app)
+
         # Init Warning Msg
         self.wng = WarningMsg(self.app.stdscr)
 
         # Init Variable Box
-        self.app.panel_height = self.app.screen_height-self.debug_info  # max number of rows
+        self.app.panel_height = self.app.screen_height-self.app.debug_info  # max number of rows
         self.app.row_max = self.app.panel_height - 2
         self.gwin = self.app.stdscr.subwin(self.app.panel_height, self.app.screen_width, 0, 0)
         self.gwin.keypad(1)
@@ -151,7 +150,7 @@ class PanelWin:
 
         # Get items
         self.lst = self.get_items()
-        self.row_num = max(0, len(self.lst) - 1)
+        self.row_num = len(self.lst) - 1
 
         # Arange item list
         self.arange_lst()
@@ -194,7 +193,7 @@ class PanelWin:
 
         # Update infos -- Bottom
         self.app.bottom_bar_info()
-        self.prompt_display_msg()
+        self.prompt_msg_display()
         self.app.stdscr.refresh()
         self.gwin.refresh()
 
@@ -220,7 +219,7 @@ class PanelWin:
 
         # Prompt
         elif self.pkey == 58:     # -> :
-            self.cmd = self.prompt.complete(chr(self.pkey))
+            self.cmd = self.prompt.with_completion(chr(self.pkey))
             self.prompt_cmd()
 
         # Send code
@@ -232,7 +231,7 @@ class PanelWin:
 
         # Menu Search
         if self.pkey == 47:    # -> /
-            self.search_item('Search for :')
+            self.search_item('Search for : ')
 
         # Next item (search)
         if self.pkey == 110:    # -> n
@@ -248,7 +247,7 @@ class PanelWin:
 
         # Filter variables
         elif self.pkey == 102:    # -> f
-            self.filter = self.prompt.display('Limit to :')
+            self.filter = self.prompt.simple('Limit to : ')
             if self.filter:
                 self.mk_sort = 'filter'
                 self.position = 0
@@ -266,34 +265,23 @@ class PanelWin:
             self.arange_lst()
 
         # Panel Menu
-        elif self.pkey in self.app.kenter and self.row_num != 0:
+        elif self.pkey in self.app.kenter and self.row_num != -1:
             self.init_menu()
 
     def socket_key_bindings(self):
         """ Socket actions key bindings. """
 
-        # Reconnection to socket
         if self.pkey == 82:    # -> R
-            self.wng.display(' Restarting connection ')
-            self.sock.restart_sockets()
-            self.sock.warning_socket(self.wng)
+            self.daemon_restart_connection()
 
-        # Disconnect from socket
         elif self.pkey == 68:    # -> D
-            self.sock.close_sockets()
-            self.sock.warning_socket(self.wng)
+            self.daemon_disconnect()
 
-        # Connect to socket
         elif self.pkey == 67:     # -> C
-            self.sock.init_sockets()
-            self.sock.warning_socket(self.wng)
+            self.daemon_connect()
 
-        # Restart daemon
         elif self.pkey == 18:    # -> c-r
-            restart_daemon()
-            self.wng.display(' Restarting Daemon ')
-            self.sock.init_sockets()
-            self.sock.warning_socket(self.wng)
+            self.daemon_restart()
 
     def custom_key_bindings(self):
         """ Key bindings : To overload """
@@ -324,7 +312,7 @@ class PanelWin:
                              curses.A_BOLD | self.c_ttl)
 
         # Reset position if position is greater than the new list of var (reset)
-        self.row_num = max(0, len(self.strings) - 1)
+        self.row_num = len(self.strings) - 1
         if self.position > self.row_num:
             self.position = 0
             self.page = 1
@@ -333,20 +321,20 @@ class PanelWin:
         for i in range(self.app.row_max*(self.page-1),
                        self.app.row_max + self.app.row_max*(self.page-1)):
 
-            if self.row_num == 0:
+            if self.row_num == -1:
                 self.gwin.addstr(1, 1, self.empty_dic,
                                  curses.A_BOLD | self.c_hh)
 
             elif i <= self.row_num:
                 self.cell1, self.cell2 = format_cell(self.lst, self.strings[i], self.app.screen_width)
                 if i == self.position:
-                    self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), 1,
+                    self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), 2,
                                      self.cell1.encode(code), curses.A_BOLD | self.c_hh)
-                    self.setup_type_display_select(i)
+                    self.fill_main_box_type_selected(i)
                 else:
-                    self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), 1,
+                    self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), 2,
                                      self.cell1.encode(code), curses.A_DIM | self.c_txt)
-                    self.setup_type_display_unselect(i)
+                    self.fill_main_box_type(i)
 
         # Bottom info
         if self.app.config['font']['pw-font'] == 'True' and len(self.limit_msg) > 0:
@@ -363,7 +351,7 @@ class PanelWin:
         self.app.stdscr.refresh()
         self.gwin.refresh()
 
-    def setup_type_display_select(self, i):
+    def fill_main_box_type_selected(self, i):
         if "[Died]" in self.cell2:
             self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_di)
@@ -377,7 +365,7 @@ class PanelWin:
             self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_hh)
 
-    def setup_type_display_unselect(self, i):
+    def fill_main_box_type(self, i):
         if "[Died]" in self.cell2:
             self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_di)
@@ -402,22 +390,33 @@ class PanelWin:
 
         elif self.mk_sort == 'filter' and self.filter:
             self.strings = filter_var_lst(self.lst, self.filter)
-            self.limit_msg = 'Filter : ' + self.filter + ' (' + str(len(self.strings)) + ' obj.)'
+            if not self.strings:
+                self.prompt_msg_setup('{} not found'.format(self.filter))
+                self.strings = sorted(list(self.lst))
+                self.filter = None
+                self.mk_sort = 'name'
+            else:
+                self.limit_msg = 'Filter : ' + self.filter + ' (' + str(len(self.strings)) + ' obj.)'
 
         else:
             self.strings = list(self.lst)
 
         # Update number of columns
-        self.row_num = max(0, len(self.strings) - 1)
+        self.row_num = len(self.strings) - 1
 
-    def prompt_display_msg(self):
+    def prompt_msg_display(self):
         """ Erase prompt message after some delay """
 
         if self.prompt_msg and time.time() - self.prompt_time > 3:
             self.prompt_msg = ''
-            self.prompt.message(self.prompt_msg)
         else:
-            self.prompt.message(self.prompt_msg)
+            self.prompt.display(self.prompt_msg)
+
+    def prompt_msg_setup(self, msg):
+        """ Set up the message to display in the prompt """
+
+        self.prompt_msg = msg
+        self.prompt_time = time.time()
 
     def prompt_cmd(self):
         """ Actions for prompt """
@@ -432,52 +431,82 @@ class PanelWin:
             self.app.close_signal = 'shutdown'
 
         elif self.cmd in ['k', 'K', 'kernel-manager']:
-            if self.panel_name in ['variable']:
-                self.app.explorer_switch = True
-            elif self.panel_name not in ['kernel']:
-                self.app.kernel_win.display()
-            else:
-                self.prompt_msg = 'Already in kernel manager !'
+            self.prompt_cmd_kernel_manager()
 
         elif self.cmd in ['v', 'V', 'e', 'E', 'variable-explorer']:
-            if self.panel_name in ['kernel']:
-                self.app.kernel_switch = True
-            elif self.panel_name not in ['variable']:
-                self.app.explorer_win.display()
-            else:
-                self.prompt_msg = 'Already in variable explorer !'
+            self.prompt_cmd_variable_explorer()
+
+        elif self.cmd in ['h', 'help']:
+            help_menu = Help(self.app)
+            help_menu.display()
+
+        elif self.cmd in ['R', 'daemon-restart']:
+            self.daemon_restart()
+
+        elif self.cmd in ['r', 'daemon-restart-connection']:
+            self.daemon_restart_connection()
+
+        elif self.cmd in ['c', 'daemon-connect']:
+            self.daemon_connect()
+
+        elif self.cmd in ['d', 'daemon-disconnect']:
+            self.daemon_disconnect()
 
         else:
-            self.prompt_msg = 'Command not found !'
+            self.prompt_msg_setup('Command not found !')
 
-        self.prompt_time = time.time()
+    def prompt_cmd_kernel_manager(self):
+        """ 'kernel-manager' prompt command"""
+
+        if self.panel_name in ['variable-explorer']:
+            self.app.explorer_switch = True
+        elif self.panel_name not in ['kernel-manager']:
+            self.app.kernel_win.display()
+        else:
+            self.prompt_msg_setup('Already in kernel manager !')
+
+    def prompt_cmd_variable_explorer(self):
+        """ 'variable-explorer' prompt command """
+
+        if self.panel_name in ['kernel-manager']:
+            self.app.kernel_switch = True
+        elif self.panel_name not in ['variable-explorer']:
+            self.app.explorer_win.display()
+        else:
+            self.prompt_msg_setup('Already in variable explorer !')
 
     def send_code(self):
         """ Send code to current kernel """
 
-        code = self.prompt.display('Send-code ')
-        try:
-            send_msg(self.sock.RequestSock, '<code>' + code)
-            self.logger.info('Code sent to kernel : {}'.format(code))
-            self.prompt_msg = 'Code sent !'
-        except Exception:
-            self.logger.error('Code not sent !')
-            self.prompt_msg = 'Code not sent !'
-        self.prompt_time = time.time()
+        code = self.prompt.simple('Send-code ')
+        if code:
+            try:
+                send_msg(self.sock.RequestSock, '<code>' + code)
+                self.logger.info('Code sent to kernel : {}'.format(code))
+                self.prompt_msg_setup('Code sent !')
+            except Exception:
+                self.logger.error('Code not sent !')
+                self.prompt_msg_setup('Code not sent !')
 
     def search_item(self, txt_msg):
         """ Search an object in the variable list """
 
-        self.search = self.prompt.display(txt_msg)
+        self.search = self.prompt.simple(txt_msg)
         self.search_lst = [i for i, s in enumerate(self.strings) if self.search in s]
         self.search_index = 0
         self.logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
 
         if self.search_lst and self.search:
+            if len(self.search_lst) == 1:
+                self.prompt_msg_setup("{} occurence of '{}' found".format(len(self.search_lst), self.search))
+            else:
+                self.prompt_msg_setup("{} occurences of '{}' found".format(len(self.search_lst), self.search))
             self.position = self.search_lst[self.search_index]
             self.page = ceil((self.position+1)/self.app.row_max)
+        elif not self.search:
+            pass
         else:
-            self.wng.display(self.search + ' not found !')
+            self.prompt_msg_setup(self.search + ' not found !')
             self.position = 0
             self.page = 1
 
@@ -493,6 +522,33 @@ class PanelWin:
 
         self.position = self.search_lst[self.search_index]
         self.page = ceil((self.position+1)/self.app.row_max)
+
+    def daemon_connect(self):
+        """ Connect to daemon socket """
+
+        self.sock.init_sockets()
+        self.sock.warning_socket(self.wng)
+
+    def daemon_disconnect(self):
+        """ Disconnet from daemon socket """
+
+        self.sock.close_sockets()
+        self.sock.warning_socket(self.wng)
+
+    def daemon_restart_connection(self):
+        """ Restart connection to the daemon socket """
+
+        self.wng.display(' Restarting connection ')
+        self.sock.restart_sockets()
+        self.sock.warning_socket(self.wng)
+
+    def daemon_restart(self):
+        """ Restart kd5 ! """
+
+        restart_daemon()
+        self.wng.display(' Restarting Daemon ')
+        self.sock.init_sockets()
+        self.sock.warning_socket(self.wng)
 
     def resize_curses(self, force=False):
         """ Check if terminal is resized and adapt screen """
@@ -519,7 +575,7 @@ class PanelWin:
     def navigate_lst(self):
         """ Navigation though the item list"""
 
-        self.pages = ceil(self.row_num/self.app.row_max)
+        self.pages = ceil((self.row_num + 1)/self.app.row_max)
         if self.pkey in self.app.kdown:
             self.navigate_down()
         if self.pkey in self.app.kup:

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : jeu. 22 mars 2018 14:41:20 CET
+# Last Modified : lun. 26 mars 2018 00:51:32 CEST
 """
 -----------
 DOCSTRING
@@ -206,7 +206,7 @@ class Inspect:
 class ProceedInspection:
     """ Object inspection """
 
-    def __init__(self, app, sock, logger, name, value, typ, pos, page, rmax, wng):
+    def __init__(self, app, sock, logger, name, value, typ, pos, page, wng):
         """ Class constructor """
 
         self.app = app
@@ -217,7 +217,6 @@ class ProceedInspection:
         self.vartype = typ
         self.position = pos
         self.page = page
-        self.row_max = rmax
         self.wng = wng
         self.doc = None
 
@@ -361,7 +360,7 @@ class ProceedInspection:
     def wait(self):
         """ Wait for variable value. """
 
-        i = 0
+        i, j = 0, 0
         spinner = [['.', 'o', 'O', 'o'],
                    ['.', 'o', 'O', '@', '*'],
                    ['v', '<', '^', '>'],
@@ -386,12 +385,14 @@ class ProceedInspection:
                    ['Searching.', 'Searching..', 'Searching...']
                    ]
 
+        search = spinner[21]
         spinner = spinner[19]
         ti = time()
         while os.path.exists(self.filename) is False:
-            sleep(0.05)
-            self.app.stdscr.addstr(self.position - (self.page-1)*self.row_max + 1,
-                                   2, spinner[i], self.app.c_exp_txt | curses.A_BOLD)
+            self.app.stdscr.addstr(self.position + 1 - (self.page-1)*self.app.row_max, 1,
+                                   spinner[i], self.app.c_exp_txt | curses.A_BOLD)
+            self.app.stdscr.addstr(self.app.screen_height - 1, 0,
+                                   search[j], self.app.c_exp_txt | curses.A_DIM)
 
             self.app.stdscr.refresh()
             if i < len(spinner) - 1:
@@ -399,7 +400,14 @@ class ProceedInspection:
             else:
                 i = 0
 
+            if j < len(search) - 1:
+                j += 1
+            else:
+                j = 0
+
             if time() - ti > 3:
                 break
+
+            sleep(0.05)
 
         self.app.stdscr.refresh()
