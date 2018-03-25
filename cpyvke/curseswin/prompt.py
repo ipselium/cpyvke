@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : ven. 23 mars 2018 16:07:02 CET
+# Last Modified : dim. 25 mars 2018 09:55:46 CEST
 """
 -----------
 DOCSTRING
@@ -32,11 +32,23 @@ import curses
 from curses import panel
 
 
+def cmd_lst():
+    """ Prompt command list """
+
+    lst = ['kernel-manager',
+#           'daemon-restart-connection', 'daemon-connect', 'daemon-disconnect',
+#           'daemon-restart',
+           'variable-explorer']
+    lst.sort()
+
+    return lst
+
+
 class Prompt:
     """ Prompt class. """
 
     def __init__(self, app):
-        """ CLass constructor """
+        """ Class constructor """
 
         # Arguments
         self.app = app
@@ -44,10 +56,6 @@ class Prompt:
 
         # Init input
         self.usr_input = ''
-
-        # Command list
-        self.cmd_lst = ['kernel-manager', 'kernel-connect', 'variable-explorer']
-        self.cmd_lst.sort()
 
         # Screen
         self.stdscr = app.stdscr
@@ -65,13 +73,13 @@ class Prompt:
         curses.echo()
         self.app.stdscr.attrset(self.app.c_main_txt | curses.A_BOLD)
         # Erase before ! (overwrite with spaces)
-        self.app.stdscr.addstr(self.app.screen_height-2, 2,
-                               ' '*(self.app.screen_width-4),
+        self.app.stdscr.addstr(self.app.screen_height-1, 0,
+                               ' '*(self.app.screen_width-1),
                                curses.A_DIM | self.app.c_main_txt)
 
-        self.app.stdscr.addstr(self.app.screen_height-2, 2, key, curses.A_DIM | self.app.c_main_txt)
-        self.usr_input = self.app.stdscr.getstr(self.app.screen_height-2, 2 + len(key),
-                                                self.app.screen_width - len(key) - 8).decode('utf-8')
+        self.app.stdscr.addstr(self.app.screen_height-1, 0, key, curses.A_DIM | self.app.c_main_txt)
+        self.usr_input = self.app.stdscr.getstr(self.app.screen_height-1, len(key),
+                                                self.app.screen_width - len(key) - 1).decode('utf-8')
         # Disable echoing of characters
         curses.noecho()
         # Restore color of the main window
@@ -111,7 +119,7 @@ class Prompt:
                     break
 
                 elif pkey in ['\t']:    # TAB
-                    match = [cmd for cmd in self.cmd_lst if cmd.startswith(self.usr_input)]
+                    match = [cmd for cmd in cmd_lst() if cmd.startswith(self.usr_input)]
 
                     if not match:
                         pass
@@ -125,25 +133,26 @@ class Prompt:
                     if not self.usr_input:
                         break
 
-                elif type(pkey) is not int and len(self.usr_input) < self.app.screen_width - 5:
-                    self.usr_input = self.usr_input + pkey
+                elif type(pkey) is not int and len(self.usr_input + pkey.rstrip()) < self.app.screen_width - 2:
+                    self.usr_input = self.usr_input + pkey.rstrip()
 
             except curses.error:
                 pass
 
-            # Erase before ! (overwrite with spaces)
-            self.app.stdscr.addstr(self.app.screen_height-2, 2,
-                                   ' '*(self.app.screen_width-3),
+            # Erase before ! (overwrite with space characters)
+            self.app.stdscr.addstr(self.app.screen_height-1, 0,
+                                   ' '*(self.app.screen_width-1),
                                    curses.A_BOLD | self.app.c_main_txt)
 
-            self.app.stdscr.addstr(self.app.screen_height-2, 2, key + self.usr_input, curses.A_BOLD | self.app.c_main_txt)
-            # Disable echoing of characters
+            self.app.stdscr.addstr(self.app.screen_height-1, 0,
+                                   key + self.usr_input,
+                                   curses.A_BOLD | self.app.c_main_txt)
 
         # Restore color of the main window and switch of echo !
         curses.noecho()
         self.app.stdscr.attrset(self.app.c_main_bdr | curses.A_BOLD)
 
-        return self.usr_input.rstrip()
+        return self.usr_input
 
     def proposal(self, match, key):
 
@@ -163,9 +172,12 @@ class Prompt:
             except curses.error:
                 pass
 
-            self.app.stdscr.addstr(self.app.screen_height-2, 2,
+            self.app.stdscr.addstr(self.app.screen_height-1, 0,
+                                   ' '*(self.app.screen_width-1),
+                                   curses.A_BOLD | self.app.c_main_txt)
+            self.app.stdscr.addstr(self.app.screen_height-1, 0,
                                    key + proposal, curses.A_DIM | self.app.c_main_txt)
-            self.app.stdscr.addstr(self.app.screen_height-2, 2,
+            self.app.stdscr.addstr(self.app.screen_height-1, 0,
                                    key + self.usr_input, curses.A_BOLD | self.app.c_exp_txt)
 
         self.usr_input = match[i]
@@ -174,7 +186,7 @@ class Prompt:
     def message(self, msg):
         """ display message in prompt. """
 
-        self.app.stdscr.addstr(self.app.screen_height-2, 2,
+        self.app.stdscr.addstr(self.app.screen_height-1, 0,
                                msg, curses.A_BOLD | self.app.c_warn_txt)
 
     def input_panel(self, txt_msg, win_title):
@@ -185,7 +197,7 @@ class Prompt:
 
         # Init Menu
         self.win_title = win_title
-        iwin = self.app.stdscr.subwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
+        iwin = self.app.stdscr.subwin(self.app.panel_height, self.app.screen_width, 0, 0)
         iwin.keypad(1)
 
         # Send menu to a panel

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : ven. 23 mars 2018 17:12:59 CET
+# Last Modified : dim. 25 mars 2018 09:34:57 CEST
 """
 -----------
 DOCSTRING
@@ -60,7 +60,6 @@ class InitApp:
         self.close_signal = 'continue'
         self.stdscr = curses.initscr()   # Init curses
         self.stdscr.keypad(1)            #
-        self.stdscr.border(0)            # draw a border around screen
         self.screen_height, self.screen_width = self.stdscr.getmaxyx()
 
         # Ressources
@@ -79,20 +78,20 @@ class InitApp:
         self.color_def()
         # Set some colors
         self.stdscr.bkgd(self.c_main_txt)
-        self.stdscr.attrset(self.c_main_bdr | curses.A_BOLD)  # border color
 
         # Min terminal size allowed
         if self.DEBUG:
             self.term_min_height = 20
             self.term_min_width = 80
-            self.debug_info = 11       # Size of the bottom text area
+            self.debug_info = 7       # Size of the bottom text area
         else:
             self.term_min_height = 15
             self.term_min_width = 70
-            self.debug_info = 5
+            self.debug_info = 2
 
         # Some variables
-        self.row_max = self.screen_height-self.debug_info  # max number of rows
+        self.panel_height = self.screen_height - self.debug_info
+        self.row_max = self.panel_height - 2  # max number of rows
         self.kernel_change = False
         self.explorer_switch = False
         self.kernel_switch = False
@@ -147,50 +146,50 @@ class InitApp:
     def dbg_socket(self):
         """ Display queue informations """
 
-        self.stdscr.addstr(self.row_max + 4, int(2*self.screen_width/3),
+        self.stdscr.addstr(self.panel_height + 1, int(2*self.screen_width/3),
                            ' Ressources ', self.c_main_ttl | curses.A_BOLD)
         if self.config['font']['pw-font'] == 'True':
             self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscr.addstr(self.row_max + 5, 2*int(self.screen_width/3) + 1,
+        self.stdscr.addstr(self.panel_height + 2, 2*int(self.screen_width/3) + 1,
                            ' cpu : {} %'.format(self.ressources.cpu_percent()),
                            curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 6, 2*int(self.screen_width/3) + 1,
+        self.stdscr.addstr(self.panel_height + 3, 2*int(self.screen_width/3) + 1,
                            ' memory : {:.2f} %'.format(self.ressources.memory_percent()),
                            curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 7, 2*int(self.screen_width/3) + 1,
+        self.stdscr.addstr(self.panel_height + 4, 2*int(self.screen_width/3) + 1,
                            ' threads : {} '.format(self.ressources.num_threads()),
                            curses.A_DIM | self.c_main_txt)
 
     def dbg_term(self, pkey):
         """ Display terminal informations """
 
-        self.stdscr.addstr(self.row_max + 4, int(self.screen_width/3),
+        self.stdscr.addstr(self.panel_height + 1, int(self.screen_width/3),
                            ' Terminal ', self.c_main_ttl | curses.A_BOLD)
         if self.config['font']['pw-font'] == 'True':
             self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscr.addstr(self.row_max + 5, int(self.screen_width/3) + 1,
+        self.stdscr.addstr(self.panel_height + 2, int(self.screen_width/3) + 1,
                            ' key : {}'.format(pkey),
                            curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 6, int(self.screen_width/3) + 1,
+        self.stdscr.addstr(self.panel_height + 3, int(self.screen_width/3) + 1,
                            ' size : {}x{}'.format(self.screen_width,
                                                    self.screen_height),
                            curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 7, int(self.screen_width/3) + 1,
+        self.stdscr.addstr(self.panel_height + 4, int(self.screen_width/3) + 1,
                            ' colors : ' + str(curses.COLORS),
                            curses.A_DIM | self.c_main_txt)
 
     def dbg_general(self, search, filter, mk_sort):
         """ Display debug informations """
 
-        self.stdscr.addstr(self.row_max + 4, 2, ' Debug ',
+        self.stdscr.addstr(self.panel_height + 1, 2, ' Debug ',
                            self.c_main_ttl | curses.A_BOLD)
         if self.config['font']['pw-font'] == 'True':
             self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscr.addstr(self.row_max + 5, 3, ' search : {}'.format(search),
+        self.stdscr.addstr(self.panel_height + 2, 3, ' search : {}'.format(search),
                            curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 6, 3, ' limit : {}'.format(filter),
+        self.stdscr.addstr(self.panel_height + 3, 3, ' limit : {}'.format(filter),
                            curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.row_max + 7, 3, ' sort : {}'.format(mk_sort),
+        self.stdscr.addstr(self.panel_height + 4, 3, ' sort : {}'.format(mk_sort),
                            curses.A_DIM | self.c_main_txt)
 
     def check_size(self):
@@ -210,7 +209,6 @@ class InitApp:
         except Exception:
             self.logger.error('Error : ', exc_info=True)
             pass
-        self.stdscr.border(0)
         self.stdscr.refresh()
 
     def bottom_bar_info(self):
@@ -221,7 +219,8 @@ class InitApp:
 
         # Kernel Info
         if self.config['font']['pw-font'] == 'True':
-            self.stdscr.addstr(self.screen_height-1, 2, '', self.c_bar_kn_pwfi | curses.A_BOLD)
+            self.stdscr.addstr(self.screen_height-2, 0, ' ', self.c_bar_co | curses.A_BOLD)
+            self.stdscr.addstr('', self.c_bar_kn_pwfi | curses.A_BOLD)
             self.stdscr.addstr(' Daemon ', self.c_bar_kn)
             self.stdscr.addstr('', self.c_bar_kn_pwfk | curses.A_BOLD)
             if self.sock.connected:
@@ -236,7 +235,7 @@ class InitApp:
                 self.stdscr.addstr('', self.c_bar_kn_pwfd | curses.A_BOLD)
 
         else:
-            self.stdscr.addstr(self.screen_height-1, 2, '< Kernel : ',
+            self.stdscr.addstr(self.screen_height-2, 2, '< Kernel : ',
                                self.c_bar_kn | curses.A_BOLD)
             if self.kc.is_alive():
                 self.stdscr.addstr('connected', self.c_bar_co | curses.A_BOLD)
@@ -248,12 +247,11 @@ class InitApp:
 
         # Help
         if self.config['font']['pw-font'] == 'True':
-            self.stdscr.addstr(self.screen_height-1, self.screen_width-12,
+            self.stdscr.addstr(self.screen_height-2, self.screen_width-9,
                                '', self.c_bar_hlp_pwf | curses.A_BOLD)
             self.stdscr.addstr(' ?:help ', self.c_bar_hlp | curses.A_BOLD)
-            self.stdscr.addstr('', self.c_bar_hlp_pwf | curses.A_BOLD)
         else:
-            self.stdscr.addstr(self.screen_height-1, self.screen_width-12,
+            self.stdscr.addstr(self.screen_height-2, self.screen_width-12,
                                '< h:help >', self.c_bar_hlp | curses.A_BOLD)
 
     def close_menu(self):

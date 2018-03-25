@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : ven. 23 mars 2018 16:43:06 CET
+# Last Modified : dim. 25 mars 2018 10:02:10 CEST
 """
 -----------
 DOCSTRING
@@ -78,7 +78,7 @@ class PanelWin:
         self.panel_name = 'template'
 
         # Init constants
-        self.position = 1
+        self.position = 0
         self.page = 1
         self.resize = False
         self.pkey = -1
@@ -98,11 +98,11 @@ class PanelWin:
         self.wng = WarningMsg(self.app.stdscr)
 
         # Init Variable Box
-        self.app.row_max = self.app.screen_height-self.debug_info  # max number of rows
-        self.gwin = self.app.stdscr.subwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
+        self.app.panel_height = self.app.screen_height-self.debug_info  # max number of rows
+        self.app.row_max = self.app.panel_height - 2
+        self.gwin = self.app.stdscr.subwin(self.app.panel_height, self.app.screen_width, 0, 0)
         self.gwin.keypad(1)
         self.gwin.bkgd(self.c_txt)
-        self.gwin.attrset(self.c_bdr | curses.A_BOLD)  # Change border color
         self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
         self.gpan = panel.new_panel(self.gwin)
         self.gpan.hide()
@@ -151,7 +151,7 @@ class PanelWin:
 
         # Get items
         self.lst = self.get_items()
-        self.row_num = len(self.lst)
+        self.row_num = max(0, len(self.lst) - 1)
 
         # Arange item list
         self.arange_lst()
@@ -181,7 +181,6 @@ class PanelWin:
         self.app.stdscr.erase()
 
         # Create border before updating fields
-        self.app.stdscr.border(0)
         self.gwin.border(0)
 
         # Update all windows
@@ -250,17 +249,20 @@ class PanelWin:
         # Filter variables
         elif self.pkey == 102:    # -> f
             self.filter = self.prompt.display('Limit to :')
-            self.mk_sort = 'filter'
-            self.position = 1
-            self.page = int(ceil(self.position/self.app.row_max))
-            self.arange_lst()
+            if self.filter:
+                self.mk_sort = 'filter'
+                self.position = 0
+                self.page = 1
+                self.arange_lst()
+            else:
+                self.filter = None
 
         # Reinit
         elif self.pkey == 117:   # -> u
             self.mk_sort = 'name'
             self.limit_msg = ''
-            self.position = 1
-            self.page = int(ceil(self.position/self.app.row_max))
+            self.position = 0
+            self.page = 1
             self.arange_lst()
 
         # Panel Menu
@@ -322,42 +324,39 @@ class PanelWin:
                              curses.A_BOLD | self.c_ttl)
 
         # Reset position if position is greater than the new list of var (reset)
-        self.row_num = len(self.strings)
+        self.row_num = max(0, len(self.strings) - 1)
         if self.position > self.row_num:
-            self.position = 1
+            self.position = 0
             self.page = 1
 
         # Items
-        for i in range(1+(self.app.row_max*(self.page-1)),
-                       self.app.row_max+1+(self.app.row_max*(self.page-1))):
+        for i in range(self.app.row_max*(self.page-1),
+                       self.app.row_max + self.app.row_max*(self.page-1)):
 
             if self.row_num == 0:
                 self.gwin.addstr(1, 1, self.empty_dic,
                                  curses.A_BOLD | self.c_hh)
 
-            else:
-                self.cell1, self.cell2 = format_cell(self.lst, self.strings[i-1], self.app.screen_width)
-                if (i+(self.app.row_max*(self.page-1)) == self.position+(self.app.row_max*(self.page-1))):
-                    self.gwin.addstr(i-(self.app.row_max*(self.page-1)), 2,
+            elif i <= self.row_num:
+                self.cell1, self.cell2 = format_cell(self.lst, self.strings[i], self.app.screen_width)
+                if i == self.position:
+                    self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), 1,
                                      self.cell1.encode(code), curses.A_BOLD | self.c_hh)
                     self.setup_type_display_select(i)
                 else:
-                    self.gwin.addstr(i-(self.app.row_max*(self.page-1)), 2,
-                                     self.cell1.encode(code),
-                                     curses.A_DIM | self.c_txt)
+                    self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), 1,
+                                     self.cell1.encode(code), curses.A_DIM | self.c_txt)
                     self.setup_type_display_unselect(i)
-                if i == self.row_num:
-                    break
 
         # Bottom info
         if self.app.config['font']['pw-font'] == 'True' and len(self.limit_msg) > 0:
-            self.gwin.addstr(self.app.row_max+1,
+            self.gwin.addstr(self.app.panel_height-1,
                              int((self.app.screen_width-len(self.limit_msg))/2),
                              '', self.c_pwf)
             self.gwin.addstr(self.limit_msg, self.c_ttl | curses.A_BOLD)
             self.gwin.addstr('',  self.c_pwf | curses.A_BOLD)
         elif len(self.limit_msg) > 0:
-            self.gwin.addstr(self.app.row_max+1,
+            self.gwin.addstr(self.app.panel_height-1,
                              int((self.app.screen_width-len(self.limit_msg))/2),
                              '< ' + self.limit_msg + ' >', curses.A_DIM | self.c_ttl)
 
@@ -366,30 +365,30 @@ class PanelWin:
 
     def setup_type_display_select(self, i):
         if "[Died]" in self.cell2:
-            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+            self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_di)
         elif "[Alive]" in self.cell2:
-            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+            self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_al)
         elif "[Connected]" in self.cell2:
-            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+            self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_co)
         else:
-            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+            self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_hh)
 
     def setup_type_display_unselect(self, i):
         if "[Died]" in self.cell2:
-            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+            self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_di)
         elif "[Alive]" in self.cell2:
-            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+            self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_al)
         elif "[Connected]" in self.cell2:
-            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+            self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_co)
         else:
-            self.gwin.addstr(i-(self.app.row_max*(self.page-1)), len(self.cell1),
+            self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_txt)
 
     def arange_lst(self):
@@ -409,7 +408,7 @@ class PanelWin:
             self.strings = list(self.lst)
 
         # Update number of columns
-        self.row_num = len(self.strings)
+        self.row_num = max(0, len(self.strings) - 1)
 
     def prompt_display_msg(self):
         """ Erase prompt message after some delay """
@@ -433,13 +432,17 @@ class PanelWin:
             self.app.close_signal = 'shutdown'
 
         elif self.cmd in ['k', 'K', 'kernel-manager']:
-            if self.panel_name not in ['kernel']:
+            if self.panel_name in ['variable']:
+                self.app.explorer_switch = True
+            elif self.panel_name not in ['kernel']:
                 self.app.kernel_win.display()
             else:
                 self.prompt_msg = 'Already in kernel manager !'
 
         elif self.cmd in ['v', 'V', 'e', 'E', 'variable-explorer']:
-            if self.panel_name not in ['variable']:
+            if self.panel_name in ['kernel']:
+                self.app.kernel_switch = True
+            elif self.panel_name not in ['variable']:
                 self.app.explorer_win.display()
             else:
                 self.prompt_msg = 'Already in variable explorer !'
@@ -466,15 +469,17 @@ class PanelWin:
         """ Search an object in the variable list """
 
         self.search = self.prompt.display(txt_msg)
-
-        self.logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
         self.search_lst = [i for i, s in enumerate(self.strings) if self.search in s]
         self.search_index = 0
-        if self.search_lst:
-            self.position = self.search_lst[self.search_index] + 1
-            self.page = int(ceil(self.position/self.app.row_max))
+        self.logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
+
+        if self.search_lst and self.search:
+            self.position = self.search_lst[self.search_index]
+            self.page = ceil((self.position+1)/self.app.row_max)
         else:
             self.wng.display(self.search + ' not found !')
+            self.position = 0
+            self.page = 1
 
     def search_item_next(self):
         """ Next occurence of the searching. """
@@ -486,8 +491,8 @@ class PanelWin:
         else:
             self.search_index = 0
 
-        self.position = self.search_lst[self.search_index] + 1
-        self.page = int(ceil(self.position/self.app.row_max))
+        self.position = self.search_lst[self.search_index]
+        self.page = ceil((self.position+1)/self.app.row_max)
 
     def resize_curses(self, force=False):
         """ Check if terminal is resized and adapt screen """
@@ -501,11 +506,12 @@ class PanelWin:
             # save also these value locally to check if
             self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
             # Update number of lines
-            self.app.row_max = self.app.screen_height-self.app.debug_info
+            self.app.panel_height = self.app.screen_height-self.app.debug_info
+            self.app.row_max = self.app.panel_height - 2
             # Update display
             self.app.stdscr.clear()
             self.gwin.clear()
-            self.gwin.resize(self.app.row_max+2, self.app.screen_width-2)
+            self.gwin.resize(self.app.panel_height, self.app.screen_width)
             curses.resizeterm(self.app.screen_height, self.app.screen_width)
             self.app.stdscr.refresh()
             self.gwin.refresh()
@@ -513,7 +519,7 @@ class PanelWin:
     def navigate_lst(self):
         """ Navigation though the item list"""
 
-        self.pages = int(ceil(self.row_num/self.app.row_max))
+        self.pages = ceil(self.row_num/self.app.row_max)
         if self.pkey in self.app.kdown:
             self.navigate_down()
         if self.pkey in self.app.kup:
@@ -527,46 +533,51 @@ class PanelWin:
         """ Navigate Right. """
 
         self.page = self.page + 1
-        self.position = (1+(self.app.row_max*(self.page-1)))
+        self.position = self.app.row_max*(self.page-1)
 
     def navigate_left(self):
         """ Navigate Left. """
 
         self.page = self.page - 1
-        self.position = 1+(self.app.row_max*(self.page-1))
+        self.position = self.app.row_max*(self.page-1)
 
     def navigate_up(self):
         """ Navigate Up. """
 
         if self.page == 1:
-            if self.position > 1:
+            if self.position > 0:
                 self.position = self.position - 1
         else:
-            if self.position > (1+(self.app.row_max*(self.page-1))):
+            if self.position > self.app.row_max*(self.page - 1):
                 self.position = self.position - 1
             else:
                 self.page = self.page - 1
-                self.position = self.app.row_max+(self.app.row_max*(self.page-1))
+                self.position = self.app.row_max - 1 + self.app.row_max*(self.page - 1)
 
     def navigate_down(self):
         """ Navigate Down. """
 
+        # First page
         if self.page == 1:
-            if (self.position < self.app.row_max) and (self.position < self.row_num):
+            if (self.position < self.app.row_max - 1) and (self.position < self.row_num):
                 self.position = self.position + 1
             else:
                 if self.pages > 1:
                     self.page = self.page + 1
-                    self.position = 1+(self.app.row_max*(self.page-1))
+                    self.position = self.app.row_max*(self.page - 1)
+
+        # Last page
         elif self.page == self.pages:
             if self.position < self.row_num:
                 self.position = self.position + 1
+
+        # Between
         else:
-            if self.position < self.app.row_max+(self.app.row_max*(self.page-1)):
+            if self.position < self.app.row_max - 1 + self.app.row_max*(self.page - 1):
                 self.position = self.position + 1
             else:
                 self.page = self.page + 1
-                self.position = 1+(self.app.row_max*(self.page-1))
+                self.position = self.app.row_max*(self.page - 1)
 
     def init_menu(self):
         """ Init the menu """

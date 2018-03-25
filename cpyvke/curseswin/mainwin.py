@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : ven. 23 mars 2018 17:09:11 CET
+# Last Modified : sam. 24 mars 2018 09:19:55 CET
 """
 -----------
 DOCSTRING
@@ -58,9 +58,8 @@ class MainWin(PanelWin):
         self.panel_name = 'main'
 
         # Init Variable Box
-        self.gwin = curses.newwin(self.app.row_max+2, self.app.screen_width-2, 1, 1)
+        self.gwin = curses.newwin(self.app.panel_height, self.app.screen_width, 0, 0)
         self.gwin.bkgd(self.app.c_exp_txt)
-        self.gwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # border color
 
         # Add explorer and kernel panels to self.app !
         self.app.explorer_win = ExplorerWin(self.app, self.sock, self.logger)

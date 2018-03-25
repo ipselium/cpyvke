@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : jeu. 22 mars 2018 14:31:54 CET
+# Last Modified : sam. 24 mars 2018 12:49:40 CET
 """
 -----------
 DOCSTRING
@@ -59,14 +59,14 @@ class ExplorerMenu:
         self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
 
         # Variables properties
-        self.varname = parent.strings[parent.position-1]
-        self.vartype = parent.lst[parent.strings[parent.position-1]]['type']
-        self.varval = parent.lst[parent.strings[parent.position-1]]['value']
+        self.varname = parent.strings[parent.position]
+        self.vartype = parent.lst[parent.strings[parent.position]]['type']
+        self.varval = parent.lst[parent.strings[parent.position]]['value']
 
         # Get Variable characteristics
         proc = ProceedInspection(self.app, self.sock, self.logger,
                                  self.varname, self.varval, self.vartype,
-                                 self.position, self.page, self.app.row_max, self.wng)
+                                 self.position, self.page, self.app.panel_height, self.wng)
         self._ismenu, self.varname, self.varval, self.vartype, self.doc = proc.get_variable()
 
         # Init all Inspectors
