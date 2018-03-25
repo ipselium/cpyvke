@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : dim. 25 mars 2018 23:38:07 CEST
+# Last Modified : lun. 26 mars 2018 01:07:43 CEST
 """
 -----------
 DOCSTRING
@@ -235,7 +235,7 @@ class InitApp:
                 self.stdscr.addstr('', self.c_bar_kn_pwfd | curses.A_BOLD)
 
         else:
-            self.stdscr.addstr(self.screen_height-2, 2, '< Kernel : ',
+            self.stdscr.addstr(self.screen_height-2, 0, '< Kernel : ',
                                self.c_bar_kn | curses.A_BOLD)
             if self.kc.is_alive():
                 self.stdscr.addstr('connected', self.c_bar_co | curses.A_BOLD)
@@ -251,8 +251,8 @@ class InitApp:
                                '', self.c_bar_hlp_pwf | curses.A_BOLD)
             self.stdscr.addstr(' ?:help ', self.c_bar_hlp | curses.A_BOLD)
         else:
-            self.stdscr.addstr(self.screen_height-2, self.screen_width-12,
-                               '< h:help >', self.c_bar_hlp | curses.A_BOLD)
+            self.stdscr.addstr(self.screen_height-2, self.screen_width-10,
+                               '< ?:help >', self.c_bar_hlp | curses.A_BOLD)
 
     def close_menu(self):
         """ Close Menu """
