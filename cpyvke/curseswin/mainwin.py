@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : dim. 25 mars 2018 23:52:40 CEST
+# Last Modified : mar. 27 mars 2018 01:03:13 CEST
 """
 -----------
 DOCSTRING
@@ -131,9 +131,10 @@ class MainWin(PanelWin):
         # Keys
         self.common_key_bindings()
 
-        # Close menu
-        if self.pkey in self.app.kquit:
-            self.app.close_menu()
+        # Decrease delay right here to avoid some waiting at the getch when not
+        # in switch mode. If switch, the halfdelay is set to its normal value
+        # just after, in the refresh() method !
+        curses.halfdelay(1)
 
         # Skip end of tasks if switching panel !
         if not self.app.explorer_switch and not self.app.kernel_switch and self.app.close_signal == "continue":
@@ -146,6 +147,10 @@ class MainWin(PanelWin):
 
         # Get pressed key (even in case of switch)
         self.pkey = self.app.stdscr.getch()
+
+        # Close menu at the end to avoid getch delay !
+        if self.pkey in self.app.kquit:
+            self.app.close_menu()
 
     def list_key_bindings(self):
         """ Overload this method with nothing ! """
