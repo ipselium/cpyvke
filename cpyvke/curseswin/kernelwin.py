@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : dim. 25 mars 2018 23:12:24 CEST
+# Last Modified : lun. 26 mars 2018 23:12:54 CEST
 """
 -----------
 DOCSTRING
@@ -30,7 +30,6 @@ DOCSTRING
 
 import os
 import curses
-
 from cpyvke.utils.kernel import kernel_dic, start_new_kernel, \
     shutdown_kernel, connect_kernel
 from cpyvke.utils.comm import send_msg
@@ -128,7 +127,8 @@ class KernelWin(PanelWin):
     def _restart_k(self):
         """ Restart a died kernel. """
 
-        self.wng.display('Not Implement yet!')
+        self.wng.display("Not implemented yet")
+        #  restart_kernel(self.lst[self.selected]['value'])
 
     def _kill_k(self):
         """ Kill kernel. """

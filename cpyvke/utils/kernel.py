@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : mar. 20 mars 2018 17:21:37 CET
+# Last Modified : lun. 26 mars 2018 23:14:56 CEST
 """
 -----------
 DOCSTRING
@@ -35,6 +35,8 @@ import os
 import subprocess
 import psutil
 import logging
+import socket
+
 
 logger = logging.getLogger("cpyvke.ktools")
 
@@ -87,28 +89,42 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
 
 def is_runing(cf):
     """ Check if kernel is alive.
-    Note : Very slow process that make bad curse display !
-    I have to find another way to check for died kernels
     """
 
     kc = BlockingKernelClient()
     kc.load_connection_file(cf)
     port = kc.get_connection_info()['iopub_port']
 
-    if check_server(port):
+    # if check_server(port):
+    if is_open("127.0.0.1", port):
         return True
     else:
         return False
-    return True
 
 
 def check_server(port):
-    """ Check if a service is listening on port. """
+    """ Check if a service is listening on port.
+
+    NOTE : Too slow for curses interface -> replaced by socket tests : is_open()
+
+    """
 
     addr = [item.laddr for item in psutil.net_connections('inet') if str(port) in str(item.laddr[1])]
     if addr:
         return True
     else:
+        return False
+
+
+def is_open(ip, port):
+    """ Check if port is open on ip """
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect((ip, int(port)))
+        s.shutdown(2)
+        return True
+    except socket.error:
         return False
 
 
@@ -233,3 +249,13 @@ def shutdown_kernel(cf):
 
     km, kc = connect_kernel_as_manager(cf)
     km.shutdown_kernel(now=True)
+
+
+def restart_kernel(cf):
+    """ Restart a kernel based on its connection file. """
+
+    km, kc = connect_kernel_as_manager(cf)
+    try:
+        km.start_kernel()
+    except Exception:
+        logger.error('Issue restarting kernel', exc_info=True)

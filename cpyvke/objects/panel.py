@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : lun. 26 mars 2018 00:55:57 CEST
+# Last Modified : lun. 26 mars 2018 21:44:15 CEST
 """
 -----------
 DOCSTRING
@@ -638,7 +638,7 @@ class PanelWin:
     def init_menu(self):
         """ Init the menu """
 
-        self.selected = self.strings[self.position-1]
+        self.selected = self.strings[self.position]
         self.menu_lst = self.create_menu()
 
         # Various variables
