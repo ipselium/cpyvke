@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mar. 27 mars 2018 23:36:05 CEST
+# Last Modified : mer. 28 mars 2018 00:20:18 CEST
 """
 -----------
 DOCSTRING
@@ -47,7 +47,7 @@ locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-def InitCf(lockfile, pidfile):
+def init_cf(lockfile, pidfile):
     """ Init connection file. """
 
     with open(lockfile, 'r') as f:
@@ -56,7 +56,7 @@ def InitCf(lockfile, pidfile):
     return find_connection_file(kernel_id)
 
 
-def WithDaemon(lockfile, pidfile, cmd):
+def with_daemon(lockfile, pidfile, cmd):
     """ Launch daemon. """
 
     os.system(cmd)
@@ -64,10 +64,10 @@ def WithDaemon(lockfile, pidfile, cmd):
     while os.path.exists(pidfile) is False:
         sleep(0.1)
 
-    return InitCf(lockfile, pidfile)
+    return init_cf(lockfile, pidfile)
 
 
-def ParseArgs(lockfile, pidfile):
+def parse_args(lockfile, pidfile):
     """ Parse Arguments. """
 
     parser = argparse.ArgumentParser()
@@ -87,7 +87,7 @@ def ParseArgs(lockfile, pidfile):
     elif os.path.exists(lockfile) and os.path.exists(pidfile):
 
         try:
-            cf = InitCf(lockfile, pidfile)
+            cf = init_cf(lockfile, pidfile)
         except FileNotFoundError:
             missing(lockfile, pidfile)
             sys.exit(2)
@@ -106,12 +106,12 @@ def ParseArgs(lockfile, pidfile):
 
             cmd = 'kd5 start ' + str(args.integer)
 
-        cf = WithDaemon(lockfile, pidfile, cmd)
+        cf = with_daemon(lockfile, pidfile, cmd)
 
     else:
 
         cmd = 'kd5 start'
-        cf = WithDaemon(lockfile, pidfile, cmd)
+        cf = with_daemon(lockfile, pidfile, cmd)
 
     return args, cf
 
@@ -159,7 +159,7 @@ def main(args=None):
     logger.addHandler(handler)
 
     # Parse arguments
-    args, cf = ParseArgs(lockfile, pidfile)
+    args, cf = parse_args(lockfile, pidfile)
 
     # Init kernel
     km, kc = connect_kernel(cf)

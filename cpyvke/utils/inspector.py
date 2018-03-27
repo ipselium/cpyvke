@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : lun. 26 mars 2018 00:51:32 CEST
+# Last Modified : mer. 28 mars 2018 00:12:48 CEST
 """
 -----------
 DOCSTRING
@@ -77,12 +77,14 @@ def inspect_class(class_inst):
     return class_attr
 
 
-def In_Thread(Func):
-    """ Run Func in thread """
+def threaded(func):
+    """ Run func in thread """
+
     def run(*k, **kw):
-        t = Process(target=Func, args=k, kwargs=kw)
+        t = Process(target=func, args=k, kwargs=kw)
         t.start()
         return t
+
     return run
 
 
@@ -104,7 +106,7 @@ class Inspect:
     def type_numeric():
         return ('int', 'float', 'complex')
 
-    @In_Thread
+    @threaded
     def plot2D(self):
         """ Plot 2D variable. """
 
@@ -112,7 +114,7 @@ class Inspect:
         imshow(self.varval)
         show()
 
-    @In_Thread
+    @threaded
     def plot1D(self):
         """ Plot 1D variable. """
 
@@ -120,7 +122,7 @@ class Inspect:
         plot(self.varval)
         show()
 
-    @In_Thread
+    @threaded
     def plot1Dcols(self):
         """ Plot 2D variable : superimpose all columns """
 
@@ -129,7 +131,7 @@ class Inspect:
             plot(self.varval[:, i])
         show()
 
-    @In_Thread
+    @threaded
     def plot1Dlines(self):
         """ Plot 2D variable : superimpose all lines """
 
