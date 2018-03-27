@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : ven. 23 mars 2018 16:06:05 CET
+# Last Modified : mar. 27 mars 2018 22:12:32 CEST
 """
 -----------
 DOCSTRING
@@ -30,11 +30,13 @@ DOCSTRING
 
 import curses
 import locale
+import abc
+
 
 code = locale.getpreferredencoding()
 
 
-class PadWin:
+class PadWin(abc.ABC):
     """ General Pad example """
 
     def __init__(self, app):
@@ -66,14 +68,9 @@ class PadWin:
         self.title = ' ' + 'Pad Test' + ' '
         self.content = self.create_content()
 
+    @abc.abstractmethod
     def create_content(self):
-        """ Create content of the pad """
-
-        content = [str(i) for i in range(50)]
-        content[0] = 'This is...'
-        content[1] = '... a very very long Example'
-
-        return content
+        """ Create content of the pad. Must return a list ! """
 
     def init_pad(self):
         """ Init Pad """

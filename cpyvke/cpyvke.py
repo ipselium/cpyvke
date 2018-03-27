@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : jeu. 22 mars 2018 17:27:47 CET
+# Last Modified : mar. 27 mars 2018 23:36:05 CEST
 """
 -----------
 DOCSTRING
@@ -138,7 +138,7 @@ def main(args=None):
 
     # Parse Config
     cfg = cfg_setup()
-    config = cfg.RunCfg()
+    config = cfg.run()
 
     # Define Paths
     logdir = os.path.expanduser('~') + '/.cpyvke/'

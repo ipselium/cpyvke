@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 27 mars 2018 00:29:27 CEST
+# Last Modified : mar. 27 mars 2018 22:52:17 CEST
 """
 -----------
 DOCSTRING
@@ -31,19 +31,20 @@ DOCSTRING
 import time
 import locale
 import curses
+import abc
 from curses import panel
 from math import ceil
 from cpyvke.curseswin.widgets import Help, WarningMsg
 from cpyvke.curseswin.prompt import Prompt
 from cpyvke.utils.kernel import restart_daemon
-from cpyvke.utils.display import format_cell, type_sort, filter_var_lst
+from cpyvke.utils.display import format_cell
 from cpyvke.utils.comm import send_msg
 
 
 code = locale.getpreferredencoding()
 
 
-class PanelWin:
+class PanelWin(abc.ABC):
     """ Generic Panel.
     Overload :
         * key_bindings
@@ -135,7 +136,7 @@ class PanelWin:
         self.gpan.hide()
 
     def custom_tasks(self):
-        """ Supplementary tasks [To overload] """
+        """ Supplementary tasks [To overload if needed] """
 
         pass
 
@@ -379,6 +380,31 @@ class PanelWin:
             self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), len(self.cell1),
                              self.cell2, curses.A_BOLD | self.c_txt)
 
+    @staticmethod
+    def filter_var_lst(lst, filt):
+        """ Filter variable list (name|type). """
+
+        filtered = []
+        for key in list(lst):
+            if filt in lst[key]['type'] or filt in key:
+                filtered.append(key)
+
+        return sorted(filtered)
+
+    @staticmethod
+    def type_sort(lst):
+        """ Sort variable by type. """
+
+        from operator import itemgetter
+
+        types = []
+        for key in list(lst):
+            types.append([key, lst[key]['type']])
+
+        types.sort(key=itemgetter(1))
+
+        return [item[0] for item in types]
+
     def arange_lst(self):
         """ Organize/Arange variable list. """
 
@@ -386,10 +412,10 @@ class PanelWin:
             self.strings = sorted(list(self.lst))
 
         elif self.mk_sort == 'type':
-            self.strings = type_sort(self.lst)
+            self.strings = self.type_sort(self.lst)
 
         elif self.mk_sort == 'filter' and self.filter:
-            self.strings = filter_var_lst(self.lst, self.filter)
+            self.strings = self.filter_var_lst(self.lst, self.filter)
             if not self.strings:
                 self.prompt_msg_setup('{} not found'.format(self.filter))
                 self.strings = sorted(list(self.lst))

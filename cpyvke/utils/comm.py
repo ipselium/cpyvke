@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : jeu. 01 mars 2018 15:09:06 CET
-# Last Modified : mar. 13 mars 2018 12:15:25 CET
+# Last Modified : mar. 27 mars 2018 23:22:52 CEST
 """
 -----------
 DOCSTRING
@@ -57,22 +57,3 @@ def recv_all(sock, n):
             return None
         data += packet
     return data
-
-
-def disp_id(data):
-    """ Display first seq of message id only """
-    return data['parent_header']['msg_id'].split('-')[0]
-
-
-def disp_data(data):
-    if data['msg_type'] == 'status':
-        dbg = '{} | status : {}'.format(disp_id(data), data['content']['execution_state'])
-    elif data['msg_type'] == 'execute_input':
-        dbg = '{} | code : {}'.format(disp_id(data), data['content']['code'])
-    elif data['msg_type'] == 'stream':
-        dbg = '{} | stream'.format(disp_id(data))
-    elif data['msg_type'] == 'error':
-        dbg = '{} | error : {}'.format(disp_id(data), data['content']['ename'])
-    else:
-        dbg = '{} {}'.format(disp_id(data), data['msg_type'])
-    return dbg

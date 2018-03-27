@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mer. 14 mars 2018 13:55:26 CET
+# Last Modified : mar. 27 mars 2018 23:36:21 CEST
 """
 -----------
 DOCSTRING
@@ -41,7 +41,7 @@ from jupyter_client import find_connection_file
 
 from .utils.kernel import init_kernel, connect_kernel, print_kernel_list, \
     start_new_kernel, is_kd_running, read_pid, find_lost_pid
-from .utils.comm import send_msg, recv_msg, disp_data
+from .utils.comm import send_msg, recv_msg
 from .utils.daemon3x import Daemon
 from .utils.config import cfg_setup
 
@@ -188,7 +188,7 @@ class Watcher(threading.Thread):
         self.msg = 0
         while self.kc.iopub_channel.msg_ready():
             data = self.kc.get_iopub_msg(timeout=0.1)
-            logger.debug('WATCHING : {}'.format(disp_data(data)))
+            logger.debug('WATCHING : {}'.format(self.disp_data(data)))
             self.msg = 1
             self.check_init(data)
 
@@ -213,12 +213,12 @@ class Watcher(threading.Thread):
             while self.kc.iopub_channel.msg_ready():
                 data = self.kc.get_iopub_msg()
                 if data['parent_header']['msg_id'] != msg_id:
-                    logger.debug('EXEC : PASS MSG : {}'.format(disp_data(data)))
+                    logger.debug('EXEC : PASS MSG : {}'.format(self.disp_data(data)))
                     self.check_init(data)
                     continue
                 else:
                     MSG_RECEIVED = True
-                    logger.debug('EXEC : PROCEED MSG : {}'.format(disp_data(data)))
+                    logger.debug('EXEC : PROCEED MSG : {}'.format(self.disp_data(data)))
                     if data['header']['msg_type'] == 'stream':
                         value = data['content']['text']
 
@@ -302,6 +302,25 @@ class Watcher(threading.Thread):
                 self.client_main = None
             else:
                 logger.info('Variable list sent to client')
+
+    @staticmethod
+    def disp_id(data):
+        """ Display first seq of message id only """
+        return data['parent_header']['msg_id'].split('-')[0]
+
+    @classmethod
+    def disp_data(cls, data):
+        if data['msg_type'] == 'status':
+            dbg = '{} | status : {}'.format(cls.disp_id(data), data['content']['execution_state'])
+        elif data['msg_type'] == 'execute_input':
+            dbg = '{} | code : {}'.format(cls.disp_id(data), data['content']['code'])
+        elif data['msg_type'] == 'stream':
+            dbg = '{} | stream'.format(cls.disp_id(data))
+        elif data['msg_type'] == 'error':
+            dbg = '{} | error : {}'.format(cls.disp_id(data), data['content']['ename'])
+        else:
+            dbg = '{} {}'.format(cls.disp_id(data), data['msg_type'])
+        return dbg
 
     def fetch_request(self):
         """ Listen to sock request :
@@ -535,7 +554,7 @@ def main(args=None):
     """ Main """
 
     cfg = cfg_setup()
-    Config = cfg.RunCfg()
+    Config = cfg.run()
 
     logdir = os.path.expanduser('~') + '/.cpyvke/'
     logfile = logdir + 'kd5.log'

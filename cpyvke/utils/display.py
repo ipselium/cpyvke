@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 12:01:45 CET
-# Last Modified : lun. 26 mars 2018 00:04:53 CEST
+# Last Modified : mar. 27 mars 2018 23:03:45 CEST
 """
 -----------
 DOCSTRING
@@ -32,7 +32,7 @@ import textwrap
 
 
 def str_reduce(msg, maxwidth):
-    """ Reduce a string if its length is greater than maxwidth """
+    """ Reduce a string with dots (...) if its length is greater than maxwidth """
 
     if len(msg) >= maxwidth:
         return msg[:maxwidth-3] + '...'
@@ -114,31 +114,6 @@ def dump(obj, nested_level=0, output=[]):
         output.append('%s%s' % (nested_level * spacing, obj))
 
     return output
-
-
-def filter_var_lst(lst, filt):
-    """ Filter variable list (name|type). """
-
-    filtered = []
-    for key in list(lst):
-        if filt in lst[key]['type'] or filt in key:
-            filtered.append(key)
-
-    return sorted(filtered)
-
-
-def type_sort(lst):
-    """ Sort variable by type. """
-
-    from operator import itemgetter
-
-    types = []
-    for key in list(lst):
-        types.append([key, lst[key]['type']])
-
-    types.sort(key=itemgetter(1))
-
-    return [item[0] for item in types]
 
 
 def format_cell(variables, name, screen_width):

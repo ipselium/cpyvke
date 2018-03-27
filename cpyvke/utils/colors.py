@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 14:48:27 CET
-# Last Modified : dim. 18 mars 2018 23:45:06 CET
+# Last Modified : mar. 27 mars 2018 23:05:59 CEST
 """
 -----------
 DOCSTRING
@@ -49,7 +49,7 @@ class Colors:
         self.explorer_colors()
         self.kernel_colors()
 
-    def eval_color(self, color):
+    def check_color(self, color):
         """ Check if a color is set to transparent. """
 
         if color == 'transparent':
@@ -70,10 +70,10 @@ class Colors:
         wgtxt = self.config['wg']['txt'].replace(' ', '').split(',')
         wgbdr = self.config['wg']['bdr'].replace(' ', '').split(',')
         try:
-            wgtxt_fg = self.eval_color(wgtxt[0])
-            wgtxt_bg = self.eval_color(wgtxt[1])
-            wgbdr_fg = self.eval_color(wgbdr[0])
-            wgbdr_bg = self.eval_color(wgbdr[1])
+            wgtxt_fg = self.check_color(wgtxt[0])
+            wgtxt_bg = self.check_color(wgtxt[1])
+            wgbdr_fg = self.check_color(wgbdr[0])
+            wgbdr_bg = self.check_color(wgbdr[1])
         except Exception as err:
             wgtxt_fg = curses.COLOR_RED
             wgtxt_bg = -1
@@ -93,14 +93,14 @@ class Colors:
         mnttl = self.config['mn']['ttl'].replace(' ', '').split(',')
         mnhh = self.config['mn']['hh'].replace(' ', '').split(',')
         try:
-            mntxt_fg = self.eval_color(mntxt[0])
-            mntxt_bg = self.eval_color(mntxt[1])
-            mnbdr_fg = self.eval_color(mnbdr[0])
-            mnbdr_bg = self.eval_color(mnbdr[1])
-            mnttl_fg = self.eval_color(mnttl[0])
-            mnttl_bg = self.eval_color(mnttl[1])
-            mnhh_fg = self.eval_color(mnhh[0])
-            mnhh_bg = self.eval_color(mnhh[1])
+            mntxt_fg = self.check_color(mntxt[0])
+            mntxt_bg = self.check_color(mntxt[1])
+            mnbdr_fg = self.check_color(mnbdr[0])
+            mnbdr_bg = self.check_color(mnbdr[1])
+            mnttl_fg = self.check_color(mnttl[0])
+            mnttl_bg = self.check_color(mnttl[1])
+            mnhh_fg = self.check_color(mnhh[0])
+            mnhh_bg = self.check_color(mnhh[1])
         except Exception as err:
             mntxt_fg = curses.COLOR_WHITE
             mntxt_bg = -1
@@ -117,14 +117,14 @@ class Colors:
         brco = self.config['br']['co'].replace(' ', '').split(',')
         brdco = self.config['br']['dco'].replace(' ', '').split(',')
         try:
-            brkn_fg = self.eval_color(brkn[0])
-            brkn_bg = self.eval_color(brkn[1])
-            brhlp_fg = self.eval_color(brhlp[0])
-            brhlp_bg = self.eval_color(brhlp[1])
-            brco_fg = self.eval_color(brco[0])
-            brco_bg = self.eval_color(brco[1])
-            brdco_fg = self.eval_color(brdco[0])
-            brdco_bg = self.eval_color(brdco[1])
+            brkn_fg = self.check_color(brkn[0])
+            brkn_bg = self.check_color(brkn[1])
+            brhlp_fg = self.check_color(brhlp[0])
+            brhlp_bg = self.check_color(brhlp[1])
+            brco_fg = self.check_color(brco[0])
+            brco_bg = self.check_color(brco[1])
+            brdco_fg = self.check_color(brdco[0])
+            brdco_bg = self.check_color(brdco[1])
         except Exception as err:
             brkn_fg = curses.COLOR_WHITE
             brkn_bg = -1
@@ -182,14 +182,14 @@ class Colors:
         xpttl = self.config['xp']['ttl'].replace(' ', '').split(',')
         xphh = self.config['xp']['hh'].replace(' ', '').split(',')
         try:
-            xptxt_fg = self.eval_color(xptxt[0])
-            xptxt_bg = self.eval_color(xptxt[1])
-            xpbdr_fg = self.eval_color(xpbdr[0])
-            xpbdr_bg = self.eval_color(xpbdr[1])
-            xpttl_fg = self.eval_color(xpttl[0])
-            xpttl_bg = self.eval_color(xpttl[1])
-            xphh_fg = self.eval_color(xphh[0])
-            xphh_bg = self.eval_color(xphh[1])
+            xptxt_fg = self.check_color(xptxt[0])
+            xptxt_bg = self.check_color(xptxt[1])
+            xpbdr_fg = self.check_color(xpbdr[0])
+            xpbdr_bg = self.check_color(xpbdr[1])
+            xpttl_fg = self.check_color(xpttl[0])
+            xpttl_bg = self.check_color(xpttl[1])
+            xphh_fg = self.check_color(xphh[0])
+            xphh_bg = self.check_color(xphh[1])
         except Exception as err:
             xptxt_fg = curses.COLOR_WHITE
             xptxt_bg = -1
@@ -221,20 +221,20 @@ class Colors:
         kndi = self.config['kn']['di'].replace(' ', '').split(',')
         knal = self.config['kn']['al'].replace(' ', '').split(',')
         try:
-            kntxt_fg = self.eval_color(kntxt[0])
-            kntxt_bg = self.eval_color(kntxt[1])
-            knbdr_fg = self.eval_color(knbdr[0])
-            knbdr_bg = self.eval_color(knbdr[1])
-            knttl_fg = self.eval_color(knttl[0])
-            knttl_bg = self.eval_color(knttl[1])
-            knhh_fg = self.eval_color(knhh[0])
-            knhh_bg = self.eval_color(knhh[1])
-            knco_fg = self.eval_color(knco[0])
-            knco_bg = self.eval_color(knco[1])
-            kndi_fg = self.eval_color(kndi[0])
-            kndi_bg = self.eval_color(kndi[1])
-            knal_fg = self.eval_color(knal[0])
-            knal_bg = self.eval_color(knal[1])
+            kntxt_fg = self.check_color(kntxt[0])
+            kntxt_bg = self.check_color(kntxt[1])
+            knbdr_fg = self.check_color(knbdr[0])
+            knbdr_bg = self.check_color(knbdr[1])
+            knttl_fg = self.check_color(knttl[0])
+            knttl_bg = self.check_color(knttl[1])
+            knhh_fg = self.check_color(knhh[0])
+            knhh_bg = self.check_color(knhh[1])
+            knco_fg = self.check_color(knco[0])
+            knco_bg = self.check_color(knco[1])
+            kndi_fg = self.check_color(kndi[0])
+            kndi_bg = self.check_color(kndi[1])
+            knal_fg = self.check_color(knal[0])
+            knal_bg = self.check_color(knal[1])
         except Exception as err:
             kntxt_fg = curses.COLOR_RED
             kntxt_bg = -1

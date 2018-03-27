@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : lun. 12 mars 2018 00:06:39 CET
+# Last Modified : mar. 27 mars 2018 23:35:29 CEST
 """
 -----------
 DOCSTRING
@@ -38,15 +38,6 @@ except ImportError:
     import configparser as ConfigParser
 
 
-def CheckDir(directory):
-    """ Check if dir exists. If not, create it."""
-
-    if os.path.isdir(directory) is False:
-        os.makedirs(directory)
-        print("Create directory :", directory)
-        sleep(0.5)
-
-
 class cfg_setup:
     """ Handle configuration file. """
 
@@ -56,21 +47,27 @@ class cfg_setup:
         self.home = os.path.expanduser("~")
         self.path = self.home + '/.cpyvke/'
         # Check if config dir exists. If not create it.
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
-            print("Create configuration directory :", self.path)
+        self.check_dir(self.path)
+
+    @staticmethod
+    def check_dir(directory):
+        """ Check if dir exists. If not, create it."""
+
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
+            print("Create directory :", directory)
             sleep(0.5)
 
-    def InitCfg(self):
+    def init_cfg(self):
         """ Check if cpyvke.conf exists. If not create it. """
 
         if os.path.exists(self.path + 'cpyvke.conf') is False:
             open(self.path + 'cpyvke.conf', 'a').close()
             print("Create configuration file : {}cpyvke.conf".format(self.path))
             sleep(0.5)
-            self.WriteConfig()
+            self.write_config()
 
-    def WriteConfig(self):
+    def write_config(self):
         """ Write configuration file. """
 
         self.cfg.add_section('main colors')
@@ -123,31 +120,23 @@ class cfg_setup:
         with open(self.path + 'cpyvke.conf', 'w') as configfile:
             self.cfg.write(configfile)
 
-    def InitSaveDir(self):
-        """ Check|create configuration directories. """
-
-        if os.path.exists(self.SaveDir) is False:
-            os.makedirs(self.SaveDir)
-            print("Create save directory :", self.SaveDir)
-            sleep(0.5)
-
-    def RunCfg(self):
+    def run(self):
         """ Run configuration. """
 
         try:
             # Check if config file exist. If not create it
-            self.InitCfg()
+            self.init_cfg()
             # Read config file
             self.cfg.read(self.path + 'cpyvke.conf')
 
-            # SaveDir
+            # save_dir
             if self.cfg.has_option('path', 'save-dir'):
-                self.SaveDir = self.cfg.get('path', 'save-dir')
-                self.SaveDir = self.SaveDir.replace('$HOME', self.home)
-                if self.SaveDir[-1] != '/':
-                    self.SaveDir = self.SaveDir + '/'
+                self.save_dir = self.cfg.get('path', 'save-dir')
+                self.save_dir = self.save_dir.replace('$HOME', self.home)
+                if self.save_dir[-1] != '/':
+                    self.save_dir = self.save_dir + '/'
             else:
-                self.SaveDir = self.path + 'save/'
+                self.save_dir = self.path + 'save/'
 
             # FONT
             if self.cfg.has_option('font', 'powerline-font'):
@@ -310,7 +299,7 @@ class cfg_setup:
                                   'hlp': br_hlp,
                                   'co': br_co,
                                   'dco': br_dco},
-                           'path': {'save-dir': self.SaveDir},
+                           'path': {'save-dir': self.save_dir},
                            'font': {'pw-font': pwf},
                            'kernel version': {'version': kver},
                            'comm': {'s-port': sport,
@@ -318,7 +307,7 @@ class cfg_setup:
                            'daemon': {'refresh': delay}}
 
             # Init save Directory
-            self.InitSaveDir()
+            self.check_dir(self.save_dir)
 
             return self.Config
 

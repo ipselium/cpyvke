@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : lun. 19 mars 2018 14:18:03 CET
-# Last Modified : lun. 19 mars 2018 16:24:10 CET
+# Last Modified : mar. 27 mars 2018 23:36:45 CEST
 """
 -----------
 DOCSTRING
@@ -39,7 +39,7 @@ from cpyvke.utils.comm import recv_msg
 from cpyvke.utils.display import whos_to_dic
 
 cfg = cfg_setup()
-config = cfg.RunCfg()
+config = cfg.run()
 
 logdir = os.path.expanduser('~') + '/.cpyvke/'
 logfile = logdir + 'cpyvke.log'
