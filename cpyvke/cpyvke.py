@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 28 mars 2018 16:40:04 CEST
+# Last Modified : mer. 28 mars 2018 22:08:52 CEST
 """
 -----------
 DOCSTRING
@@ -53,9 +53,9 @@ def init_cf(lockfile):
     """ Init connection file. """
 
     with open(lockfile, 'r') as f:
-        kernel_id = f.readline()
+        kid = f.readline()
 
-    return find_connection_file(kernel_id)
+    return find_connection_file(kid)
 
 
 def with_daemon(lockfile, pidfile, cmd):
@@ -69,7 +69,7 @@ def with_daemon(lockfile, pidfile, cmd):
     return init_cf(lockfile)
 
 
-def parse_args(lockfile, pidfile, lastfile):
+def parse_args(lockfile, pidfile):
     """ Parse Arguments. """
 
     parser = argparse.ArgumentParser()
@@ -99,7 +99,7 @@ def parse_args(lockfile, pidfile, lastfile):
             if args.integer:
                 message = 'Daemon is already running. Dropping argument {}\n'
                 sys.stderr.write(message.format(args.integer))
-                time.sleep(2)
+                time.sleep(1.5)
 
     elif args.integer:
         if args.integer == 'last':
@@ -133,7 +133,6 @@ def main(args=None):
     lockfile = logdir + 'kd5.lock'
     pidfile = logdir + 'kd5.pid'
     logfile = logdir + 'cpyvke.log'
-    lastfile = logdir + 'kd5.last'
 
     # Logger
     logger = logging.getLogger("cpyvke")
@@ -148,7 +147,7 @@ def main(args=None):
     logger.addHandler(handler)
 
     # Parse arguments
-    args, cf = parse_args(lockfile, pidfile, lastfile)
+    args, cf = parse_args(lockfile, pidfile)
 
     # Init kernel
     km, kc = connect_kernel(cf)

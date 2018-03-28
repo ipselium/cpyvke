@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : mer. 28 mars 2018 16:26:39 CEST
+# Last Modified : mer. 28 mars 2018 21:59:36 CEST
 """
 -----------
 DOCSTRING
@@ -69,9 +69,9 @@ def is_kd_running(pidfile):
 
 
 def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
-    """ Start a new kernel and return the kernel_id """
+    """ Start a new kernel and return the kernel id """
 
-    with open(LogDir + 'LastKernel', "w") as f:
+    with open(LogDir + 'kd5.lock', "w") as f:
         if version == '2':
             subprocess.Popen(["ipython", "kernel"], stdout=f)
         else:
@@ -79,15 +79,15 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
 
     time.sleep(1)
 
-    with open(LogDir + 'LastKernel', "r") as f:
-        kernel_id = f.read().split('kernel-')[1].split('.json')[0]
+    with open(LogDir + 'kd5.lock', "r") as f:
+        kid = f.read().split('kernel-')[1].split('.json')[0]
 
-    with open(LogDir + 'LastKernel', "w") as f:
-        f.write(kernel_id)
+    with open(LogDir + 'kd5.lock', "w") as f:
+        f.write(kid)
 
-    logger.info('Create :: Kernel id. {}'.format(kernel_id))
+    logger.info('Create :: Kernel id. {}'.format(kid))
 
-    return kernel_id
+    return kid
 
 
 def is_runing(cf):
@@ -131,8 +131,8 @@ def is_open(ip, port):
         return False
 
 
-def kernel_id(cf):
-    return cf.split('-')[1].split('.')[0]
+def set_kid(cf):
+    return cf.split('kernel-')[1].split('.json')[0]
 
 
 def kernel_list(cf=None):
@@ -159,7 +159,7 @@ def kernel_dic(cf=None):
     lstk = [path + item for item in os.listdir(path) if 'kernel' in item]
 
     try:
-        return {kernel_id(item): {'value': item, 'type': 'Connected'} if is_runing(item) and item == cf
+        return {set_kid(item): {'value': item, 'type': 'Connected'} if is_runing(item) and item == cf
                 else {'value': item, 'type': 'Alive'} if is_runing(item)
                 else {'value': item, 'type': 'Died'} for item in lstk}
     except Exception:

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mer. 28 mars 2018 15:55:59 CEST
+# Last Modified : mer. 28 mars 2018 22:03:10 CEST
 """
 -----------
 DOCSTRING
@@ -41,7 +41,7 @@ from logging.handlers import RotatingFileHandler
 from jupyter_client import find_connection_file
 
 from .utils.kernel import init_kernel, connect_kernel, print_kernel_list, \
-    start_new_kernel, is_kd_running, find_lost_pid
+    start_new_kernel, is_kd_running, find_lost_pid, set_kid
 from .utils.comm import send_msg, recv_msg
 from .utils.daemon3x import Daemon
 from .utils.config import cfg_setup
@@ -264,24 +264,21 @@ class Watcher(threading.Thread):
     def kernel_change(self, cf):
         """ Watch kernel changes """
 
-        old_id = self.kc.connection_file.split('/')[-1]
+        old_id = set_kid(self.kc.connection_file)
         _, self.kc = connect_kernel(cf)
-        new_id = self.kc.connection_file.split('/')[-1]
+        new_id = set_kid(self.kc.connection_file)
 
         # Update kd5.last kd5.lock files
-        self.update_files(new_id)
+        self.update_lockfile(new_id)
         logger.info('Kernel change from {} to {}'.format(old_id, new_id))
 
         # Force kernel update
         self.send_variables()
 
-    def update_files(self, new_id):
+    def update_lockfile(self, new_id):
         """ Update last and lock files """
 
         LogDir = os.path.expanduser("~") + "/.cpyvke/"
-
-        with open(LogDir + 'kd5.last', 'w') as f:
-            f.write(new_id)
 
         with open(LogDir + 'kd5.lock', 'w') as f:
             f.write(new_id)
@@ -388,7 +385,7 @@ class Daemonize(Daemon):
         WK.join()
 
 
-def parse_args(lockfile, pidfile, lastfile, Config):
+def parse_args(lockfile, pidfile, Config):
     """ Parse arguments. """
 
     parser = argparse.ArgumentParser()
@@ -407,15 +404,15 @@ def parse_args(lockfile, pidfile, lastfile, Config):
             sys.stderr.write("Cannot start new instance of kd5.\n")
             sys.exit(1)
         else:
-            kernel_id = start_action(args, lockfile, lastfile, Config)
+            kid = start_action(args, lockfile, Config)
 
     # restart action
     elif args.action == 'restart':
-        kernel_id = restart_action(pidfile, lockfile)
+        kid = restart_action(pidfile, lockfile)
 
     # Stop action
     elif args.action == 'stop':
-        kernel_id = stop_action(pidfile, lockfile)
+        kid = stop_action(pidfile, lockfile)
 
     # List action
     elif args.action == 'list':
@@ -427,52 +424,51 @@ def parse_args(lockfile, pidfile, lastfile, Config):
         status_action(pidfile, lockfile)
         sys.exit(0)
 
-    return args, kernel_id
+    return args, kid
 
 
-def start_action(args, lockfile, lastfile, Config):
+def start_action(args, lockfile, Config):
     """ Start Parser action. """
 
     if args.integer:
 
         try:
-            kernel_id = str(args.integer)
-            find_connection_file(kernel_id)
+            kid = str(args.integer)
+            find_connection_file(kid)
         except OSError:
             message = '{}Error :\t{}Cannot find kernel id. {} !\n\tExiting\n'
             sys.stderr.write(message.format(RED, RESET, args.integer))
             sys.exit(1)
         else:
             message = 'Connecting to kernel id. {}\n'
-            sys.stdout.write(message.format(kernel_id))
+            sys.stdout.write(message.format(kid))
 
     elif args.action == 'last':
-        kernel_id = kdread(lastfile)
-        if kernel_id:
+        kid = kdread(lockfile)
+        if kid:
             message = 'Connecting to kernel id. {}\n'
-            sys.stdout.write(message.format(kernel_id))
+            sys.stdout.write(message.format(kid))
         else:
             sys.exit(1)
 
     else:
         sys.stdout.write('Creating new kernel...\n')
-        kernel_id = start_new_kernel(version=Config['kernel version']['version'])
+        kid = start_new_kernel(version=Config['kernel version']['version'])
         message = 'Kernel id {} created (Python {})\n'
-        sys.stdout.write(message.format(kernel_id, Config['kernel version']['version']))
+        sys.stdout.write(message.format(kid, Config['kernel version']['version']))
 
-    kdwrite(lockfile, kernel_id)
-    kdwrite(lastfile, kernel_id)
+    kdwrite(lockfile, kid)
 
-    return kernel_id
+    return kid
 
 
 def restart_action(pidfile, lockfile):
     """ Prepare restart action """
 
-    actual_pid = status_pid(pidfile)
-    kernel_id = status_lock(lockfile)
-    if actual_pid and kernel_id:
-        return kernel_id
+    current_pid = status_pid(pidfile)
+    kid = status_lock(lockfile)
+    if current_pid and kid:
+        return kid
     else:
         sys.stdout.write('Cannot restart kd5.\n')
         sys.exit(1)
@@ -481,20 +477,19 @@ def restart_action(pidfile, lockfile):
 def stop_action(pidfile, lockfile):
     """ Prepare stop action """
 
-    actual_pid = status_pid(pidfile)
-    kernel_id = status_lock(lockfile)
-    if actual_pid:
-        if kernel_id:
+    current_pid = status_pid(pidfile)
+    kid = status_lock(lockfile)
+    if current_pid:
+        if kid:
             message = 'Disconnecting from kernel id. {}\n'
-            os.remove(lockfile)
-            sys.stdout.write(message.format(kernel_id))
-            return kernel_id
+            sys.stdout.write(message.format(kid))
+            return kid
         else:
             message = 'SIGTERM sent to kd5\n'
-            p = psutil.Process(int(actual_pid))
+            p = psutil.Process(int(current_pid))
             p.terminate()
             os.remove(pidfile)
-            sys.stdout.write(message.format(kernel_id))
+            sys.stdout.write(message.format(kid))
             sys.exit(1)
     else:
         sys.exit(1)
@@ -548,7 +543,7 @@ def status_lock(lockfile):
 
 
 def kdread(cfile):
-    """ read lockfile | pidfile | lastfile """
+    """ read lockfile | pidfile """
 
     if os.path.exists(cfile):
         with open(cfile, "r") as f:
@@ -560,7 +555,7 @@ def kdread(cfile):
 
 
 def kdwrite(cfile, content):
-    """ write lockfile | pidfile | lastfile """
+    """ write lockfile | pidfile """
 
     with open(cfile, "w") as f:
         f.write(content)
@@ -575,7 +570,6 @@ def main(args=None):
     logdir = os.path.expanduser('~') + '/.cpyvke/'
     logfile = logdir + 'kd5.log'
     lockfile = logdir + 'kd5.lock'
-    lastfile = logdir + 'kd5.last'
     pidfile = logdir + 'kd5.pid'
 
     # Logger
@@ -590,13 +584,13 @@ def main(args=None):
     logger.addHandler(handler)
 
     # Parse Arguments
-    args, kernel_id = parse_args(lockfile, pidfile, lastfile, Config)
+    args, kid = parse_args(lockfile, pidfile, Config)
 
     sport = int(Config['comm']['s-port'])
     rport = int(Config['comm']['r-port'])
     delay = float(Config['daemon']['refresh'])
 
-    WatchConf = {'cf': find_connection_file(kernel_id),
+    WatchConf = {'cf': find_connection_file(kid),
                  'delay': delay,
                  'sport': sport,
                  'rport': rport}

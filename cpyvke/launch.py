@@ -20,7 +20,7 @@
 #
 #
 # Creation Date :
-# Last Modified : lun. 12 mars 2018 23:26:45 CET
+# Last Modified : mer. 28 mars 2018 17:20:28 CEST
 """
 -----------
 DOCSTRING
@@ -41,9 +41,9 @@ def main():
 
     if os.path.exists(lockfile):
         with open(lockfile, 'r') as f:
-            kernel_id = f.readline()
+            kid = f.readline()
 
-        cmd = 'jupyter console --existing kernel-{}.json'.format(kernel_id)
+        cmd = 'jupyter console --existing kernel-{}.json'.format(kid)
         os.system(cmd)
 
     else:
