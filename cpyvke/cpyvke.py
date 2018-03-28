@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 28 mars 2018 16:23:48 CEST
+# Last Modified : mer. 28 mars 2018 16:40:04 CEST
 """
 -----------
 DOCSTRING
@@ -43,6 +43,7 @@ from cpyvke.utils.config import cfg_setup
 from cpyvke.utils.kernel import connect_kernel, print_kernel_list
 from cpyvke.utils.sockets import SocketManager
 from cpyvke.utils.term_colors import RED, RESET
+from cpyvke.kd5 import kdread
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
@@ -87,11 +88,18 @@ def parse_args(lockfile, pidfile, lastfile):
         sys.exit(0)
 
     elif os.path.exists(lockfile) and os.path.exists(pidfile):
-        cf = init_cf(lockfile)
-        if args.integer:
-            message = 'Daemon is already running. Dropping argument {}\n'
-            sys.stderr.write(message.format(args.integer))
-            time.sleep(2)
+        try:
+            cf = init_cf(lockfile)
+        except OSError:
+            message = '{}Error :{}\tCannot find kernel id. {} !\n\tRemoving lock file.\n'
+            sys.stderr.write(message.format(RED, RESET, kdread(lockfile)))
+            os.remove(lockfile)
+            sys.exit(1)
+        else:
+            if args.integer:
+                message = 'Daemon is already running. Dropping argument {}\n'
+                sys.stderr.write(message.format(args.integer))
+                time.sleep(2)
 
     elif args.integer:
         if args.integer == 'last':
