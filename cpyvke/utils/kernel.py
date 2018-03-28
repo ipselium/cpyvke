@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : mer. 28 mars 2018 21:59:36 CEST
+# Last Modified : mer. 28 mars 2018 23:08:44 CEST
 """
 -----------
 DOCSTRING
@@ -38,34 +38,6 @@ import socket
 import time
 
 logger = logging.getLogger("cpyvke.ktools")
-
-
-def find_lost_pid():
-    cur_pid = os.getpid()
-    pids = []
-    for proc in psutil.process_iter():
-        pinfo = proc.as_dict(attrs=['pid', 'name'])
-        if pinfo['name'] == 'kd5' and pinfo['pid'] != cur_pid:
-            pids.append(pinfo['pid'])
-    return pids
-
-
-def read_pid(pidfile):
-    """ Read the pid in pidfile """
-
-    with open(pidfile, 'r') as f:
-        pid = int(f.read())
-    return pid
-
-
-def is_kd_running(pidfile):
-    """ Check if process with pid (in pidfile) is actually running"""
-
-    pid = read_pid(pidfile)
-    if psutil.pid_exists(pid):
-        return True
-    else:
-        return False
 
 
 def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
@@ -237,10 +209,6 @@ def init_kernel(kc, backend='tk'):
     kc.execute("_np.set_printoptions(threshold='nan')", store_history=False)
     kc.execute("%matplotlib {}".format(backend), store_history=False)
     kc.execute("import cpyvke.utils.inspector as _inspect", store_history=False)
-
-
-def restart_daemon():
-    subprocess.Popen(["kd5", "restart"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def shutdown_kernel(cf):

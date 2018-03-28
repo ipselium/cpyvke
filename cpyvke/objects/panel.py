@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 27 mars 2018 22:52:17 CEST
+# Last Modified : mer. 28 mars 2018 23:12:01 CEST
 """
 -----------
 DOCSTRING
@@ -36,7 +36,7 @@ from curses import panel
 from math import ceil
 from cpyvke.curseswin.widgets import Help, WarningMsg
 from cpyvke.curseswin.prompt import Prompt
-from cpyvke.utils.kernel import restart_daemon
+from cpyvke.utils.kd import restart_daemon
 from cpyvke.utils.display import format_cell
 from cpyvke.utils.comm import send_msg
 

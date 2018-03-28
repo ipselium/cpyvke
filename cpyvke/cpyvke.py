@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 28 mars 2018 22:08:52 CEST
+# Last Modified : jeu. 29 mars 2018 00:02:21 CEST
 """
 -----------
 DOCSTRING
@@ -41,9 +41,9 @@ from cpyvke.curseswin.app import InitApp
 from cpyvke.curseswin.mainwin import MainWin
 from cpyvke.utils.config import cfg_setup
 from cpyvke.utils.kernel import connect_kernel, print_kernel_list
+from cpyvke.utils.kd import kd_status
 from cpyvke.utils.sockets import SocketManager
 from cpyvke.utils.term_colors import RED, RESET
-from cpyvke.kd5 import kdread
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
@@ -69,6 +69,16 @@ def with_daemon(lockfile, pidfile, cmd):
     return init_cf(lockfile)
 
 
+def no_lock_exit():
+    """ If no kd5.lock ! """
+
+    message = '{}Error :{}\tCannot find kd5.lock !\n\tFixing issues shutting down kd5...\n'
+    sys.stderr.write(message.format(RED, RESET))
+    os.system('kd5 stop')
+    sys.stderr.write("You can now restart cpyvke!\n")
+    sys.exit(1)
+
+
 def parse_args(lockfile, pidfile):
     """ Parse Arguments. """
 
@@ -83,37 +93,40 @@ def parse_args(lockfile, pidfile):
 
     args = parser.parse_args()
 
+    pid = kd_status(pidfile)
+
     if args.list:
         print_kernel_list()
         sys.exit(0)
 
-    elif os.path.exists(lockfile) and os.path.exists(pidfile):
-        try:
-            cf = init_cf(lockfile)
-        except OSError:
-            message = '{}Error :{}\tCannot find kernel id. {} !\n\tRemoving lock file.\n'
-            sys.stderr.write(message.format(RED, RESET, kdread(lockfile)))
-            os.remove(lockfile)
-            sys.exit(1)
-        else:
-            if args.integer:
-                message = 'Daemon is already running. Dropping argument {}\n'
-                sys.stderr.write(message.format(args.integer))
-                time.sleep(1.5)
+    elif os.path.exists(lockfile) and pid:
+        cf = init_cf(lockfile)
+        if args.integer:
+            message = 'Daemon is already running. Dropping argument {}\n'
+            sys.stderr.write(message.format(args.integer))
+            time.sleep(1.5)
+
+    elif not os.path.exists(lockfile) and pid:
+        no_lock_exit()
+
+    elif args.integer == 'last' and not os.path.exists(lockfile):
+        no_lock_exit()
+
+    elif args.integer == 'last' and os.path.exists(lockfile):
+        cmd = 'kd5 last'
+        cf = with_daemon(lockfile, pidfile, cmd)
 
     elif args.integer:
-        if args.integer == 'last':
-            cmd = 'kd5 last'
+        try:
+            find_connection_file(str(args.integer))
+        except OSError:
+            message = '{}Error :{}\tCannot find kernel id. {} !\n\tExiting\n'
+            sys.stderr.write(message.format(RED, RESET, args.integer))
+            sys.exit(1)
         else:
-            try:
-                find_connection_file(str(args.integer))
-            except OSError:
-                message = '{}Error :{}\tCannot find kernel id. {} !\n\tExiting\n'
-                sys.stderr.write(message.format(RED, RESET, args.integer))
-                sys.exit(1)
-            else:
-                cmd = 'kd5 start ' + str(args.integer)
+            cmd = 'kd5 start ' + str(args.integer)
         cf = with_daemon(lockfile, pidfile, cmd)
+
     else:
         cmd = 'kd5 start'
         cf = with_daemon(lockfile, pidfile, cmd)

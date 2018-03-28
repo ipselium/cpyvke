@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : mer. 28 mars 2018 22:03:10 CEST
+# Last Modified : mer. 28 mars 2018 23:10:50 CEST
 """
 -----------
 DOCSTRING
@@ -41,7 +41,8 @@ from logging.handlers import RotatingFileHandler
 from jupyter_client import find_connection_file
 
 from .utils.kernel import init_kernel, connect_kernel, print_kernel_list, \
-    start_new_kernel, is_kd_running, find_lost_pid, set_kid
+    start_new_kernel, set_kid
+from .utils.kd import is_kd_running, find_lost_pid
 from .utils.comm import send_msg, recv_msg
 from .utils.daemon3x import Daemon
 from .utils.config import cfg_setup
