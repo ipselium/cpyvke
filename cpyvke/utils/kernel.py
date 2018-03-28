@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov 4 21:49:15 2016
-# Last Modified : lun. 26 mars 2018 23:14:56 CEST
+# Last Modified : mer. 28 mars 2018 16:26:39 CEST
 """
 -----------
 DOCSTRING
@@ -30,13 +30,12 @@ DOCSTRING
 
 
 from jupyter_client import BlockingKernelClient, manager
-from time import sleep
 import os
 import subprocess
 import psutil
 import logging
 import socket
-
+import time
 
 logger = logging.getLogger("cpyvke.ktools")
 
@@ -78,13 +77,17 @@ def start_new_kernel(LogDir=os.path.expanduser("~") + "/.cpyvke/", version=3):
         else:
             subprocess.Popen(["ipython3", "kernel"], stdout=f)
 
-    sleep(1)
+    time.sleep(1)
+
     with open(LogDir + 'LastKernel', "r") as f:
-        stdout = f.read()
+        kernel_id = f.read().split('kernel-')[1].split('.json')[0]
 
-    logger.info('Create :: %s', stdout.split('\n')[-2])
+    with open(LogDir + 'LastKernel', "w") as f:
+        f.write(kernel_id)
 
-    return stdout.split('kernel-')[1].split('.json')[0]
+    logger.info('Create :: Kernel id. {}'.format(kernel_id))
+
+    return kernel_id
 
 
 def is_runing(cf):
@@ -174,10 +177,7 @@ def print_kernel_list():
         print('{:^79}'.format('Last run of the daemon may have quit prematurely.'))
     else:
         for item in klst:
-            if item == klst[-1]:
-                print('{0[0]:71}{0[1]:>8}'.format(item))
-            else:
-                print('{0[0]:71}{0[1]:>8}\n'.format(item))
+            print('{0[0]:71}{0[1]:>8}'.format(item))
     print(79*'-')
 
 
@@ -240,8 +240,7 @@ def init_kernel(kc, backend='tk'):
 
 
 def restart_daemon():
-    with open(os.devnull, 'w') as f:
-        subprocess.Popen(["kd5", "restart"], stdout=f)
+    subprocess.Popen(["kd5", "restart"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def shutdown_kernel(cf):

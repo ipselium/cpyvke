@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : mer. 28 mars 2018 00:20:18 CEST
+# Last Modified : mer. 28 mars 2018 16:23:48 CEST
 """
 -----------
 DOCSTRING
@@ -33,7 +33,7 @@ import sys
 import locale
 import logging
 import argparse
-from time import sleep
+import time
 from jupyter_client import find_connection_file
 from logging.handlers import RotatingFileHandler
 
@@ -42,12 +42,13 @@ from cpyvke.curseswin.mainwin import MainWin
 from cpyvke.utils.config import cfg_setup
 from cpyvke.utils.kernel import connect_kernel, print_kernel_list
 from cpyvke.utils.sockets import SocketManager
+from cpyvke.utils.term_colors import RED, RESET
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-def init_cf(lockfile, pidfile):
+def init_cf(lockfile):
     """ Init connection file. """
 
     with open(lockfile, 'r') as f:
@@ -62,12 +63,12 @@ def with_daemon(lockfile, pidfile, cmd):
     os.system(cmd)
 
     while os.path.exists(pidfile) is False:
-        sleep(0.1)
+        time.sleep(0.1)
 
-    return init_cf(lockfile, pidfile)
+    return init_cf(lockfile)
 
 
-def parse_args(lockfile, pidfile):
+def parse_args(lockfile, pidfile, lastfile):
     """ Parse Arguments. """
 
     parser = argparse.ArgumentParser()
@@ -75,62 +76,41 @@ def parse_args(lockfile, pidfile):
     parser.add_argument("-L", "--list", help="List all kernels",
                         action="store_true")
     parser.add_argument("integer", help="Start up with existing kernel. \
-                        INTEGER is the id of the connection file.",
+                        INTEGER is the id of the connection file. \
+                        INTEGER can also be the keyword 'last' for 'last kernel'",
                         nargs='?')
 
     args = parser.parse_args()
 
     if args.list:
         print_kernel_list()
-        sys.exit(2)
+        sys.exit(0)
 
     elif os.path.exists(lockfile) and os.path.exists(pidfile):
-
-        try:
-            cf = init_cf(lockfile, pidfile)
-        except FileNotFoundError:
-            missing(lockfile, pidfile)
-            sys.exit(2)
+        cf = init_cf(lockfile)
+        if args.integer:
+            message = 'Daemon is already running. Dropping argument {}\n'
+            sys.stderr.write(message.format(args.integer))
+            time.sleep(2)
 
     elif args.integer:
-
         if args.integer == 'last':
             cmd = 'kd5 last'
         else:
             try:
                 find_connection_file(str(args.integer))
-            except FileNotFoundError:
-                message = 'Error :\tCannot find kernel id. {} !\n\tExiting\n'
-                sys.stderr.write(message.format(args.integer))
-                sys.exit(2)
-
-            cmd = 'kd5 start ' + str(args.integer)
-
+            except OSError:
+                message = '{}Error :{}\tCannot find kernel id. {} !\n\tExiting\n'
+                sys.stderr.write(message.format(RED, RESET, args.integer))
+                sys.exit(1)
+            else:
+                cmd = 'kd5 start ' + str(args.integer)
         cf = with_daemon(lockfile, pidfile, cmd)
-
     else:
-
         cmd = 'kd5 start'
         cf = with_daemon(lockfile, pidfile, cmd)
 
     return args, cf
-
-
-def missing(lockfile, pidfile):
-    """ Fix missing connection file. """
-
-    print('An old lock file already exists, but the kernel connection file is missing.')
-    print('As this issue is not fixed, cpyvke cannot run.')
-    rm_lock = input('Remove the old lock file ? [y|n] : ')
-
-    if rm_lock == 'y':
-        os.remove(lockfile)
-        os.remove(pidfile)
-        print('You can now restart cpyvke.')
-    elif rm_lock == 'n':
-        print('Exiting...')
-    else:
-        print('Wrong choice. exiting... ')
 
 
 def main(args=None):
@@ -145,6 +125,7 @@ def main(args=None):
     lockfile = logdir + 'kd5.lock'
     pidfile = logdir + 'kd5.pid'
     logfile = logdir + 'cpyvke.log'
+    lastfile = logdir + 'kd5.last'
 
     # Logger
     logger = logging.getLogger("cpyvke")
@@ -159,7 +140,7 @@ def main(args=None):
     logger.addHandler(handler)
 
     # Parse arguments
-    args, cf = parse_args(lockfile, pidfile)
+    args, cf = parse_args(lockfile, pidfile, lastfile)
 
     # Init kernel
     km, kc = connect_kernel(cf)
