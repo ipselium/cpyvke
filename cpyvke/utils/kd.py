@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mer. 28 mars 2018 23:07:12 CEST
-# Last Modified : mer. 28 mars 2018 23:37:41 CEST
+# Last Modified : jeu. 29 mars 2018 00:09:09 CEST
 """
 -----------
 DOCSTRING
@@ -29,6 +29,7 @@ DOCSTRING
 """
 
 import os
+import sys
 import psutil
 import subprocess
 
@@ -68,6 +69,25 @@ def read_pid(pidfile):
     with open(pidfile, 'r') as f:
         pid = int(f.read())
     return pid
+
+
+def kdread(cfile):
+    """ read lockfile | pidfile """
+
+    if os.path.exists(cfile):
+        with open(cfile, "r") as f:
+            return f.readline().replace('\n', '')
+    else:
+        message = 'Error :\tCannot find {} !\n\tExiting\n'
+        sys.stderr.write(message.format(cfile))
+        return None
+
+
+def kdwrite(cfile, content):
+    """ write lockfile | pidfile """
+
+    with open(cfile, "w") as f:
+        f.write(content)
 
 
 def is_kd_running(pidfile):
