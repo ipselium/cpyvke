@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : dim. 25 mars 2018 23:11:21 CEST
+# Last Modified : jeu. 29 mars 2018 23:38:17 CEST
 """
 -----------
 DOCSTRING
@@ -34,35 +34,47 @@ import locale
 from cpyvke.curseswin.explorermenu import ExplorerMenu
 from cpyvke.utils.display import whos_to_dic
 from cpyvke.utils.comm import recv_msg
-from cpyvke.objects.panel import PanelWin
+from cpyvke.objects.panel import ListPanel
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-class ExplorerWin(PanelWin):
-    """ Main window. """
+class ExplorerWin(ListPanel):
+    """ Variable explorer panel """
 
     def __init__(self, app, sock, logger):
-        """ Main window constructor """
-
         super(ExplorerWin, self).__init__(app, sock, logger)
 
-        # Various Variables :
-        self.win_title = "Variable Explorer"
-        self.empty_dic = "Interactive namespace is empty"
-        self.wng_msg = ""
-        self.panel_name = 'variable-explorer'
+    @property
+    def panel_name(self):
+        return 'variable-explorer'
 
-        # Init Variable Box
-        self.gwin.bkgd(self.app.c_exp_txt)
-        self.gwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # border color
+    @property
+    def title(self):
+        return 'Variable Explorer'
+
+    @property
+    def empty(self):
+        return 'Interactive namespace is empty'
+
+    def color(self, item):
+        if item == 'txt':
+            return self.app.c_exp_txt
+        elif item == 'bdr':
+            return self.app.c_exp_bdr | curses.A_BOLD
+        elif item == 'ttl':
+            return self.app.c_exp_ttl | curses.A_BOLD
+        elif item == 'hh':
+            return self.app.c_exp_hh | curses.A_BOLD
+        elif item == 'pwf':
+            return self.app.c_exp_pwf | curses.A_BOLD
 
     def custom_tasks(self):
         """ Additional Explorer tasks """
 
         # Update variable number in bottom bar:
-        self.app.var_nb = len(self.lst)
+        self.app.var_nb = len(self.item_lst)
 
     def custom_key_bindings(self):
         """ Key Actions ! """
@@ -73,7 +85,7 @@ class ExplorerWin(PanelWin):
 
         # Force Update Variable List sending fake code to daemon
         elif self.pkey == 114:   # -> r
-            self.sock.force_update(self.wng)
+            self.sock.force_update(self.app.wng)
 
     def get_items(self):
         """ Get variable from the daemon """
@@ -88,16 +100,16 @@ class ExplorerWin(PanelWin):
             pass
         else:
             if tmp:
-                self.lst = whos_to_dic(tmp)
+                self.item_lst = whos_to_dic(tmp)
                 self.logger.info('Variable list updated')
                 self.logger.debug('\n%s', tmp)
                 try:
                     # remove temporary file used by daemon from the list
-                    del self.lst['fcpyvke0']
+                    del self.item_lst['fcpyvke0']
                 except KeyError:
                     pass
 
-        return self.lst
+        return self.item_lst
 
     def init_menu(self):
         """ Init variable menu """

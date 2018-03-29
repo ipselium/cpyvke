@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 27 mars 2018 01:03:13 CEST
+# Last Modified : jeu. 29 mars 2018 17:50:44 CEST
 """
 -----------
 DOCSTRING
@@ -34,14 +34,15 @@ import locale
 
 from cpyvke.curseswin.kernelwin import KernelWin
 from cpyvke.curseswin.explorerwin import ExplorerWin
-from cpyvke.objects.panel import PanelWin
+from cpyvke.curseswin.widgets import WarningMsg
+from cpyvke.objects.panel import BasePanel
 from cpyvke.utils.ascii import ascii_cpyvke
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-class MainWin(PanelWin):
+class MainWin(BasePanel):
     """ Main window. """
 
     def __init__(self, app, sock, logger):
@@ -55,16 +56,39 @@ class MainWin(PanelWin):
         self.search_index = 0
         self.mk_sort = 'name'
         self.variables = {}
-        self.panel_name = 'main'
 
         # Init Variable Box
         self.gwin = curses.newwin(self.app.panel_height, self.app.screen_width, 0, 0)
-        self.gwin.bkgd(self.app.c_exp_txt)
+        self.gwin.bkgd(self.app.c_main_txt)
 
         # Add explorer and kernel panels to self.app !
         self.app.explorer_win = ExplorerWin(self.app, self.sock, self.logger)
         self.app.kernel_win = KernelWin(self.app, self.sock, self.logger)
-        self.app.test_win = PanelWin(self.app, self.sock, self.logger)
+        self.app.wng = WarningMsg(self.app)
+
+    @property
+    def title(self):
+        """ Panel Title """
+
+        return ''
+
+    @property
+    def panel_name(self):
+        return 'main'
+
+    def color(self, item):
+        if item == 'txt':
+            return self.app.c_exp_txt
+        elif item == 'bdr':
+            return self.app.c_exp_bdr
+        elif item == 'ttl':
+            return self.app.c_exp_ttl
+        elif item == 'hh':
+            return self.app.c_exp_hh
+        elif item == 'pwf':
+            return self.app.c_exp_pwf
+        elif item == 'warn':
+            return self.app.c_warn_txt
 
     def display(self):
         """ Run app ! """
@@ -112,7 +136,7 @@ class MainWin(PanelWin):
         for i in range(len(msg)):
             self.gwin.addstr(i+1,
                              int((self.app.screen_width - msg_size)/2),
-                             msg[i], self.app.c_warn_txt | curses.A_BOLD)
+                             msg[i], self.color('warn') | curses.A_BOLD)
 
         tmp = "Type   {:25} {:30}"
         self.gwin.addstr(i+3, 1, tmp.format(':help<Enter> or ?',
@@ -170,9 +194,4 @@ class MainWin(PanelWin):
         # Explorer panel
         elif self.pkey in [9, 69]:    # -> TAB/E
             self.app.explorer_win.display()
-            self.resize_curses(True)  # Fix brutal resize crash
-
-        # Test panel
-        elif self.pkey == 84:    # -> T
-            self.app.test_win.display()
             self.resize_curses(True)  # Fix brutal resize crash

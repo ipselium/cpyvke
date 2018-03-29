@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : mer. 28 mars 2018 00:12:48 CEST
+# Last Modified : jeu. 29 mars 2018 23:15:09 CEST
 """
 -----------
 DOCSTRING
@@ -208,7 +208,7 @@ class Inspect:
 class ProceedInspection:
     """ Object inspection """
 
-    def __init__(self, app, sock, logger, name, value, typ, pos, page, wng):
+    def __init__(self, app, sock, logger, name, value, typ, pos, page):
         """ Class constructor """
 
         self.app = app
@@ -219,7 +219,6 @@ class ProceedInspection:
         self.vartype = typ
         self.position = pos
         self.page = page
-        self.wng = wng
         self.doc = None
 
     def get_variable(self):
@@ -355,7 +354,7 @@ class ProceedInspection:
     def kernel_busy(self):
         """ Handle silent kernel. """
 
-        self.wng.display('Kernel Busy ! Try again...')
+        self.app.wng.display('Kernel Busy ! Try again...')
         self.varval = '[Busy]'
         self._ismenu = False
 

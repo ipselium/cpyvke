@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : dim. 18 mars 2018 23:42:43 CET
+# Last Modified : jeu. 29 mars 2018 23:38:43 CEST
 """
 -----------
 DOCSTRING
@@ -29,34 +29,41 @@ DOCSTRING
 """
 
 import curses
-from cpyvke.objects.panel import PanelWin
+from cpyvke.objects.panel import ListPanel
 
 
-class ClassWin(PanelWin):
+class ClassWin(ListPanel):
+    """ Class inspector panel """
 
     def __init__(self, app, sock, logger, varval, varname):
-        """ Class Constructor """
-
         super(ClassWin, self).__init__(app, sock, logger)
-
-        # Define Styles
-        self.c_txt = self.app.c_exp_txt
-        self.c_bdr = self.app.c_exp_bdr
-        self.c_ttl = self.app.c_exp_ttl
-        self.c_hh = self.app.c_exp_hh
-        self.c_pwf = self.app.c_exp_pwf
-
-        # Values
         self.varval = varval
         self.varname = varname
 
-        # Some strings
-        self.win_title = ' {} inspection '.format(self.varname)
-        self.empty_dic = "No objects in this class instance"
+    @property
+    def title(self):
+        return ' {} inspection '.format(self.varname)
 
-        # Init Variable Box
-        self.gwin.bkgd(self.app.c_exp_txt)
-        self.gwin.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # border color
+    @property
+    def panel_name(self):
+        return 'class-inspector'
+
+    @property
+    def empty(self):
+        return 'No objects in this class instance'
+
+    def color(self, item):
+
+        if item == 'txt':
+            return self.app.c_exp_txt
+        elif item == 'bdr':
+            return self.app.c_exp_bdr | curses.A_BOLD
+        elif item == 'ttl':
+            return self.app.c_exp_ttl | curses.A_BOLD
+        elif item == 'hh':
+            return self.app.c_exp_hh | curses.A_BOLD
+        elif item == 'pwf':
+            return self.app.c_exp_pwf | curses.A_BOLD
 
     def get_items(self):
         """ List of items :

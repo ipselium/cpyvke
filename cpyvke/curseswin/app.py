@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 27 mars 2018 00:51:29 CEST
+# Last Modified : jeu. 29 mars 2018 23:03:40 CEST
 """
 -----------
 DOCSTRING
@@ -91,19 +91,48 @@ class InitApp:
 
         # Some variables
         self.panel_height = self.screen_height - self.debug_info
-        self.row_max = self.panel_height - 2  # max number of rows
+        self.row_max = self.panel_height - 2
         self.kernel_change = False
         self.explorer_switch = False
         self.kernel_switch = False
         self.var_nb = 0
 
-        # Bindings :
-        self.kdown = [curses.KEY_DOWN, 106]
-        self.kup = [curses.KEY_UP, 107]
-        self.kleft = [curses.KEY_LEFT, 104, 339]
-        self.kright = [curses.KEY_RIGHT, 108, 338]
-        self.kenter = [curses.KEY_ENTER, ord("\n"), 10, 32]
-        self.kquit = [27, 113]
+    def update_dim(self):
+        """ Update current height and width of the curses window """
+
+        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
+        self.panel_height = self.screen_height-self.debug_info
+        self.row_max = self.panel_height - 2
+
+    @property
+    def kdown(self):
+        """ Down keys """
+        return [curses.KEY_DOWN, 106]
+
+    @property
+    def kup(self):
+        """ Up keys """
+        return [curses.KEY_UP, 107]
+
+    @property
+    def kleft(self):
+        """ Left keys """
+        return [curses.KEY_LEFT, 104, 339]
+
+    @property
+    def kright(self):
+        """ Right keys """
+        return [curses.KEY_RIGHT, 108, 338]
+
+    @property
+    def kenter(self):
+        """ Enter keys """
+        return [curses.KEY_ENTER, ord("\n"), 10, 32]
+
+    @property
+    def kquit(self):
+        """ quit keys """
+        return [27, 113]
 
     def color_def(self):
         """ Definition of all color variables """
@@ -144,7 +173,7 @@ class InitApp:
         self.c_bar_kn_pwfd = curses.color_pair(40)
 
     def dbg_socket(self):
-        """ Display queue informations """
+        """ Display ressources informations """
 
         self.stdscr.addstr(self.panel_height + 1, int(2*self.screen_width/3),
                            ' Ressources ', self.c_main_ttl | curses.A_BOLD)
@@ -196,7 +225,7 @@ class InitApp:
         """ Blank screen and display a warning if size of the terminal is too small. """
 
         self.stdscr.erase()
-        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
+        self.update_dim()
         msg_actual = str(self.screen_width) + 'x' + str(self.screen_height)
         msg_limit = 'Win must be > ' + str(self.term_min_width) + 'x' + str(self.term_min_height)
         try:

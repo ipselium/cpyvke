@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 27 mars 2018 22:12:32 CEST
+# Last Modified : jeu. 29 mars 2018 15:23:50 CEST
 """
 -----------
 DOCSTRING
@@ -42,63 +42,53 @@ class PadWin(abc.ABC):
     def __init__(self, app):
         """ CLass constructor """
 
-        # Arguments
+        # app instance
         self.app = app
-        self.config = app.config
 
-        # Define Style
-        self.c_txt = app.c_exp_txt
-        self.c_bdr = app.c_exp_bdr
-        self.c_ttl = app.c_exp_ttl
-        self.c_hh = app.c_exp_hh
-        self.c_pwf = app.c_exp_pwf
-
-        # Bindings
-        self.kup = app.kup
-        self.kdown = app.kdown
-        self.kright = app.kright
-        self.kleft = app.kleft
-        self.kquit = app.kquit
-
-        # Screen
-        self.stdscr = app.stdscr
-        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
-
-        # Create content
-        self.title = ' ' + 'Pad Test' + ' '
-        self.content = self.create_content()
+        # Update screen dimensions
+        self.app.update_dim()
 
     @abc.abstractmethod
-    def create_content(self):
-        """ Create content of the pad. Must return a list ! """
+    def color(self, item):
+        """ Pad colors """
+
+    @property
+    @abc.abstractmethod
+    def title(self):
+        """ Pad Title. Must be a string """
+
+    @property
+    @abc.abstractmethod
+    def content(self):
+        """ Pad content. Must return a list ! """
 
     def init_pad(self):
         """ Init Pad """
 
         self.pad_width = max(len(self.title),
                              max([len(elem) for elem in self.content])) + 8
-        self.pad_width = min(self.pad_width, self.screen_width-2)
+        self.pad_width = min(self.pad_width, self.app.screen_width-2)
         self.pad_height = len(self.content) + 2
         self.gpad = curses.newpad(self.pad_height, self.pad_width)
         self.gpad.keypad(1)
-        self.gpad.bkgd(self.c_txt)
-        self.gpad.attrset(self.c_bdr | curses.A_BOLD)
+        self.gpad.bkgd(self.color('txt'))
+        self.gpad.attrset(self.color('bdr'))
         self.gpad.border(0)
         self.title_loc = int((self.pad_width - len(self.title) - 2)/2)
 
         # Pad content
         for i, j in enumerate(self.content):
-            self.gpad.addstr(1+i, 3, j.encode(code), self.c_txt)
+            self.gpad.addstr(1+i, 3, j.encode(code), self.color('txt'))
 
         # Pad title
-        if self.config['font']['pw-font'] == 'True':
+        if self.app.config['font']['pw-font'] == 'True':
             self.gpad.addstr(0, self.title_loc,
-                             '', self.c_pwf | curses.A_BOLD)
-            self.gpad.addstr(self.title, self.c_ttl | curses.A_BOLD)
-            self.gpad.addstr('', self.c_pwf | curses.A_BOLD)
+                             '', self.color('pwf'))
+            self.gpad.addstr(self.title, self.color('ttl'))
+            self.gpad.addstr('', self.color('pwf'))
         else:
             self.gpad.addstr(0, self.title_loc,
-                             '|' + self.title + '|', self.c_ttl | curses.A_BOLD)
+                             '|' + self.title + '|', self.color('ttl'))
 
     def display(self):
         """ Create pad to display variable content. """
@@ -108,16 +98,16 @@ class PadWin(abc.ABC):
         pkey = -1
         pad_pos = 0
         pad_y = max(self.pad_height,
-                    self.screen_height - 2) - (self.screen_height - 2)
+                    self.app.screen_height - 2) - (self.app.screen_height - 2)
 
-        while pkey not in self.kquit:
-            if pkey in self.kdown:
+        while pkey not in self.app.kquit:
+            if pkey in self.app.kdown:
                 pad_pos = min(pad_y, pad_pos+1)
-            elif pkey in self.kup:
+            elif pkey in self.app.kup:
                 pad_pos = max(0, pad_pos-1)
-            elif pkey in self.kright:
+            elif pkey in self.app.kright:
                 pad_pos = min(pad_y, pad_pos+5)
-            elif pkey in self.kleft:
+            elif pkey in self.app.kleft:
                 pad_pos = max(0, pad_pos-5)
             elif pkey == curses.KEY_NPAGE:
                 pad_pos = min(pad_y, pad_pos+10)
@@ -129,7 +119,7 @@ class PadWin(abc.ABC):
                 pad_pos = pad_y
 
             self.gpad.refresh(pad_pos, 0, 1, 1,
-                              self.screen_height-2, self.screen_width-2)
+                              self.app.screen_height-2, self.app.screen_width-2)
 
             pkey = self.gpad.getch()
 

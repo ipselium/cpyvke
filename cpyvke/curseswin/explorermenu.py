@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : lun. 26 mars 2018 00:46:32 CEST
+# Last Modified : jeu. 29 mars 2018 23:26:06 CEST
 """
 -----------
 DOCSTRING
@@ -32,7 +32,7 @@ import curses
 from curses import panel
 
 from cpyvke.curseswin.classwin import ClassWin
-from cpyvke.curseswin.widgets import Viewer, WarningMsg
+from cpyvke.curseswin.widgets import Viewer
 from cpyvke.utils.inspector import ProceedInspection, Inspect
 
 
@@ -52,21 +52,18 @@ class ExplorerMenu:
         self.position = parent.position
         self.page = parent.page
 
-        # Warning messages
-        self.wng = WarningMsg(self.app.stdscr)
-
-        # get heigh and width of stdscreen
-        self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
+        # Update heigh and width of curse win
+        self.app.update_dim()
 
         # Variables properties
         self.varname = parent.strings[parent.position]
-        self.vartype = parent.lst[parent.strings[parent.position]]['type']
-        self.varval = parent.lst[parent.strings[parent.position]]['value']
+        self.vartype = parent.item_lst[parent.strings[parent.position]]['type']
+        self.varval = parent.item_lst[parent.strings[parent.position]]['value']
 
         # Get Variable characteristics
         proc = ProceedInspection(self.app, self.sock, self.logger,
                                  self.varname, self.varval, self.vartype,
-                                 self.position, self.page, self.wng)
+                                 self.position, self.page)
         self._ismenu, self.varname, self.varval, self.vartype, self.doc = proc.get_variable()
 
         # Init all Inspectors
@@ -89,7 +86,7 @@ class ExplorerMenu:
         self.menu_height = len(self.menu_lst) + 2
 
         # Init Menu
-        self.menu = self.app.stdscr.subwin(self.menu_height, self.menu_width, 2, self.screen_width-self.menu_width-2)
+        self.menu = self.app.stdscr.subwin(self.menu_height, self.menu_width, 2, self.app.screen_width-self.menu_width-2)
         self.menu.bkgd(self.app.c_exp_txt)
         self.menu.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # Change border color
         self.menu.border(0)
@@ -161,11 +158,11 @@ class ExplorerMenu:
         try:
             eval(self.menu_lst[self.menuposition][1])
             if self.menu_lst[self.menuposition][0] == 'Save':
-                self.wng.display('Saved !')
+                self.app.wng.display('Saved !')
         except Exception:
             self.logger.error('Menu', exc_info=True)
             if self.menu_lst[self.menuposition][0] == 'Save':
-                self.wng.display('Not saved !')
+                self.app.wng.display('Not saved !')
         else:
             self.quit_menu = True
 
@@ -185,7 +182,7 @@ class ExplorerMenu:
             return [('Busy', ' ')]
 
         elif self.vartype in self.inspect.type_numeric():
-            return [('Delete', "self.sock.del_var(self.varname, self.wng)")]
+            return [('Delete', "self.sock.del_var(self.varname, self.app.wng)")]
 
         elif self.vartype in ['module']:
             return [('Help', "self.inspect.display('less', 'help')")]
@@ -205,19 +202,19 @@ class ExplorerMenu:
                     ('Less', "self.inspect.display('less')"),
                     ('Edit', "self.inspect.display('vim')"),
                     ('Save', "self.inspect.save(self.save_dir)"),
-                    ('Delete', "self.sock.del_var(self.varname, self.wng)")]
+                    ('Delete', "self.sock.del_var(self.varname, self.app.wng)")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 1):
             return [('Plot', 'self.inspect.plot1D()'),
                     ('Save', 'self.menu_save()'),
-                    ('Delete', "self.sock.del_var(self.varname, self.wng)")]
+                    ('Delete', "self.sock.del_var(self.varname, self.app.wng)")]
 
         elif (self.vartype == 'ndarray') and (len(self.varval.shape) == 2):
             return [('Plot 2D', 'self.inspect.plot2D()'),
                     ('Plot (cols)', 'self.inspect.plot1Dcols()'),
                     ('Plot (lines)', 'self.inspect.plot1Dlines()'),
                     ('Save', 'self.menu_save()'),
-                    ('Delete', "self.sock.del_var(self.varname, self.wng)")]
+                    ('Delete', "self.sock.del_var(self.varname, self.app.wng)")]
 
         elif self.vartype in ['class', 'type']:
             return [('View', 'self.view.display()'),
@@ -230,7 +227,7 @@ class ExplorerMenu:
         """ Create the save menu. """
 
         # Init Menu
-        save_menu = self.app.stdscr.subwin(5, 6, self.menu_height, self.screen_width-9)
+        save_menu = self.app.stdscr.subwin(5, 6, self.menu_height, self.app.screen_width-9)
         save_menu.bkgd(self.app.c_exp_txt)
         save_menu.attrset(self.app.c_exp_bdr | curses.A_BOLD)  # Change border color
         save_menu.border(0)
@@ -268,9 +265,9 @@ class ExplorerMenu:
             if menukey in self.app.kenter:
                 try:
                     eval(save_lst[self.menuposition][1])
-                    self.wng.display('Saved !')
+                    self.app.wng.display('Saved !')
                 except Exception:
-                    self.wng.display('Not saved !')
+                    self.app.wng.display('Not saved !')
                     self.logger.error('Menu save', exc_info=True)
                 else:
                     self.menuposition = 0

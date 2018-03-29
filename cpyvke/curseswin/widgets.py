@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : ven. 23 mars 2018 16:51:37 CET
+# Last Modified : jeu. 29 mars 2018 15:20:05 CEST
 """
 -----------
 DOCSTRING
@@ -45,28 +45,26 @@ class Viewer(PadWin):
     """ Display variable content in a pad. """
 
     def __init__(self, app, varval, varname):
-        """ Class constructor """
-
+        super(Viewer, self).__init__(app)
         self.varval = varval
         self.varname = varname
 
-        super(Viewer, self).__init__(app)
+    def color(self, item):
+        if item == 'txt':
+            return self.app.c_exp_txt
+        elif item == 'bdr':
+            return self.app.c_exp_bdr | curses.A_BOLD
+        elif item == 'ttl':
+            return self.app.c_exp_ttl | curses.A_BOLD
+        elif item == 'pwf':
+            return self.app.c_exp_pwf | curses.A_BOLD
 
-        # Init Values
-        self.c_txt = self.app.c_exp_txt
-        self.c_bdr = self.app.c_exp_bdr
-        self.c_ttl = self.app.c_exp_ttl
-        self.c_hh = self.app.c_exp_hh
-        self.c_pwf = self.app.c_exp_pwf
+    @property
+    def title(self):
+        return ' ' + self.varname + ' '
 
-        # Init Menu
-        self.title = ' ' + self.varname + ' '
-        self.content = self.create_content()
-
-    def create_content(self):
-        """ Create content of the pad """
-
-        # Format variable
+    @property
+    def content(self):
         if type(self.varval) is str:
             dumped = str_format(self.varval, self.screen_width-6)
         else:
@@ -78,25 +76,21 @@ class Viewer(PadWin):
 class WarningMsg:
     """ Display a message. """
 
-    def __init__(self, stdscreen):
+    def __init__(self, app):
 
-        self.stdscreen = stdscreen
-
-        # Define Styles
-        self.c_warn_txt = curses.color_pair(1)
-        self.c_warn_bdr = curses.color_pair(2)
+        self.app = app
 
     def display(self, wng_msg):
         """ Display **wng_msg** in a panel. """
 
-        self.screen_height, self.screen_width = self.stdscreen.getmaxyx()
+        self.app.update_dim()
 
         # Init Menu
-        wng_msg = str_reduce(wng_msg, self.screen_width - 2)
+        wng_msg = str_reduce(wng_msg, self.app.screen_width - 2)
         wng_width = len(wng_msg) + 2
-        menu_wng = self.stdscreen.subwin(3, wng_width, 3, int((self.screen_width-wng_width)/2))
-        menu_wng.bkgd(self.c_warn_txt | curses.A_BOLD)
-        menu_wng.attrset(self.c_warn_bdr | curses.A_BOLD)    # change border color
+        menu_wng = self.app.stdscr.subwin(3, wng_width, 3, int((self.app.screen_width-wng_width)/2))
+        menu_wng.bkgd(self.app.c_warn_txt | curses.A_BOLD)
+        menu_wng.attrset(self.app.c_warn_bdr | curses.A_BOLD)    # change border color
         menu_wng.border(0)
         menu_wng.keypad(1)
 
@@ -104,7 +98,7 @@ class WarningMsg:
         panel_wng = panel.new_panel(menu_wng)
         panel_wng.top()        # Push the panel to the bottom of the stack.
 
-        menu_wng.addstr(1, 1, wng_msg, self.c_warn_txt)
+        menu_wng.addstr(1, 1, wng_msg, self.app.c_warn_txt)
         panel_wng.show()       # Display the panel (which might have been hidden)
         menu_wng.refresh()
         sleep(1)
@@ -118,22 +112,24 @@ class Help(PadWin):
     """ Display help in a pad. """
 
     def __init__(self, app):
-
         super(Help, self).__init__(app)
 
-        # Init Values
-        self.c_txt = self.app.c_main_txt
-        self.c_bdr = self.app.c_main_bdr
-        self.c_ttl = self.app.c_main_ttl
-        self.c_pwf = self.app.c_main_pwf
+    def color(self, item):
+        if item == 'txt':
+            return self.app.c_main_txt
+        elif item == 'bdr':
+            return self.app.c_main_bdr | curses.A_BOLD
+        elif item == 'ttl':
+            return self.app.c_main_ttl | curses.A_BOLD
+        elif item == 'pwf':
+            return self.app.c_main_pwf | curses.A_BOLD
 
-        # Init Menu
-        self.title = 'Help'
-        self.content = self.create_content()
+    @property
+    def title(self):
+        return 'Help'
 
-    def create_content(self):
-        """ Create content """
-
+    @property
+    def content(self):
         return ['',
                 '(?) This Help !',
                 '(ENTER) Selected item menu',

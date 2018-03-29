@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : lun. 26 mars 2018 23:12:54 CEST
+# Last Modified : jeu. 29 mars 2018 23:38:26 CEST
 """
 -----------
 DOCSTRING
@@ -33,34 +33,44 @@ import curses
 from cpyvke.utils.kernel import kernel_dic, start_new_kernel, \
     shutdown_kernel, connect_kernel
 from cpyvke.utils.comm import send_msg
-from cpyvke.objects.panel import PanelWin
+from cpyvke.objects.panel import ListPanel
 
 
-class KernelWin(PanelWin):
+class KernelWin(ListPanel):
+    """ Kernel manager panel """
 
     def __init__(self, app, sock, logger):
-        """ Class constructor """
-
         super(KernelWin, self).__init__(app, sock, logger)
 
-        # Define Styles
-        self.c_txt = self.app.c_kern_txt
-        self.c_bdr = self.app.c_kern_bdr
-        self.c_ttl = self.app.c_kern_ttl
-        self.c_hh = self.app.c_kern_hh
-        self.c_co = self.app.c_kern_co
-        self.c_al = self.app.c_kern_al
-        self.c_di = self.app.c_kern_di
-        self.c_pwf = self.app.c_kern_pwf
+    @property
+    def panel_name(self):
+        return 'kernel-manager'
 
-        # Some strings
-        self.win_title = ' Kernel Manager '
-        self.empty_dic = 'No Kernels !'
-        self.panel_name = 'kernel-manager'
+    @property
+    def title(self):
+        return ' Kernel Manager '
 
-        # Init Variable Box
-        self.gwin.bkgd(self.c_txt)
-        self.gwin.attrset(self.c_bdr | curses.A_BOLD)  # Change border color
+    @property
+    def empty(self):
+        return 'No Kernels !'
+
+    def color(self, item):
+        if item == 'txt':
+            return self.app.c_kern_txt
+        elif item == 'bdr':
+            return self.app.c_kern_bdr | curses.A_BOLD
+        elif item == 'ttl':
+            return self.app.c_kern_ttl | curses.A_BOLD
+        elif item == 'hh':
+            return self.app.c_kern_hh | curses.A_BOLD
+        elif item == 'co':
+            return self.app.c_kern_co | curses.A_BOLD
+        elif item == 'al':
+            return self.app.c_kern_al | curses.A_BOLD
+        elif item == 'di':
+            return self.app.c_kern_di | curses.A_BOLD
+        elif item == 'pwf':
+            return self.app.c_kern_pwf | curses.A_BOLD
 
     def get_items(self):
         """ Get items ! """
@@ -84,19 +94,19 @@ class KernelWin(PanelWin):
     def create_menu(self):
         """ Create the item list for the kernel menu  """
 
-        if self.lst[self.selected]['type'] == 'Connected':
+        if self.item_lst[self.selected]['type'] == 'Connected':
             return [('New', 'self._new_k()'),
                     ('Remove all died', 'self._rm_all_cf()'),
                     ('Shutdown all alive', 'self._kill_all_k()')]
 
-        elif self.lst[self.selected]['type'] == 'Alive':
+        elif self.item_lst[self.selected]['type'] == 'Alive':
             return [('Connect', 'self._connect_k()'),
                     ('New', 'self._new_k()'),
                     ('Shutdown', 'self._kill_k()'),
                     ('Shutdown all alive', 'self._kill_all_k()'),
                     ('Remove all died', 'self._rm_all_cf()')]
 
-        elif self.lst[self.selected]['type'] == 'Died':
+        elif self.item_lst[self.selected]['type'] == 'Died':
             return [('Restart', 'self._restart_k()'),
                     ('New', 'self._new_k()'),
                     ('Remove file', 'self._rm_cf()'),
@@ -110,14 +120,14 @@ class KernelWin(PanelWin):
         """ Create a new kernel. """
 
         kid = start_new_kernel(version=self.app.config['kernel version']['version'])
-        self.wng.display('Kernel id {} created (Python {})'.format(kid,
-                                                                   self.app.config['kernel version']['version']))
+        self.app.wng.display('Kernel id {} created (Python {})'.format(kid,
+                                                                       self.app.config['kernel version']['version']))
 
     def _connect_k(self):
         """ Connect to a kernel. """
 
-        km, self.app.kc = connect_kernel(self.lst[self.selected]['value'])
-        send_msg(self.sock.RequestSock, '<cf>' + self.lst[self.selected]['value'])
+        km, self.app.kc = connect_kernel(self.item_lst[self.selected]['value'])
+        send_msg(self.sock.RequestSock, '<cf>' + self.item_lst[self.selected]['value'])
 
         # Update kernels connection file and set new kernel flag
         self.app.cf = self.app.kc.connection_file
@@ -127,37 +137,37 @@ class KernelWin(PanelWin):
     def _restart_k(self):
         """ Restart a died kernel. """
 
-        self.wng.display("Not implemented yet")
-        #  restart_kernel(self.lst[self.selected]['value'])
+        self.app.wng.display("Not implemented yet")
+        #  restart_kernel(self.item_lst[self.selected]['value'])
 
     def _kill_k(self):
         """ Kill kernel. """
 
-        shutdown_kernel(self.lst[self.selected]['value'])
+        shutdown_kernel(self.item_lst[self.selected]['value'])
         self.position = 1
         self.page = 1
 
     def _kill_all_k(self):
         """ Kill all kernel marked as Alive. """
 
-        for name in self.lst:
-            if self.lst[name]['type'] == 'Alive':
-                shutdown_kernel(self.lst[name]['value'])
+        for name in self.item_lst:
+            if self.item_lst[name]['type'] == 'Alive':
+                shutdown_kernel(self.item_lst[name]['value'])
         self.page = 1
         self.position = 1  # Reinit cursor location
 
     def _rm_cf(self):
         """ Remove connection file of died kernel. """
 
-        os.remove(self.lst[self.selected]['value'])
+        os.remove(self.item_lst[self.selected]['value'])
         self.page = 1
         self.position = 1  # Reinit cursor location
 
     def _rm_all_cf(self):
         """ Remove connection files of all died kernels. """
 
-        for name in self.lst:
-            if self.lst[name]['type'] == 'Died':
-                os.remove(self.lst[name]['value'])
+        for name in self.item_lst:
+            if self.item_lst[name]['type'] == 'Died':
+                os.remove(self.item_lst[name]['value'])
         self.page = 1
         self.position = 1  # Reinit cursor location
