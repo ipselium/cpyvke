@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : jeu. 29 mars 2018 17:50:44 CEST
+# Last Modified : ven. 30 mars 2018 00:11:24 CEST
 """
 -----------
 DOCSTRING
@@ -50,26 +50,13 @@ class MainWin(BasePanel):
 
         super(MainWin, self).__init__(app, sock, logger)
 
-        # Various Variables :
-        self.search = None
-        self.filter = None
-        self.search_index = 0
-        self.mk_sort = 'name'
-        self.variables = {}
-
-        # Init Variable Box
-        self.gwin = curses.newwin(self.app.panel_height, self.app.screen_width, 0, 0)
-        self.gwin.bkgd(self.app.c_main_txt)
-
-        # Add explorer and kernel panels to self.app !
+        # Add explorer, kernel panels and wng pad to self.app !
         self.app.explorer_win = ExplorerWin(self.app, self.sock, self.logger)
         self.app.kernel_win = KernelWin(self.app, self.sock, self.logger)
         self.app.wng = WarningMsg(self.app)
 
     @property
     def title(self):
-        """ Panel Title """
-
         return ''
 
     @property

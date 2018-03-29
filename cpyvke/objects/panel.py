@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 29 mars 2018 23:45:45 CEST
+# Last Modified : ven. 30 mars 2018 00:07:59 CEST
 """
 -----------
 DOCSTRING
@@ -118,9 +118,8 @@ class BasePanel(abc.ABC):
 
         # Update all windows
         if self.app.DEBUG:
-            self.app.dbg_socket()         # Display infos about the process
+            self.app.dbg_ressources()         # Display infos about the process
             self.app.dbg_term(self.pkey)         # Display infos about the process
-            self.app.dbg_general(self.search, self.filter, self.mk_sort)        # Display debug infos
 
         # Fill the main box !
         self.fill_main_box()
@@ -431,9 +430,9 @@ class ListPanel(BasePanel):
 
         # Update all windows
         if self.app.DEBUG:
-            self.app.dbg_socket()         # Display infos about the process
+            self.app.dbg_ressources()         # Display infos about the process
             self.app.dbg_term(self.pkey)         # Display infos about the process
-            self.app.dbg_general(self.search, self.filter, self.mk_sort)        # Display debug infos
+            self.app.dbg_lst(self.search, self.filter, self.mk_sort)        # Display debug infos
 
         # Fill the main box !
         self.fill_main_box()
