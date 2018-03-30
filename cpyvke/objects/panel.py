@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : ven. 30 mars 2018 00:07:59 CEST
+# Last Modified : sam. 31 mars 2018 00:48:16 CEST
 """
 -----------
 DOCSTRING
@@ -39,7 +39,7 @@ from cpyvke.curseswin.prompt import Prompt
 from cpyvke.utils.kd import restart_daemon
 from cpyvke.utils.display import format_cell
 from cpyvke.utils.comm import send_msg
-
+from cpyvke.curseswin.app import CheckSize
 
 code = locale.getpreferredencoding()
 
@@ -70,7 +70,6 @@ class BasePanel(abc.ABC):
         self.prompt_msg = ''
 
         # Update dimensions
-        self.app.update_dim()
         self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()  # Local dimensions
 
         # Init subwin
@@ -97,6 +96,10 @@ class BasePanel(abc.ABC):
             * for BasePanel : 'txt', 'bdr', 'ttl', 'hh', 'pwf'
             * for ListPanel : 'co', 'al', 'di'
         """
+
+    @abc.abstractmethod
+    def fill_main_box(self):
+        """ Fill the main box """
 
     @abc.abstractmethod
     def display(self):
@@ -178,10 +181,6 @@ class BasePanel(abc.ABC):
         """ Key bindings : To overload """
 
         pass
-
-    @abc.abstractmethod
-    def fill_main_box(self):
-        """ Fill the main box """
 
     def prompt_msg_display(self):
         """ Erase prompt message after some delay """
@@ -299,10 +298,7 @@ class BasePanel(abc.ABC):
 
         # Check difference between self.screen_height and self.app.screen_height
         resize = curses.is_term_resized(self.screen_height, self.screen_width)
-        min_size_cond = self.app.screen_height >= self.app.term_min_height and self.app.screen_width >= self.app.term_min_width
-        if (min_size_cond and resize) or force:
-            # new heigh and width of object stdscreen
-            self.app.update_dim()
+        if resize or force:
             # save also these value locally to check if
             self.screen_height, self.screen_width = self.app.stdscr.getmaxyx()
             # Update display
@@ -338,8 +334,8 @@ class ListPanel(BasePanel):
         self.page = 1
 
         # Init variables :
-        self.item_lst = {}
-        self.strings = []
+        self.item_dic = {}
+        self.item_keys = []
 
     @property
     @abc.abstractmethod
@@ -371,11 +367,7 @@ class ListPanel(BasePanel):
             # Listen to resize and adapt Curses
             self.resize_curses()
 
-            if self.app.screen_height < self.app.term_min_height or self.app.screen_width < self.app.term_min_width:
-                self.app.check_size()
-                time.sleep(0.5)
-            else:
-                self.tasks()
+            self.tasks()
 
         self.gwin.clear()
         self.gpan.hide()
@@ -385,6 +377,7 @@ class ListPanel(BasePanel):
 
         pass
 
+    @CheckSize()
     def tasks(self):
         """ List of tasks at each iteration """
 
@@ -395,8 +388,8 @@ class ListPanel(BasePanel):
         self.sock.check_main_socket()
 
         # Get items
-        self.item_lst = self.get_items()
-        self.row_num = len(self.item_lst) - 1
+        self.item_dic = self.get_items()
+        self.row_num = len(self.item_dic) - 1
 
         # Arange item list
         self.arange_lst()
@@ -495,7 +488,7 @@ class ListPanel(BasePanel):
 
     @abc.abstractmethod
     def get_items(self):
-        """ Return the list of item : To overload """
+        """ Return a dicionnary with items : self.item_dic """
 
         return
 
@@ -513,7 +506,7 @@ class ListPanel(BasePanel):
                              '|' + self.title + '|', self.color('ttl'))
 
         # Reset position if position is greater than the new list of var (reset)
-        self.row_num = len(self.strings) - 1
+        self.row_num = len(self.item_keys) - 1
         if self.position > self.row_num:
             self.position = 0
             self.page = 1
@@ -526,7 +519,7 @@ class ListPanel(BasePanel):
                 self.gwin.addstr(1, 1, self.empty, self.color('hh'))
 
             elif i <= self.row_num:
-                self.cell1, self.cell2 = format_cell(self.item_lst, self.strings[i], self.app.screen_width)
+                self.cell1, self.cell2 = format_cell(self.item_dic, self.item_keys[i], self.app.screen_width)
                 if i == self.position:
                     self.gwin.addstr(i + 1 - self.app.row_max*(self.page-1), 2,
                                      self.cell1.encode(code), self.color('hh'))
@@ -580,25 +573,25 @@ class ListPanel(BasePanel):
                              self.cell2, self.color('txt'))
 
     @staticmethod
-    def filter_var_lst(item_lst, filt):
+    def filter_var_lst(item_dic, filt):
         """ Filter variable list (name|type). """
 
         filtered = []
-        for key in list(item_lst):
-            if filt in item_lst[key]['type'] or filt in key:
+        for key in list(item_dic):
+            if filt in item_dic[key]['type'] or filt in key:
                 filtered.append(key)
 
         return sorted(filtered)
 
     @staticmethod
-    def type_sort(item_lst):
+    def type_sort(item_dic):
         """ Sort variable by type. """
 
         from operator import itemgetter
 
         types = []
-        for key in list(item_lst):
-            types.append([key, item_lst[key]['type']])
+        for key in list(item_dic):
+            types.append([key, item_dic[key]['type']])
 
         types.sort(key=itemgetter(1))
 
@@ -608,34 +601,34 @@ class ListPanel(BasePanel):
         """ Organize/Arange variable list. """
 
         if self.mk_sort == 'name':
-            self.strings = sorted(list(self.item_lst))
+            self.item_keys = sorted(list(self.item_dic))
 
         elif self.mk_sort == 'type':
-            self.strings = self.type_sort(self.item_lst)
+            self.item_keys = self.type_sort(self.item_dic)
 
         elif self.mk_sort == 'filter' and self.filter:
-            self.strings = self.filter_var_lst(self.item_lst, self.filter)
-            if not self.strings:
+            self.item_keys = self.filter_var_lst(self.item_dic, self.filter)
+            if not self.item_keys:
                 self.prompt_msg_setup('{} not found'.format(self.filter))
-                self.strings = sorted(list(self.item_lst))
+                self.item_keys = sorted(list(self.item_dic))
                 self.filter = None
                 self.mk_sort = 'name'
             else:
-                self.limit_msg = 'Filter : ' + self.filter + ' (' + str(len(self.strings)) + ' obj.)'
+                self.limit_msg = 'Filter : ' + self.filter + ' (' + str(len(self.item_keys)) + ' obj.)'
 
         else:
-            self.strings = list(self.item_lst)
+            self.item_keys = list(self.item_dic)
 
         # Update number of columns
-        self.row_num = len(self.strings) - 1
+        self.row_num = len(self.item_keys) - 1
 
     def search_item(self, txt_msg):
         """ Search an object in the variable list """
 
         self.search = self.prompt.simple(txt_msg)
-        self.search_lst = [i for i, s in enumerate(self.strings) if self.search in s]
+        self.search_lst = [i for i, s in enumerate(self.item_keys) if self.search in s]
         self.search_index = 0
-        self.logger.info('Searching for : {} in :\n{}'.format(self.search, self.strings))
+        self.logger.info('Searching for : {} in :\n{}'.format(self.search, self.item_keys))
 
         if self.search_lst and self.search:
             if len(self.search_lst) == 1:
@@ -654,7 +647,7 @@ class ListPanel(BasePanel):
     def search_item_next(self):
         """ Next occurence of the searching. """
 
-        self.search_lst = [i for i, s in enumerate(self.strings) if self.search in s]
+        self.search_lst = [i for i, s in enumerate(self.item_keys) if self.search in s]
 
         if self.search_lst and self.search_index < len(self.search_lst) - 1:
             self.search_index += 1
@@ -730,7 +723,12 @@ class ListPanel(BasePanel):
     def init_menu(self):
         """ Init the menu """
 
-        self.selected = self.strings[self.position]
+        self.selected = self.item_keys[self.position]
+
+        # Add specific initilization
+        self.menu_special_init()
+
+        # Create menu list
         self.menu_lst = self.create_menu()
 
         # Various variables
@@ -761,6 +759,11 @@ class ListPanel(BasePanel):
 
         # Submenu
         self.display_menu()
+
+    def menu_special_init(self):
+        """ Additionnal initialization for menu """
+
+        pass
 
     def create_menu(self):
         """ Create the item list for the kernel menu : To overload """
@@ -806,10 +809,10 @@ class ListPanel(BasePanel):
                 break
 
             elif menukey in self.app.kup:
-                self.navigate_menu(-1)
+                self.navigate_menu(-1, len(self.menu_lst))
 
             elif menukey in self.app.kdown:
-                self.navigate_menu(1)
+                self.navigate_menu(1, len(self.menu_lst))
 
             if menukey == curses.KEY_RESIZE:
                 self.resize = True
@@ -818,12 +821,12 @@ class ListPanel(BasePanel):
         self.gwin_menu.clear()
         self.gpan_menu.hide()
 
-    def navigate_menu(self, n):
+    def navigate_menu(self, n, size):
         """ Navigate through the menu """
 
         self.menu_cursor += n
 
         if self.menu_cursor < 0:
             self.menu_cursor = 0
-        elif self.menu_cursor >= len(self.menu_lst):
-            self.menu_cursor = len(self.menu_lst)-1
+        elif self.menu_cursor >= size:
+            self.menu_cursor = size - 1

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 29 mars 2018 23:38:26 CEST
+# Last Modified : ven. 30 mars 2018 17:28:23 CEST
 """
 -----------
 DOCSTRING
@@ -94,19 +94,19 @@ class KernelWin(ListPanel):
     def create_menu(self):
         """ Create the item list for the kernel menu  """
 
-        if self.item_lst[self.selected]['type'] == 'Connected':
+        if self.item_dic[self.selected]['type'] == 'Connected':
             return [('New', 'self._new_k()'),
                     ('Remove all died', 'self._rm_all_cf()'),
                     ('Shutdown all alive', 'self._kill_all_k()')]
 
-        elif self.item_lst[self.selected]['type'] == 'Alive':
+        elif self.item_dic[self.selected]['type'] == 'Alive':
             return [('Connect', 'self._connect_k()'),
                     ('New', 'self._new_k()'),
                     ('Shutdown', 'self._kill_k()'),
                     ('Shutdown all alive', 'self._kill_all_k()'),
                     ('Remove all died', 'self._rm_all_cf()')]
 
-        elif self.item_lst[self.selected]['type'] == 'Died':
+        elif self.item_dic[self.selected]['type'] == 'Died':
             return [('Restart', 'self._restart_k()'),
                     ('New', 'self._new_k()'),
                     ('Remove file', 'self._rm_cf()'),
@@ -126,8 +126,8 @@ class KernelWin(ListPanel):
     def _connect_k(self):
         """ Connect to a kernel. """
 
-        km, self.app.kc = connect_kernel(self.item_lst[self.selected]['value'])
-        send_msg(self.sock.RequestSock, '<cf>' + self.item_lst[self.selected]['value'])
+        km, self.app.kc = connect_kernel(self.item_dic[self.selected]['value'])
+        send_msg(self.sock.RequestSock, '<cf>' + self.item_dic[self.selected]['value'])
 
         # Update kernels connection file and set new kernel flag
         self.app.cf = self.app.kc.connection_file
@@ -138,36 +138,36 @@ class KernelWin(ListPanel):
         """ Restart a died kernel. """
 
         self.app.wng.display("Not implemented yet")
-        #  restart_kernel(self.item_lst[self.selected]['value'])
+        #  restart_kernel(self.item_dic[self.selected]['value'])
 
     def _kill_k(self):
         """ Kill kernel. """
 
-        shutdown_kernel(self.item_lst[self.selected]['value'])
+        shutdown_kernel(self.item_dic[self.selected]['value'])
         self.position = 1
         self.page = 1
 
     def _kill_all_k(self):
         """ Kill all kernel marked as Alive. """
 
-        for name in self.item_lst:
-            if self.item_lst[name]['type'] == 'Alive':
-                shutdown_kernel(self.item_lst[name]['value'])
+        for name in self.item_dic:
+            if self.item_dic[name]['type'] == 'Alive':
+                shutdown_kernel(self.item_dic[name]['value'])
         self.page = 1
         self.position = 1  # Reinit cursor location
 
     def _rm_cf(self):
         """ Remove connection file of died kernel. """
 
-        os.remove(self.item_lst[self.selected]['value'])
+        os.remove(self.item_dic[self.selected]['value'])
         self.page = 1
         self.position = 1  # Reinit cursor location
 
     def _rm_all_cf(self):
         """ Remove connection files of all died kernels. """
 
-        for name in self.item_lst:
-            if self.item_lst[name]['type'] == 'Died':
-                os.remove(self.item_lst[name]['value'])
+        for name in self.item_dic:
+            if self.item_dic[name]['type'] == 'Died':
+                os.remove(self.item_dic[name]['value'])
         self.page = 1
         self.position = 1  # Reinit cursor location

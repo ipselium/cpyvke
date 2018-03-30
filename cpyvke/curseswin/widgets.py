@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : jeu. 29 mars 2018 15:20:05 CEST
+# Last Modified : sam. 31 mars 2018 00:36:49 CEST
 """
 -----------
 DOCSTRING
@@ -82,8 +82,6 @@ class WarningMsg:
 
     def display(self, wng_msg):
         """ Display **wng_msg** in a panel. """
-
-        self.app.update_dim()
 
         # Init Menu
         wng_msg = str_reduce(wng_msg, self.app.screen_width - 2)

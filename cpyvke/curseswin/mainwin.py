@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : ven. 30 mars 2018 00:11:24 CEST
+# Last Modified : ven. 30 mars 2018 20:51:00 CEST
 """
 -----------
 DOCSTRING
@@ -29,12 +29,12 @@ DOCSTRING
 """
 
 import curses
-from time import sleep
 import locale
 
 from cpyvke.curseswin.kernelwin import KernelWin
 from cpyvke.curseswin.explorerwin import ExplorerWin
 from cpyvke.curseswin.widgets import WarningMsg
+from cpyvke.curseswin.app import CheckSize
 from cpyvke.objects.panel import BasePanel
 from cpyvke.utils.ascii import ascii_cpyvke
 
@@ -83,36 +83,29 @@ class MainWin(BasePanel):
         try:
             self.pkey = -1
             while self.app.close_signal == 'continue':
+                self.resize_curses()
                 self.update_curses()
             self.app.shutdown()
         except Exception:
             self.app.exit_with_error()
 
+    @CheckSize()
     def update_curses(self):
         """ Update Curses """
 
-        # Listen to resize and adapt Curses
-        self.resize_curses()
+        # Check switch panel
+        if self.app.explorer_switch:
+            self.app.explorer_switch = False
+            self.app.kernel_win.display()
+            self.resize_curses(True)
 
-        # Check if size is enough
-        if self.app.screen_height < self.app.term_min_height or self.app.screen_width < self.app.term_min_width:
-            self.app.check_size()
-            sleep(0.5)
+        elif self.app.kernel_switch:
+            self.app.kernel_switch = False
+            self.app.explorer_win.display()
+            self.resize_curses(True)
+
         else:
-
-            # Check switch panel
-            if self.app.explorer_switch:
-                self.app.explorer_switch = False
-                self.app.kernel_win.display()
-                self.resize_curses(True)
-
-            elif self.app.kernel_switch:
-                self.app.kernel_switch = False
-                self.app.explorer_win.display()
-                self.resize_curses(True)
-
-            else:
-                self.tasks()
+            self.tasks()
 
     def fill_main_box(self):
         """ Welcome message """

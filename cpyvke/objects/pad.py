@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 29 mars 2018 15:23:50 CEST
+# Last Modified : sam. 31 mars 2018 00:38:56 CEST
 """
 -----------
 DOCSTRING
@@ -44,9 +44,6 @@ class PadWin(abc.ABC):
 
         # app instance
         self.app = app
-
-        # Update screen dimensions
-        self.app.update_dim()
 
     @abc.abstractmethod
     def color(self, item):

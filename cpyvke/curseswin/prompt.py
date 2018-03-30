@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : jeu. 29 mars 2018 15:41:43 CEST
+# Last Modified : sam. 31 mars 2018 00:37:54 CEST
 """
 -----------
 DOCSTRING
@@ -73,9 +73,6 @@ class Prompt:
         # Reinit input
         self.usr_input = ''
 
-        # Update dimensions of the main window
-        self.app.update_dim()
-
         # Enable echoing of characters
         curses.echo()
         self.app.stdscr.attrset(self.app.c_main_txt | curses.A_BOLD)
@@ -99,9 +96,6 @@ class Prompt:
 
         # Reinit input
         self.usr_input = ''
-
-        # Update dimensions of the main window
-        self.app.update_dim()
         self.app.stdscr.attrset(self.app.c_main_txt | curses.A_BOLD)
         # Enable echoing of characters
         curses.echo()
@@ -194,15 +188,11 @@ class Prompt:
     def display(self, msg):
         """ display message in prompt. """
 
-        self.app.update_dim()
         self.app.stdscr.addstr(self.app.screen_height-1, 0,
                                msg, curses.A_BOLD | self.app.c_warn_txt)
 
     def panel(self, txt_msg, win_title):
         """ Prompt on a dedicated panel """
-
-        # Update dimensions of the main window
-        self.app.update_dim()
 
         # Init Menu
         self.win_title = win_title

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : ven. 30 mars 2018 00:08:43 CEST
+# Last Modified : sam. 31 mars 2018 01:01:16 CEST
 """
 -----------
 DOCSTRING
@@ -35,11 +35,56 @@ import locale
 import traceback
 import curses
 from curses import panel
+import functools
 
 from cpyvke.utils.colors import Colors
 from cpyvke.utils.comm import send_msg
 
 locale.setlocale(locale.LC_ALL, '')
+
+
+class CheckSize:
+    """ Decorator to check size of the curses window.
+    Blank screen and display a warning if size of the terminal is too small."""
+
+    def __init__(self):
+
+        # Init curses
+        self.stdscr = curses.initscr()
+        curses.start_color()
+        self.color = curses.color_pair(1) | curses.A_BOLD
+
+    def __call__(self, function):
+
+        @functools.wraps(function)
+        def decorated(*args, **kwargs):
+            # Fetch self instance and in particular self.app.DEBUG
+            DEBUG = args[0].app.DEBUG
+            # Min terminal size allowed
+            if DEBUG:
+                term_min_height = 20
+                term_min_width = 80
+            else:
+                term_min_height = 15
+                term_min_width = 70
+
+            screen_height, screen_width = self.stdscr.getmaxyx()
+            if screen_height < term_min_height or screen_width < term_min_width:
+                # Messages
+                msg_actual = str(screen_width) + 'x' + str(screen_height)
+                msg_limit = 'Win must be > ' + str(term_min_width) + 'x' + str(term_min_height)
+                # Message locations
+                y_mid = int(screen_height/2)
+                x_mid_limit = int((screen_width-len(msg_limit))/2)
+                x_mid_actual = int((screen_width-len(msg_actual))/2)
+                # Update curses
+                self.stdscr.erase()
+                self.stdscr.addstr(y_mid, x_mid_limit, msg_limit, self.color)
+                self.stdscr.addstr(y_mid+1, x_mid_actual, msg_actual, self.color)
+                self.stdscr.refresh()
+            else:
+                function(*args, **kwargs)
+        return decorated
 
 
 class InitApp:
@@ -48,24 +93,22 @@ class InitApp:
     def __init__(self, kc, cf, config, sock, DEBUG):
         """  """
 
-        self.sock = sock
-
-        # Basics
+        # Arguments
         self.kc = kc
         self.cf = cf
         self.config = config
+        self.sock = sock
         self.DEBUG = DEBUG
 
         # Init CUI :
         self.close_signal = 'continue'
         self.stdscr = curses.initscr()   # Init curses
-        self.stdscr.keypad(1)            #
-        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
 
         # Ressources
         self.ressources = psutil.Process(os.getpid())
 
         # Curses options
+        self.stdscr.keypad(1)            #
         self.curse_delay = 10            # 1s timer on each getch
         curses.noecho()             # Wont print the input og getch (keys)
         curses.cbreak()             #
@@ -81,48 +124,53 @@ class InitApp:
 
         # Min terminal size allowed
         if self.DEBUG:
-            self.term_min_height = 20
-            self.term_min_width = 80
-            self.debug_info = 7       # Size of the bottom text area
+            self._debug_info = 7       # Size of the bottom text area
         else:
-            self.term_min_height = 15
-            self.term_min_width = 70
-            self.debug_info = 2
+            self._debug_info = 2
 
         # Some variables
-        self.panel_height = self.screen_height - self.debug_info
-        self.row_max = self.panel_height - 2
         self.kernel_change = False
         self.explorer_switch = False
         self.kernel_switch = False
         self.var_nb = 0
 
-    def update_dim(self):
-        """ Update current height and width of the curses window """
+    @property
+    def screen_width(self):
+        _, screen_width = self.stdscr.getmaxyx()
+        return screen_width
 
-        self.screen_height, self.screen_width = self.stdscr.getmaxyx()
-        self.panel_height = self.screen_height-self.debug_info
-        self.row_max = self.panel_height - 2
+    @property
+    def screen_height(self):
+        screen_height, _ = self.stdscr.getmaxyx()
+        return screen_height
+
+    @property
+    def panel_height(self):
+        return self.screen_height-self._debug_info
+
+    @property
+    def row_max(self):
+        return self.panel_height - 2
 
     @property
     def kdown(self):
         """ Down keys """
-        return [curses.KEY_DOWN, 106]
+        return [curses.KEY_DOWN, 258, 106]
 
     @property
     def kup(self):
         """ Up keys """
-        return [curses.KEY_UP, 107]
+        return [curses.KEY_UP, 259, 107]
 
     @property
     def kleft(self):
         """ Left keys """
-        return [curses.KEY_LEFT, 104, 339]
+        return [curses.KEY_LEFT, 260, 104, 339]
 
     @property
     def kright(self):
         """ Right keys """
-        return [curses.KEY_RIGHT, 108, 338]
+        return [curses.KEY_RIGHT, 261, 108, 338]
 
     @property
     def kenter(self):
@@ -221,25 +269,6 @@ class InitApp:
                            curses.A_DIM | self.c_main_txt)
         self.stdscr.addstr(self.panel_height + 4, int(self.screen_width/3) + 1, ' sort : {}'.format(mk_sort),
                            curses.A_DIM | self.c_main_txt)
-
-    def check_size(self):
-        """ Blank screen and display a warning if size of the terminal is too small. """
-
-        self.stdscr.erase()
-        self.update_dim()
-        msg_actual = str(self.screen_width) + 'x' + str(self.screen_height)
-        msg_limit = 'Win must be > ' + str(self.term_min_width) + 'x' + str(self.term_min_height)
-        try:
-            self.stdscr.addstr(int(self.screen_height/2),
-                               int((self.screen_width-len(msg_limit))/2),
-                               msg_limit, self.c_warn_txt | curses.A_BOLD)
-            self.stdscr.addstr(int(self.screen_height/2)+1,
-                               int((self.screen_width-len(msg_actual))/2),
-                               msg_actual, self.c_warn_txt | curses.A_BOLD)
-        except Exception:
-            self.logger.error('Error : ', exc_info=True)
-            pass
-        self.stdscr.refresh()
 
     def bottom_bar_info(self):
         """ Check and display kernel informations """
@@ -340,7 +369,8 @@ class InitApp:
         self.sock.close_sockets()
         self.kill_all_figs()   # Stop all figure subprocesses
 
-    def kill_all_figs(self):
+    @staticmethod
+    def kill_all_figs():
         """ Kill all figures (running in different processes) """
 
         import multiprocessing
