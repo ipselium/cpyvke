@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : ven. 30 mars 2018 20:51:00 CEST
+# Last Modified : sam. 31 mars 2018 11:01:10 CEST
 """
 -----------
 DOCSTRING
@@ -34,7 +34,7 @@ import locale
 from cpyvke.curseswin.kernelwin import KernelWin
 from cpyvke.curseswin.explorerwin import ExplorerWin
 from cpyvke.curseswin.widgets import WarningMsg
-from cpyvke.curseswin.app import CheckSize
+from cpyvke.curseswin.app import check_size
 from cpyvke.objects.panel import BasePanel
 from cpyvke.utils.ascii import ascii_cpyvke
 
@@ -89,7 +89,7 @@ class MainWin(BasePanel):
         except Exception:
             self.app.exit_with_error()
 
-    @CheckSize()
+    @check_size
     def update_curses(self):
         """ Update Curses """
 

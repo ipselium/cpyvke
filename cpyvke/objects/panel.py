@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : sam. 31 mars 2018 00:48:16 CEST
+# Last Modified : sam. 31 mars 2018 11:01:33 CEST
 """
 -----------
 DOCSTRING
@@ -36,20 +36,16 @@ from curses import panel
 from math import ceil
 from cpyvke.curseswin.widgets import Help
 from cpyvke.curseswin.prompt import Prompt
+from cpyvke.curseswin.app import check_size
 from cpyvke.utils.kd import restart_daemon
 from cpyvke.utils.display import format_cell
 from cpyvke.utils.comm import send_msg
-from cpyvke.curseswin.app import CheckSize
 
 code = locale.getpreferredencoding()
 
 
 class BasePanel(abc.ABC):
     """ Generic Panel.
-    Overload :
-        * key_bindings
-        * get_items
-        * create_menu
     """
 
     def __init__(self, app, sock, logger):
@@ -311,11 +307,7 @@ class BasePanel(abc.ABC):
 
 
 class ListPanel(BasePanel):
-    """ Generic Panel.
-    Overload :
-        * key_bindings
-        * get_items
-        * create_menu
+    """ Generic Panel for lists with menu.
     """
 
     def __init__(self, app, sock, logger):
@@ -377,7 +369,7 @@ class ListPanel(BasePanel):
 
         pass
 
-    @CheckSize()
+    @check_size
     def tasks(self):
         """ List of tasks at each iteration """
 

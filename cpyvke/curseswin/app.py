@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : sam. 31 mars 2018 01:01:16 CEST
+# Last Modified : sam. 31 mars 2018 11:02:45 CEST
 """
 -----------
 DOCSTRING
@@ -43,48 +43,43 @@ from cpyvke.utils.comm import send_msg
 locale.setlocale(locale.LC_ALL, '')
 
 
-class CheckSize:
+def check_size(function):
     """ Decorator to check size of the curses window.
     Blank screen and display a warning if size of the terminal is too small."""
 
-    def __init__(self):
+    @functools.wraps(function)
+    def decorated(*args, **kwargs):
 
-        # Init curses
-        self.stdscr = curses.initscr()
-        curses.start_color()
-        self.color = curses.color_pair(1) | curses.A_BOLD
+        # Fetch self instance which is 1st element of args
+        app = args[0].app
 
-    def __call__(self, function):
+        # Min terminal size allowed
+        if app.DEBUG:
+            term_min_height = 20
+            term_min_width = 80
+        else:
+            term_min_height = 15
+            term_min_width = 70
 
-        @functools.wraps(function)
-        def decorated(*args, **kwargs):
-            # Fetch self instance and in particular self.app.DEBUG
-            DEBUG = args[0].app.DEBUG
-            # Min terminal size allowed
-            if DEBUG:
-                term_min_height = 20
-                term_min_width = 80
-            else:
-                term_min_height = 15
-                term_min_width = 70
+        # Blank screen if dimension are too small
+        if app.screen_height < term_min_height or app.screen_width < term_min_width:
+            # Messages
+            msg_actual = str(app.screen_width) + 'x' + str(app.screen_height)
+            msg_limit = 'Win must be > ' + str(term_min_width) + 'x' + str(term_min_height)
+            # Message locations
+            y_mid = int(app.screen_height/2)
+            x_mid_limit = int((app.screen_width-len(msg_limit))/2)
+            x_mid_actual = int((app.screen_width-len(msg_actual))/2)
+            # Update curses
+            app.stdscr.erase()
+            app.stdscr.addstr(y_mid, x_mid_limit, msg_limit, app.c_warn_txt | curses.A_BOLD)
+            app.stdscr.addstr(y_mid+1, x_mid_actual, msg_actual, app.c_warn_txt | curses.A_BOLD)
+            app.stdscr.refresh()
+            time.sleep(0.2)
+        else:
+            function(*args, **kwargs)
 
-            screen_height, screen_width = self.stdscr.getmaxyx()
-            if screen_height < term_min_height or screen_width < term_min_width:
-                # Messages
-                msg_actual = str(screen_width) + 'x' + str(screen_height)
-                msg_limit = 'Win must be > ' + str(term_min_width) + 'x' + str(term_min_height)
-                # Message locations
-                y_mid = int(screen_height/2)
-                x_mid_limit = int((screen_width-len(msg_limit))/2)
-                x_mid_actual = int((screen_width-len(msg_actual))/2)
-                # Update curses
-                self.stdscr.erase()
-                self.stdscr.addstr(y_mid, x_mid_limit, msg_limit, self.color)
-                self.stdscr.addstr(y_mid+1, x_mid_actual, msg_actual, self.color)
-                self.stdscr.refresh()
-            else:
-                function(*args, **kwargs)
-        return decorated
+    return decorated
 
 
 class InitApp:

@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : sam. 31 mars 2018 00:38:56 CEST
+# Last Modified : sam. 31 mars 2018 01:20:18 CEST
 """
 -----------
 DOCSTRING
@@ -79,13 +79,12 @@ class PadWin(abc.ABC):
 
         # Pad title
         if self.app.config['font']['pw-font'] == 'True':
-            self.gpad.addstr(0, self.title_loc,
-                             '', self.color('pwf'))
+            self.gpad.addstr(0, self.title_loc, '', self.color('pwf'))
             self.gpad.addstr(self.title, self.color('ttl'))
             self.gpad.addstr('', self.color('pwf'))
         else:
-            self.gpad.addstr(0, self.title_loc,
-                             '|' + self.title + '|', self.color('ttl'))
+            self.gpad.addstr(0, self.title_loc, '|' + self.title + '|',
+                             self.color('ttl'))
 
     def display(self):
         """ Create pad to display variable content. """
@@ -110,9 +109,9 @@ class PadWin(abc.ABC):
                 pad_pos = min(pad_y, pad_pos+10)
             elif pkey == curses.KEY_PPAGE:
                 pad_pos = max(0, pad_pos-10)
-            elif pkey == 262:
+            elif pkey == 262:               # Home
                 pad_pos = 0
-            elif pkey == 360:
+            elif pkey == 360:               # End
                 pad_pos = pad_y
 
             self.gpad.refresh(pad_pos, 0, 1, 1,
