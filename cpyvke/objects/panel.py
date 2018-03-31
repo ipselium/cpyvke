@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : sam. 31 mars 2018 11:01:33 CEST
+# Last Modified : sam. 31 mars 2018 11:20:59 CEST
 """
 -----------
 DOCSTRING
@@ -356,9 +356,6 @@ class ListPanel(BasePanel):
             if self.app.kernel_switch or self.app.explorer_switch:
                 break
 
-            # Listen to resize and adapt Curses
-            self.resize_curses()
-
             self.tasks()
 
         self.gwin.clear()
@@ -372,6 +369,9 @@ class ListPanel(BasePanel):
     @check_size
     def tasks(self):
         """ List of tasks at each iteration """
+
+        # Listen to resize and adapt Curses
+        self.resize_curses()
 
         # Custom tasks
         self.custom_tasks()

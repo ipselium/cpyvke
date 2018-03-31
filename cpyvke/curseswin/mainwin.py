@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : sam. 31 mars 2018 11:01:10 CEST
+# Last Modified : sam. 31 mars 2018 11:23:11 CEST
 """
 -----------
 DOCSTRING
@@ -83,7 +83,6 @@ class MainWin(BasePanel):
         try:
             self.pkey = -1
             while self.app.close_signal == 'continue':
-                self.resize_curses()
                 self.update_curses()
             self.app.shutdown()
         except Exception:
@@ -92,6 +91,8 @@ class MainWin(BasePanel):
     @check_size
     def update_curses(self):
         """ Update Curses """
+
+        self.resize_curses()
 
         # Check switch panel
         if self.app.explorer_switch:

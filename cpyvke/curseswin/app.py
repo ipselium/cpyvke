@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : sam. 31 mars 2018 11:02:45 CEST
+# Last Modified : sam. 31 mars 2018 11:16:50 CEST
 """
 -----------
 DOCSTRING
@@ -35,7 +35,6 @@ import locale
 import traceback
 import curses
 from curses import panel
-import functools
 
 from cpyvke.utils.colors import Colors
 from cpyvke.utils.comm import send_msg
@@ -47,8 +46,7 @@ def check_size(function):
     """ Decorator to check size of the curses window.
     Blank screen and display a warning if size of the terminal is too small."""
 
-    @functools.wraps(function)
-    def decorated(*args, **kwargs):
+    def wrapper(*args, **kwargs):
 
         # Fetch self instance which is 1st element of args
         app = args[0].app
@@ -72,14 +70,17 @@ def check_size(function):
             x_mid_actual = int((app.screen_width-len(msg_actual))/2)
             # Update curses
             app.stdscr.erase()
-            app.stdscr.addstr(y_mid, x_mid_limit, msg_limit, app.c_warn_txt | curses.A_BOLD)
-            app.stdscr.addstr(y_mid+1, x_mid_actual, msg_actual, app.c_warn_txt | curses.A_BOLD)
+            try:
+                app.stdscr.addstr(y_mid, x_mid_limit, msg_limit, app.c_warn_txt | curses.A_BOLD)
+                app.stdscr.addstr(y_mid+1, x_mid_actual, msg_actual, app.c_warn_txt | curses.A_BOLD)
+            except curses.error:
+                pass
             app.stdscr.refresh()
             time.sleep(0.2)
         else:
             function(*args, **kwargs)
 
-    return decorated
+    return wrapper
 
 
 class InitApp:
