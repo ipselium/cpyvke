@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : sam. 31 mars 2018 11:23:11 CEST
+# Last Modified : lun. 02 avril 2018 13:50:01 CEST
 """
 -----------
 DOCSTRING
@@ -122,9 +122,9 @@ class MainWin(BasePanel):
         tmp = "Type   {:25} {:30}"
         self.gwin.addstr(i+3, 1, tmp.format(':help<Enter> or ?',
                                             'for help').center(self.app.screen_width-4))
-        self.gwin.addstr(i+4, 1, tmp.format(':q<Enter> or q',
+        self.gwin.addstr(i+4, 1, tmp.format(':q<Enter>',
                                             'to exit').center(self.app.screen_width-4))
-        self.gwin.addstr(i+5, 1, tmp.format(':Q<Enter> or q',
+        self.gwin.addstr(i+5, 1, tmp.format(':Q<Enter>',
                                             'to exit and shutdown daemon').center(self.app.screen_width-4))
 
     def tasks(self):
@@ -152,10 +152,6 @@ class MainWin(BasePanel):
 
         # Get pressed key (even in case of switch)
         self.pkey = self.app.stdscr.getch()
-
-        # Close menu at the end to avoid getch delay !
-        if self.pkey in self.app.kquit:
-            self.app.close_menu()
 
     def list_key_bindings(self):
         """ Overload this method with nothing ! """

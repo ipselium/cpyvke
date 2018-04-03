@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : sam. 31 mars 2018 01:20:18 CEST
+# Last Modified : lun. 02 avril 2018 13:27:47 CEST
 """
 -----------
 DOCSTRING
@@ -37,12 +37,10 @@ code = locale.getpreferredencoding()
 
 
 class PadWin(abc.ABC):
-    """ General Pad example """
+    """ General Pad Abstract Class """
 
     def __init__(self, app):
-        """ CLass constructor """
 
-        # app instance
         self.app = app
 
     @abc.abstractmethod
@@ -113,13 +111,12 @@ class PadWin(abc.ABC):
                 pad_pos = 0
             elif pkey == 360:               # End
                 pad_pos = pad_y
+            elif pkey == curses.KEY_RESIZE:
+                break
 
             self.gpad.refresh(pad_pos, 0, 1, 1,
                               self.app.screen_height-2, self.app.screen_width-2)
 
             pkey = self.gpad.getch()
-
-            if pkey == curses.KEY_RESIZE:
-                break
 
         self.gpad.erase()

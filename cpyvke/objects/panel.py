@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : sam. 31 mars 2018 11:20:59 CEST
+# Last Modified : mar. 03 avril 2018 11:13:10 CEST
 """
 -----------
 DOCSTRING
@@ -115,16 +115,15 @@ class BasePanel(abc.ABC):
         # Create border before updating fields
         self.gwin.border(0)
 
-        # Update all windows
-        if self.app.DEBUG:
-            self.app.dbg_ressources()         # Display infos about the process
-            self.app.dbg_term(self.pkey)         # Display infos about the process
-
         # Fill the main box !
         self.fill_main_box()
 
+        # Update all windows
+        if self.app.debug:
+            self.app.dbg_pad(self.pkey)
+
         # Update infos -- Bottom
-        self.app.bottom_bar_info()
+        self.app.status_bar()
         self.prompt_msg_display()
         self.app.stdscr.refresh()
         self.gwin.refresh()
@@ -157,6 +156,10 @@ class BasePanel(abc.ABC):
         # Send code
         elif self.pkey == 120:    # -> x
             self.send_code()
+
+        # Debug Pad
+        elif self.pkey == 100:      # -> d
+            self.toggle_debug()
 
     def socket_key_bindings(self):
         """ Socket actions key bindings. """
@@ -226,6 +229,9 @@ class BasePanel(abc.ABC):
         elif self.cmd in ['d', 'daemon-disconnect']:
             self.daemon_disconnect()
 
+        elif self.cmd in ['toggle-debug']:
+            self.toggle_debug()
+
         else:
             self.prompt_msg_setup('Command not found !')
 
@@ -248,6 +254,14 @@ class BasePanel(abc.ABC):
             self.app.explorer_win.display()
         else:
             self.prompt_msg_setup('Already in variable explorer !')
+
+    def toggle_debug(self):
+        """ Display/hide debug informations """
+
+        if self.app.debug:
+            self.app.debug = False
+        else:
+            self.app.debug = True
 
     def send_code(self):
         """ Send code to current kernel """
@@ -413,17 +427,15 @@ class ListPanel(BasePanel):
         # Create border before updating fields
         self.gwin.border(0)
 
-        # Update all windows
-        if self.app.DEBUG:
-            self.app.dbg_ressources()         # Display infos about the process
-            self.app.dbg_term(self.pkey)         # Display infos about the process
-            self.app.dbg_lst(self.search, self.filter, self.mk_sort)        # Display debug infos
-
         # Fill the main box !
         self.fill_main_box()
 
+        # Update all windows
+        if self.app.debug:
+            self.app.dbg_pad(self.pkey, self.search, self.filter, self.mk_sort)
+
         # Update infos -- Bottom
-        self.app.bottom_bar_info()
+        self.app.status_bar()
         self.prompt_msg_display()
         self.app.stdscr.refresh()
         self.gwin.refresh()

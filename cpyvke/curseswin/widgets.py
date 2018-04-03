@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : sam. 31 mars 2018 00:36:49 CEST
+# Last Modified : lun. 02 avril 2018 13:51:00 CEST
 """
 -----------
 DOCSTRING
@@ -131,7 +131,7 @@ class Help(PadWin):
         return ['',
                 '(?) This Help !',
                 '(ENTER) Selected item menu',
-                '(q|ESC) Previous menu/quit',
+                '(q|ESC) Previous menu',
                 '(:) Prompt access',
                 '(/) Search a pattern',
                 '(n) Next occurence of pattern',

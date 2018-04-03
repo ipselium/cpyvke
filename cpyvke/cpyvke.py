@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : jeu. 29 mars 2018 00:02:21 CEST
+# Last Modified : lun. 02 avril 2018 17:04:58 CEST
 """
 -----------
 DOCSTRING
@@ -83,7 +83,6 @@ def parse_args(lockfile, pidfile):
     """ Parse Arguments. """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-D", "--debug", help="Debug mode", action="store_true")
     parser.add_argument("-L", "--list", help="List all kernels",
                         action="store_true")
     parser.add_argument("integer", help="Start up with existing kernel. \
@@ -167,7 +166,7 @@ def main(args=None):
 
     # Init Curses App
     sock = SocketManager(config, logger)
-    app = InitApp(kc, cf, config, sock, args.debug)
+    app = InitApp(kc, cf, config, sock)
     # Run App
     logger.info('cpyvke started')
     main_curse = MainWin(app, sock, logger)

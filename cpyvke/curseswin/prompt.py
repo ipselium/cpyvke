@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : sam. 31 mars 2018 00:37:54 CEST
+# Last Modified : mar. 03 avril 2018 11:12:09 CEST
 """
 -----------
 DOCSTRING
@@ -39,7 +39,8 @@ def cmd_lst():
            'daemon-restart-connection', 'daemon-connect', 'daemon-disconnect',
            'daemon-restart',
            'help',
-           'variable-explorer']
+           'variable-explorer',
+           'toggle-debug']
     lst.sort()
 
     return lst

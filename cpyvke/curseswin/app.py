@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : sam. 31 mars 2018 11:16:50 CEST
+# Last Modified : mar. 03 avril 2018 11:07:42 CEST
 """
 -----------
 DOCSTRING
@@ -34,10 +34,10 @@ import psutil
 import locale
 import traceback
 import curses
-from curses import panel
 
 from cpyvke.utils.colors import Colors
 from cpyvke.utils.comm import send_msg
+from cpyvke.utils.display import str_reduce
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -52,12 +52,8 @@ def check_size(function):
         app = args[0].app
 
         # Min terminal size allowed
-        if app.DEBUG:
-            term_min_height = 20
-            term_min_width = 80
-        else:
-            term_min_height = 15
-            term_min_width = 70
+        term_min_height = 15
+        term_min_width = 70
 
         # Blank screen if dimension are too small
         if app.screen_height < term_min_height or app.screen_width < term_min_width:
@@ -86,7 +82,7 @@ def check_size(function):
 class InitApp:
     """ Initlication. """
 
-    def __init__(self, kc, cf, config, sock, DEBUG):
+    def __init__(self, kc, cf, config, sock):
         """  """
 
         # Arguments
@@ -94,7 +90,6 @@ class InitApp:
         self.cf = cf
         self.config = config
         self.sock = sock
-        self.DEBUG = DEBUG
 
         # Init CUI :
         self.close_signal = 'continue'
@@ -118,13 +113,8 @@ class InitApp:
         # Set some colors
         self.stdscr.bkgd(self.c_main_txt)
 
-        # Min terminal size allowed
-        if self.DEBUG:
-            self._debug_info = 7       # Size of the bottom text area
-        else:
-            self._debug_info = 2
-
         # Some variables
+        self.debug = False
         self.kernel_change = False
         self.explorer_switch = False
         self.kernel_switch = False
@@ -142,7 +132,7 @@ class InitApp:
 
     @property
     def panel_height(self):
-        return self.screen_height-self._debug_info
+        return self.screen_height - 2
 
     @property
     def row_max(self):
@@ -217,56 +207,36 @@ class InitApp:
         self.c_bar_kn_pwfc = curses.color_pair(49)
         self.c_bar_kn_pwfd = curses.color_pair(40)
 
-    def dbg_ressources(self):
-        """ Display ressources informations """
-
-        self.stdscr.addstr(self.panel_height + 1, int(2*self.screen_width/3),
-                           ' Ressources ', self.c_main_ttl | curses.A_BOLD)
-        if self.config['font']['pw-font'] == 'True':
-            self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscr.addstr(self.panel_height + 2, 2*int(self.screen_width/3) + 1,
-                           ' cpu : {} %'.format(self.ressources.cpu_percent()),
-                           curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.panel_height + 3, 2*int(self.screen_width/3) + 1,
-                           ' memory : {:.2f} %'.format(self.ressources.memory_percent()),
-                           curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.panel_height + 4, 2*int(self.screen_width/3) + 1,
-                           ' threads : {} '.format(self.ressources.num_threads()),
-                           curses.A_DIM | self.c_main_txt)
-
-    def dbg_term(self, pkey):
-        """ Display terminal informations """
-
-        self.stdscr.addstr(self.panel_height + 1, 2,
-                           ' Terminal ', self.c_main_ttl | curses.A_BOLD)
-        if self.config['font']['pw-font'] == 'True':
-            self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscr.addstr(self.panel_height + 2, 3,
-                           ' key : {}'.format(pkey),
-                           curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.panel_height + 3, 3,
-                           ' size : {}x{}'.format(self.screen_width,
-                                                   self.screen_height),
-                           curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.panel_height + 4, 3,
-                           ' colors : ' + str(curses.COLORS),
-                           curses.A_DIM | self.c_main_txt)
-
-    def dbg_lst(self, search, filter, mk_sort):
+    def dbg_pad(self, pkey, search=None, filter=None, mk_sort=None):
         """ Display debug informations """
 
-        self.stdscr.addstr(self.panel_height + 1, int(self.screen_width/3), ' Debug ',
-                           self.c_main_ttl | curses.A_BOLD)
-        if self.config['font']['pw-font'] == 'True':
-            self.stdscr.addstr('', self.c_main_pwf | curses.A_BOLD)
-        self.stdscr.addstr(self.panel_height + 2, int(self.screen_width/3) + 1, ' search : {}'.format(search),
-                           curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.panel_height + 3, int(self.screen_width/3) + 1, ' limit : {}'.format(filter),
-                           curses.A_DIM | self.c_main_txt)
-        self.stdscr.addstr(self.panel_height + 4, int(self.screen_width/3) + 1, ' sort : {}'.format(mk_sort),
-                           curses.A_DIM | self.c_main_txt)
+        pad_width = 19
 
-    def bottom_bar_info(self):
+        lst = [' cpu: {}%'.format(self.ressources.cpu_percent()),
+               ' mem: {:.2f}%'.format(self.ressources.memory_percent()),
+               ' size : {}x{}'.format(self.screen_width, self.screen_height),
+               ' colors : ' + str(curses.COLORS),
+               ' key : {}'.format(pkey),
+               ' sort : {}'.format(mk_sort),
+               str_reduce(' search : {}'.format(search), pad_width - 3),
+               str_reduce(' limit : {}'.format(filter), pad_width - 3)]
+
+        # Init Menu
+        pad_height = len(lst) + 2
+        pad = self.stdscr.subwin(pad_height, pad_width, 2, int((self.screen_width-pad_width+1)/2))
+        pad.attrset(self.c_warn_bdr | curses.A_BOLD)    # change border color
+        pad.keypad(1)
+        pad.clear()
+        pad.border(0)
+
+        # Fill pad
+        for idx, item in enumerate(lst):
+            if 'None' not in item:
+                pad.addstr(idx + 1, 2, item, curses.A_DIM | self.c_main_txt)
+
+        pad.refresh()
+
+    def status_bar(self):
         """ Check and display kernel informations """
 
         debug_info_id = 'kernel ' + self.cf.split('-')[1].split('.')[0] + ' '
@@ -308,47 +278,6 @@ class InitApp:
         else:
             self.stdscr.addstr(self.screen_height-2, self.screen_width-10,
                                '< ?:help >', self.c_bar_hlp | curses.A_BOLD)
-
-    def close_menu(self):
-        """ Close Menu """
-
-        # Init Menu
-        cmsg = 'Shutdown daemon (default no) ? [y|n|q]'
-        cmsg_width = len(cmsg) + 4
-        menu_close = self.stdscr.subwin(3, cmsg_width,
-                                        int(self.screen_height/2),
-                                        int((self.screen_width-cmsg_width)/2))
-        menu_close.bkgd(self.c_warn_txt)
-        menu_close.attrset(self.c_warn_bdr | curses.A_BOLD)  # Change border color
-        menu_close.border(0)
-        menu_close.keypad(1)
-
-        # Send menu to a panel
-        panel_close = panel.new_panel(menu_close)
-        panel_close.top()        # Push the panel to the bottom of the stack.
-
-        menu_close.addstr(1, 2, cmsg, curses.A_BOLD | self.c_warn_txt)
-        panel_close.show()       # Display the panel (which might have been hidden)
-        menu_close.refresh()
-
-        # Wait for yes or no
-        self.stdscr.nodelay(False)
-        self.pkey = -1
-        while self.pkey not in (121, 110, 113, 89, 78, 27, ord("\n")):
-            self.pkey = self.stdscr.getch()
-            time.sleep(0.5)
-
-        # Erase the panel
-        menu_close.clear()
-        panel_close.hide()
-        self.stdscr.refresh()
-
-        if self.pkey in (110, 78, ord("\n")):
-            self.close_signal = 'close'
-        elif self.pkey in (121, 89):
-            self.close_signal = 'shutdown'
-        elif self.pkey in (113, 27):  # escape this menu
-            self.close_signal = 'continue'
 
     def shutdown(self):
         """ Shutdown CUI, Daemon, and kernel """
