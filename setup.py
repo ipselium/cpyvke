@@ -36,7 +36,7 @@ if sys.version_info < (2,7):
     raise NotImplementedError(
         "Sorry, you need at least Python 2.7 to use cpyvke.")
 
-VERSION = '1.1.10'
+VERSION = '1.2.0'
 
 __doc__ = """\
 A Curses PYthon Variable and Kernel Explorer
