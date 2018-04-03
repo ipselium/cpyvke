@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 03 avril 2018 11:45:29 CEST
+# Last Modified : mar. 03 avril 2018 14:47:49 CEST
 """
 -----------
 DOCSTRING
@@ -316,7 +316,10 @@ class BasePanel(abc.ABC):
         """ Send code to current kernel """
 
         code = self.prompt.simple('Send-code ')
-        if code:
+        code, err = self.check_code(code)
+        if err:
+            self.prompt_msg_setup(err)
+        elif code:
             try:
                 send_msg(self.sock.RequestSock, '<code>' + code)
                 self.logger.info('Code sent to kernel : {}'.format(code))
@@ -324,6 +327,17 @@ class BasePanel(abc.ABC):
             except Exception:
                 self.logger.error('Code not sent !')
                 self.prompt_msg_setup('Code not sent !')
+
+    @staticmethod
+    def check_code(code):
+        """ Check is code is authorized """
+
+        if 'input' in code:
+            return '', 'input command is not allowed'
+        elif 'reset' in code:
+            return 'reset -f', 'Resetting namespace...'
+        else:
+            return code, None
 
     def daemon_connect(self):
         """ Connect to daemon socket """

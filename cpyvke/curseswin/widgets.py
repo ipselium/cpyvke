@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : lun. 02 avril 2018 13:51:00 CEST
+# Last Modified : mar. 03 avril 2018 14:51:27 CEST
 """
 -----------
 DOCSTRING
@@ -124,7 +124,7 @@ class Help(PadWin):
 
     @property
     def title(self):
-        return 'Help'
+        return ' Help '
 
     @property
     def content(self):
