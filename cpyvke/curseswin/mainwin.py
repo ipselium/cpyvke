@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : lun. 02 avril 2018 13:50:01 CEST
+# Last Modified : mar. 03 avril 2018 11:45:34 CEST
 """
 -----------
 DOCSTRING
@@ -34,7 +34,6 @@ import locale
 from cpyvke.curseswin.kernelwin import KernelWin
 from cpyvke.curseswin.explorerwin import ExplorerWin
 from cpyvke.curseswin.widgets import WarningMsg
-from cpyvke.curseswin.app import check_size
 from cpyvke.objects.panel import BasePanel
 from cpyvke.utils.ascii import ascii_cpyvke
 
@@ -77,37 +76,6 @@ class MainWin(BasePanel):
         elif item == 'warn':
             return self.app.c_warn_txt
 
-    def display(self):
-        """ Run app ! """
-
-        try:
-            self.pkey = -1
-            while self.app.close_signal == 'continue':
-                self.update_curses()
-            self.app.shutdown()
-        except Exception:
-            self.app.exit_with_error()
-
-    @check_size
-    def update_curses(self):
-        """ Update Curses """
-
-        self.resize_curses()
-
-        # Check switch panel
-        if self.app.explorer_switch:
-            self.app.explorer_switch = False
-            self.app.kernel_win.display()
-            self.resize_curses(True)
-
-        elif self.app.kernel_switch:
-            self.app.kernel_switch = False
-            self.app.explorer_win.display()
-            self.resize_curses(True)
-
-        else:
-            self.tasks()
-
     def fill_main_box(self):
         """ Welcome message """
 
@@ -126,37 +94,6 @@ class MainWin(BasePanel):
                                             'to exit').center(self.app.screen_width-4))
         self.gwin.addstr(i+5, 1, tmp.format(':Q<Enter>',
                                             'to exit and shutdown daemon').center(self.app.screen_width-4))
-
-    def tasks(self):
-        """ Tasks to update curses """
-
-        # Check Connection to daemon
-        self.sock.check_main_socket()
-
-        # Keys
-        self.common_key_bindings()
-
-        # Decrease delay right here to avoid some waiting at the getch when not
-        # in switch mode. If switch, the halfdelay is set to its normal value
-        # just after, in the refresh() method !
-        curses.halfdelay(1)
-
-        # Skip end of tasks if switching panel !
-        if not self.app.explorer_switch and not self.app.kernel_switch and self.app.close_signal == "continue":
-
-            # Update screen size if another menu break because of resizing
-            self.resize_curses()
-
-            # Update all static panels
-            self.refresh()
-
-        # Get pressed key (even in case of switch)
-        self.pkey = self.app.stdscr.getch()
-
-    def list_key_bindings(self):
-        """ Overload this method with nothing ! """
-
-        pass
 
     def custom_key_bindings(self):
         """ Custom Key Actions ! """

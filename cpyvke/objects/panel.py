@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 03 avril 2018 11:13:10 CEST
+# Last Modified : mar. 03 avril 2018 11:45:29 CEST
 """
 -----------
 DOCSTRING
@@ -97,13 +97,57 @@ class BasePanel(abc.ABC):
     def fill_main_box(self):
         """ Fill the main box """
 
-    @abc.abstractmethod
     def display(self):
         """ Display the panel. """
 
-    @abc.abstractmethod
+        try:
+            self.pkey = -1
+            while self.app.close_signal == 'continue':
+                self.tasks()
+            self.app.shutdown()
+        except Exception:
+            self.app.exit_with_error()
+
+    @check_size
     def tasks(self):
         """ List of tasks at each iteration """
+
+        self.resize_curses()
+
+        # Check switch panel
+        if self.app.explorer_switch:
+            self.app.explorer_switch = False
+            self.app.kernel_win.display()
+            self.resize_curses(True)
+
+        elif self.app.kernel_switch:
+            self.app.kernel_switch = False
+            self.app.explorer_win.display()
+            self.resize_curses(True)
+
+        else:
+            # Check Connection to daemon
+            self.sock.check_main_socket()
+
+            # Keys
+            self.common_key_bindings()
+
+            # Decrease delay right here to avoid some waiting at the getch when not
+            # in switch mode. If switch, the halfdelay is set to its normal value
+            # just after, in the refresh() method !
+            curses.halfdelay(1)
+
+            # Skip end of tasks if switching panel !
+            if not self.app.explorer_switch and not self.app.kernel_switch and self.app.close_signal == "continue":
+
+                # Update screen size if another menu break because of resizing
+                self.resize_curses()
+
+                # Update all static panels
+                self.refresh()
+
+            # Get pressed key (even in case of switch)
+            self.pkey = self.app.stdscr.getch()
 
     def refresh(self):
         """ Refresh all objects. """
@@ -175,6 +219,11 @@ class BasePanel(abc.ABC):
 
         elif self.pkey == 18:    # -> c-r
             self.daemon_restart()
+
+    def list_key_bindings(self):
+        """ Not available for BasePanel. See List ListPanel """
+
+        pass
 
     def custom_key_bindings(self):
         """ Key bindings : To overload """

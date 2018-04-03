@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 03 avril 2018 11:07:42 CEST
+# Last Modified : mar. 03 avril 2018 11:46:27 CEST
 """
 -----------
 DOCSTRING
@@ -207,7 +207,7 @@ class InitApp:
         self.c_bar_kn_pwfc = curses.color_pair(49)
         self.c_bar_kn_pwfd = curses.color_pair(40)
 
-    def dbg_pad(self, pkey, search=None, filter=None, mk_sort=None):
+    def dbg_pad(self, pkey, search=None, filt=None, mk_sort=None):
         """ Display debug informations """
 
         pad_width = 19
@@ -219,7 +219,7 @@ class InitApp:
                ' key : {}'.format(pkey),
                ' sort : {}'.format(mk_sort),
                str_reduce(' search : {}'.format(search), pad_width - 3),
-               str_reduce(' limit : {}'.format(filter), pad_width - 3)]
+               str_reduce(' limit : {}'.format(filt), pad_width - 3)]
 
         # Init Menu
         pad_height = len(lst) + 2
