@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 16:29:28 2016
-# Last Modified : mar. 03 avril 2018 14:51:27 CEST
+# Last Modified : mar. 03 avril 2018 21:15:01 CEST
 """
 -----------
 DOCSTRING
@@ -66,7 +66,7 @@ class Viewer(PadWin):
     @property
     def content(self):
         if type(self.varval) is str:
-            dumped = str_format(self.varval, self.screen_width-6)
+            dumped = str_format(self.varval, self.app.screen_width-6)
         else:
             dumped = dump(self.varval)
 
