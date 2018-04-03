@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Mon Nov 14 09:08:25 2016
-# Last Modified : mar. 03 avril 2018 14:47:49 CEST
+# Last Modified : mar. 03 avril 2018 15:55:45 CEST
 """
 -----------
 DOCSTRING
@@ -681,7 +681,7 @@ class ListPanel(BasePanel):
                 self.filter = None
                 self.mk_sort = 'name'
             else:
-                self.limit_msg = 'Filter : ' + self.filter + ' (' + str(len(self.item_keys)) + ' obj.)'
+                self.limit_msg = ' Filter : {} ({} obj.) '.format(self.filter, len(self.item_keys))
 
         else:
             self.item_keys = list(self.item_dic)

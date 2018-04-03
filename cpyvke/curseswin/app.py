@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 03 avril 2018 11:46:27 CEST
+# Last Modified : mar. 03 avril 2018 15:57:59 CEST
 """
 -----------
 DOCSTRING
@@ -58,8 +58,8 @@ def check_size(function):
         # Blank screen if dimension are too small
         if app.screen_height < term_min_height or app.screen_width < term_min_width:
             # Messages
-            msg_actual = str(app.screen_width) + 'x' + str(app.screen_height)
-            msg_limit = 'Win must be > ' + str(term_min_width) + 'x' + str(term_min_height)
+            msg_actual = '{}x{}'.format(app.screen_width, app.screen_height)
+            msg_limit = 'Win must be > {}x{}'.format(term_min_width, term_min_height)
             # Message locations
             y_mid = int(app.screen_height/2)
             x_mid_limit = int((app.screen_width-len(msg_limit))/2)
@@ -215,7 +215,7 @@ class InitApp:
         lst = [' cpu: {}%'.format(self.ressources.cpu_percent()),
                ' mem: {:.2f}%'.format(self.ressources.memory_percent()),
                ' size : {}x{}'.format(self.screen_width, self.screen_height),
-               ' colors : ' + str(curses.COLORS),
+               ' colors : {}'.format(curses.COLORS),
                ' key : {}'.format(pkey),
                ' sort : {}'.format(mk_sort),
                str_reduce(' search : {}'.format(search), pad_width - 3),
@@ -239,8 +239,8 @@ class InitApp:
     def status_bar(self):
         """ Check and display kernel informations """
 
-        debug_info_id = 'kernel ' + self.cf.split('-')[1].split('.')[0] + ' '
-        debug_info_obj = str(self.var_nb) + ' obj.'
+        debug_info_id = 'kernel {} '.format(self.cf.split('-')[1].split('.')[0])
+        debug_info_obj = '{} obj.'.format(self.var_nb)
 
         # Kernel Info
         if self.config['font']['pw-font'] == 'True':
