@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : lun. 02 avril 2018 17:04:58 CEST
+# Last Modified : lun. 09 avril 2018 21:15:58 CEST
 """
 -----------
 DOCSTRING
@@ -99,7 +99,12 @@ def parse_args(lockfile, pidfile):
         sys.exit(0)
 
     elif os.path.exists(lockfile) and pid:
-        cf = init_cf(lockfile)
+        try:
+            cf = init_cf(lockfile)
+        except OSError:
+            sys.stderr.write('lockfile points to an unknown connection file.\n')
+            sys.stderr.write("Try 'kd5 stop'\n")
+            sys.exit(1)
         if args.integer:
             message = 'Daemon is already running. Dropping argument {}\n'
             sys.stderr.write(message.format(args.integer))

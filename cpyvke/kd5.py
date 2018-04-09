@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Fri Nov  4 21:49:15 2016
-# Last Modified : jeu. 29 mars 2018 00:10:18 CEST
+# Last Modified : lun. 09 avril 2018 21:32:29 CEST
 """
 -----------
 DOCSTRING
@@ -269,7 +269,7 @@ class Watcher(threading.Thread):
         _, self.kc = connect_kernel(cf)
         new_id = set_kid(self.kc.connection_file)
 
-        # Update kd5.last kd5.lock files
+        # Update kd5.lock files
         self.update_lockfile(new_id)
         logger.info('Kernel change from {} to {}'.format(old_id, new_id))
 
@@ -277,7 +277,7 @@ class Watcher(threading.Thread):
         self.send_variables()
 
     def update_lockfile(self, new_id):
-        """ Update last and lock files """
+        """ Update lock files """
 
         LogDir = os.path.expanduser("~") + "/.cpyvke/"
 
@@ -428,6 +428,17 @@ def parse_args(lockfile, pidfile, Config):
     return args, kid
 
 
+def create_new(Config):
+    """ Create new kernel """
+
+    sys.stdout.write('Creating new kernel...\n')
+    kid = start_new_kernel(version=Config['kernel version']['version'])
+    message = 'Kernel id {} created (Python {})\n'
+    sys.stdout.write(message.format(kid, Config['kernel version']['version']))
+
+    return kid
+
+
 def start_action(args, lockfile, Config):
     """ Start Parser action. """
 
@@ -453,10 +464,7 @@ def start_action(args, lockfile, Config):
             sys.exit(1)
 
     else:
-        sys.stdout.write('Creating new kernel...\n')
-        kid = start_new_kernel(version=Config['kernel version']['version'])
-        message = 'Kernel id {} created (Python {})\n'
-        sys.stdout.write(message.format(kid, Config['kernel version']['version']))
+        kid = create_new(Config)
 
     kdwrite(lockfile, kid)
 
@@ -572,7 +580,15 @@ def main(args=None):
     rport = int(Config['comm']['r-port'])
     delay = float(Config['daemon']['refresh'])
 
-    WatchConf = {'cf': find_connection_file(kid),
+    try:
+        cfile = find_connection_file(kid)
+    except OSError:
+        sys.stderr.write('Lockfile points to an unknown connection file !\n')
+        kid = create_new(Config)
+        cfile = find_connection_file(kid)
+        kdwrite(lockfile, kid)
+
+    WatchConf = {'cf': cfile,
                  'delay': delay,
                  'sport': sport,
                  'rport': rport}
