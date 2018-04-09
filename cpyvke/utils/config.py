@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 29 nov. 2016 23:18:27 CET
-# Last Modified : mar. 27 mars 2018 23:35:29 CEST
+# Last Modified : lun. 09 avril 2018 22:46:28 CEST
 """
 -----------
 DOCSTRING
@@ -75,6 +75,7 @@ class cfg_setup:
         self.cfg.set('main colors', 'text', 'white, transparent')
         self.cfg.set('main colors', 'highlight', 'black, cyan')
         self.cfg.set('main colors', 'border', 'white, transparent')
+        self.cfg.set('main colors', 'ascii', 'red, transparent')
 
         self.cfg.add_section('explorer colors')
         self.cfg.set('explorer colors', 'title', 'cyan, transparent')
@@ -106,6 +107,7 @@ class cfg_setup:
 
         self.cfg.add_section('font')
         self.cfg.set('font', 'powerline-font', 'False')
+        self.cfg.set('font', 'ascii-font', 'small')
 
         self.cfg.add_section('comm')
         self.cfg.set('comm', 's-port', 15555)
@@ -143,6 +145,11 @@ class cfg_setup:
                 pwf = self.cfg.get('font', 'powerline-font')
             else:
                 pwf = 'False'
+
+            if self.cfg.has_option('font', 'ascii-font'):
+                ascii = self.cfg.get('font', 'ascii-font')
+            else:
+                ascii = 'small'
 
             # KERNEL VERSION
             if self.cfg.has_option('kernel version', 'version'):
@@ -220,6 +227,11 @@ class cfg_setup:
             else:
                 main_hh = "black, cyan"
 
+            if self.cfg.has_option('main colors', 'ascii'):
+                main_asc = self.cfg.get('main colors', 'ascii')
+            else:
+                main_asc = "red, transparent"
+
             # EXPLORER COLORS
             if self.cfg.has_option('explorer colors', 'text'):
                 exp_txt = self.cfg.get('explorer colors', 'text')
@@ -281,6 +293,7 @@ class cfg_setup:
             self.Config = {'mn': {'txt': main_txt,
                                   'bdr': main_bdr,
                                   'ttl': main_ttl,
+                                  'asc': main_asc,
                                   'hh': main_hh},
                            'xp': {'txt': exp_txt,
                                   'bdr': exp_bdr,
@@ -300,7 +313,8 @@ class cfg_setup:
                                   'co': br_co,
                                   'dco': br_dco},
                            'path': {'save-dir': self.save_dir},
-                           'font': {'pw-font': pwf},
+                           'font': {'pw-font': pwf,
+                                    'ascii-font': ascii},
                            'kernel version': {'version': kver},
                            'comm': {'s-port': sport,
                                     'r-port': rport},

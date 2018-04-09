@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 03 avril 2018 11:45:34 CEST
+# Last Modified : lun. 09 avril 2018 22:43:21 CEST
 """
 -----------
 DOCSTRING
@@ -64,28 +64,28 @@ class MainWin(BasePanel):
 
     def color(self, item):
         if item == 'txt':
-            return self.app.c_exp_txt
+            return self.app.c_main_txt
         elif item == 'bdr':
-            return self.app.c_exp_bdr
+            return self.app.c_main_bdr
         elif item == 'ttl':
-            return self.app.c_exp_ttl
+            return self.app.c_main_ttl
         elif item == 'hh':
-            return self.app.c_exp_hh
+            return self.app.c_main_hh
         elif item == 'pwf':
-            return self.app.c_exp_pwf
-        elif item == 'warn':
-            return self.app.c_warn_txt
+            return self.app.c_main_pwf
+        elif item == 'asc':
+            return self.app.c_main_asc
 
     def fill_main_box(self):
         """ Welcome message """
 
-        msg = ascii_cpyvke()
+        msg = ascii_cpyvke(self.app.config['font']['ascii-font'])
         msg_size = max([len(i) for i in msg])
 
         for i in range(len(msg)):
             self.gwin.addstr(i+1,
                              int((self.app.screen_width - msg_size)/2),
-                             msg[i], self.color('warn') | curses.A_BOLD)
+                             msg[i], self.color('asc') | curses.A_BOLD)
 
         tmp = "Type   {:25} {:30}"
         self.gwin.addstr(i+3, 1, tmp.format(':help<Enter> or ?',

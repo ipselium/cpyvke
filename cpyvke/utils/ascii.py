@@ -20,13 +20,14 @@
 #
 #
 # Creation Date : sam. 17 mars 2018 11:22:56 CET
-# Last Modified : mar. 20 mars 2018 11:08:37 CET
+# Last Modified : lun. 09 avril 2018 22:37:36 CEST
 """
 -----------
 DOCSTRING
 
 @author: Cyril Desjouy
 """
+
 
 def ascii_cpyvke(font='small'):
     """ figlet -f font "Cpyvke" """
@@ -46,6 +47,6 @@ def ascii_cpyvke(font='small'):
         return ["░█▀▀░█▀█░█░█░█░█░█░█░█▀▀",
                 "░█░░░█▀▀░░█░░▀▄▀░█▀▄░█▀▀",
                 "░▀▀▀░▀░░░░▀░░░▀░░▀░▀░▀▀▀  v1.2.2"]
-
-
+    else:
+        return ["Ascii font not found !"]
 

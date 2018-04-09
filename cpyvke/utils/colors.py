@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : mar. 13 mars 2018 14:48:27 CET
-# Last Modified : mar. 27 mars 2018 23:05:59 CEST
+# Last Modified : lun. 09 avril 2018 22:51:01 CEST
 """
 -----------
 DOCSTRING
@@ -92,6 +92,7 @@ class Colors:
         mnbdr = self.config['mn']['bdr'].replace(' ', '').split(',')
         mnttl = self.config['mn']['ttl'].replace(' ', '').split(',')
         mnhh = self.config['mn']['hh'].replace(' ', '').split(',')
+        mnasc = self.config['mn']['asc'].replace(' ', '').split(',')
         try:
             mntxt_fg = self.check_color(mntxt[0])
             mntxt_bg = self.check_color(mntxt[1])
@@ -101,6 +102,9 @@ class Colors:
             mnttl_bg = self.check_color(mnttl[1])
             mnhh_fg = self.check_color(mnhh[0])
             mnhh_bg = self.check_color(mnhh[1])
+            mnasc_fg = self.check_color(mnasc[0])
+            mnasc_bg = self.check_color(mnasc[1])
+
         except Exception as err:
             mntxt_fg = curses.COLOR_WHITE
             mntxt_bg = -1
@@ -110,6 +114,8 @@ class Colors:
             mnttl_bg = -1
             mnhh_fg = curses.COLOR_BLACK
             mnhh_bg = curses.COLOR_WHITE
+            mnasc_fg = curses.COLOR_RED
+            mnasc_bg = -1
             logger.error('%s', err)
 
         brkn = self.config['br']['kn'].replace(' ', '').split(',')
@@ -141,6 +147,7 @@ class Colors:
         curses.init_pair(12, mnbdr_fg, mnbdr_bg)
         curses.init_pair(13, mnttl_fg, mnttl_bg)
         curses.init_pair(14, mnhh_fg, mnhh_bg)
+        curses.init_pair(16, mnasc_fg, mnasc_bg)
         if mnttl_bg != -1:
             curses.init_pair(15, mnttl_bg, mnbdr_bg)
         else:

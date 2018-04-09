@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 16:27:41 2016
-# Last Modified : jeu. 29 mars 2018 23:15:09 CEST
+# Last Modified : lun. 09 avril 2018 21:56:41 CEST
 """
 -----------
 DOCSTRING
@@ -192,9 +192,12 @@ class Inspect:
 
         elif self.vartype == 'module':
             if arg == 'help':
-                exec('import {}'.format(self.varval))
                 sys.stdout = open(filename, 'w')
-                print(help(self.varval))
+                try:
+                    exec('import {}'.format(self.varval))
+                    print(help(self.varval))
+                except ImportError:
+                    print('Not found!')
 
         else:
             with open(filename, 'w') as f:

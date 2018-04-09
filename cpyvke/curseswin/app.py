@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov 9 10:03:04 2016
-# Last Modified : mar. 03 avril 2018 15:57:59 CEST
+# Last Modified : lun. 09 avril 2018 22:51:37 CEST
 """
 -----------
 DOCSTRING
@@ -179,6 +179,7 @@ class InitApp:
         self.c_main_ttl = curses.color_pair(13)
         self.c_main_hh = curses.color_pair(14)
         self.c_main_pwf = curses.color_pair(15)
+        self.c_main_asc = curses.color_pair(16)
 
         self.c_exp_txt = curses.color_pair(21)
         self.c_exp_bdr = curses.color_pair(22)
