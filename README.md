@@ -18,21 +18,21 @@ longer maintened !
 
 - - -
 
-## kd5 : the daemon to communicate with IPython kernels
-
-*Communication with ipython kernels.*
-
-* Stream variable list each time a change occurs in the kernel
-* Listen to request from the client
-
-- - -
-
 ## cpyvke : the Curses interface
 
 *Variable explorer and kernel manager.*
 
 * Explore variables in IPython kernels
 * Manage IPython kernels
+
+- - -
+
+## kd5 : the daemon to communicate with IPython kernels
+
+*Communication with ipython kernels.*
+
+* Stream variable list each time a change occurs in the kernel
+* Listen to request from the client
 
 - - -
 
