@@ -20,7 +20,7 @@
 #
 #
 # Creation Date :
-# Last Modified : mar. 20 mars 2018 11:08:03 CET
+# Last Modified : mar. 10 avril 2018 20:31:43 CEST
 """
 -----------
 DOCSTRING
@@ -30,42 +30,35 @@ DOCSTRING
 
 from setuptools import setup, find_packages
 import sys
-
+import cpyvke
 
 if sys.version_info < (2,7):
     raise NotImplementedError(
         "Sorry, you need at least Python 2.7 to use cpyvke.")
 
-VERSION = '1.2.3'
-
-__doc__ = """\
-A Curses PYthon Variable and Kernel Explorer
-"""
-
-
 setup(
     name='cpyvke',
-    version=VERSION,
+    description='A Kernel and variable explorer in Curses',
+    long_description=open('README.md').read(),
+    version=cpyvke.__version__,
+    license='GPL',
     url='https://github.com/ipselium/cpyvke',
     author='Cyril Desjouy',
     author_email='ipselium@free.fr',
     packages=find_packages(),
     include_package_data=True,
+    install_requires=["jupyter_client", "ipykernel", "psutil", "numpy", "matplotlib"],
+    classifiers=[
+        'Development Status :: Beta',
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'Programming Language :: Python',
+    ],
     entry_points={
         'console_scripts': [
             'kd5 = cpyvke.kd5:main',
             'cpyvke = cpyvke.cpyvke:main',
             'cpyvke-launch-ipython = cpyvke.launch:main',
         ],
-    },
-    install_requires=["jupyter_client", "ipykernel", "psutil", "numpy", "matplotlib"],
-    license='BSD',
-    description='A Kernel and variable explorer in Curses',
-    long_description=__doc__,
-    classifiers=[
-        'Development Status :: Beta',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Programming Language :: Python',
-    ]
+    }
 )

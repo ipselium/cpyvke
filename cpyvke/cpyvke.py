@@ -20,7 +20,7 @@
 #
 #
 # Creation Date : Wed Nov  9 10:03:04 2016
-# Last Modified : lun. 09 avril 2018 21:15:58 CEST
+# Last Modified : mar. 10 avril 2018 20:54:45 CEST
 """
 -----------
 DOCSTRING
@@ -37,13 +37,13 @@ import time
 from jupyter_client import find_connection_file
 from logging.handlers import RotatingFileHandler
 
-from cpyvke.curseswin.app import InitApp
-from cpyvke.curseswin.mainwin import MainWin
-from cpyvke.utils.config import cfg_setup
-from cpyvke.utils.kernel import connect_kernel, print_kernel_list
-from cpyvke.utils.kd import kd_status
-from cpyvke.utils.sockets import SocketManager
-from cpyvke.utils.term_colors import RED, RESET
+from .curseswin.app import InitApp
+from .curseswin.mainwin import MainWin
+from .utils.config import cfg_setup
+from .utils.kernel import connect_kernel, print_kernel_list
+from .utils.kd import kd_status
+from .utils.sockets import SocketManager
+from .utils.term_colors import RED, RESET
 
 locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
