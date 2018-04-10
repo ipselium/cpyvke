@@ -20,7 +20,7 @@
 #
 #
 # Creation Date :
-# Last Modified : mar. 10 avril 2018 20:31:43 CEST
+# Last Modified : mar. 10 avril 2018 21:55:52 CEST
 """
 -----------
 DOCSTRING
@@ -49,10 +49,13 @@ setup(
     include_package_data=True,
     install_requires=["jupyter_client", "ipykernel", "psutil", "numpy", "matplotlib"],
     classifiers=[
-        'Development Status :: Beta',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3.5',
+        'Operating System :: POSIX :: Linux',
+        'Topic :: Software Development :: Debuggers',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
     ],
     entry_points={
         'console_scripts': [

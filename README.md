@@ -58,8 +58,11 @@ longer maintened !
 ## Installation
 
 `git clone https://github.com/ipselium/cpyvke.git`
-
 `python3 setup.py install`
+
+### or 
+
+pip install cpyvke
 
 - - -
 
