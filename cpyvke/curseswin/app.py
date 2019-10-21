@@ -290,8 +290,8 @@ class InitApp:
         elif self.close_signal == 'shutdown':
             print('Exiting ! Shutting down daemon...')
             send_msg(self.sock.RequestSock, '<_stop>')
-            # self.kc.shutdown()
 
+        self.kc.stop_channels()
         self.sock.close_sockets()
         self.kill_all_figs()   # Stop all figure subprocesses
 
