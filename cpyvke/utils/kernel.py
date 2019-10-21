@@ -31,6 +31,7 @@ DOCSTRING
 
 from jupyter_client import BlockingKernelClient, manager
 import os
+import sys
 import subprocess
 import psutil
 import logging
@@ -212,7 +213,7 @@ def init_kernel(kc, backend='tk'):
     backend = 'tk'
 
     kc.execute("import numpy as _np", store_history=False)
-    kc.execute("_np.set_printoptions(threshold='nan')", store_history=False)
+    kc.execute("_np.set_printoptions(threshold={})".format(sys.maxsize), store_history=False)
     kc.execute("%matplotlib {}".format(backend), store_history=False)
     kc.execute("import cpyvke.utils.inspector as _inspect", store_history=False)
 
