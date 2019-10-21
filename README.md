@@ -46,12 +46,14 @@ longer maintened !
 
 ## Dependencies
 
-* Ipython >= 5.1
-* ipykernel (tested with 4.6.1)
-* jupyter_client >= 4.4
+* Ipython >= 5.1 (tested with 5.1.0 -- 7.2.0 -- 7.8.0)
+* ipykernel (tested with 4.6.1 -- 5.0.1 -- 5.1.3)
+* jupyter_client >= 4.4 (tested with 4.4.0 -- 5.2.4 -- 5.3.4)
 * psutil (tested with 3.4.2)
 * numpy (tested with 1.13.0)
 * matplotlib (tested with 1.5.1)
+
+
 
 - - -
 
@@ -60,7 +62,7 @@ longer maintened !
 `git clone https://github.com/ipselium/cpyvke.git`
 `python3 setup.py install`
 
-### or 
+### or
 
 pip install cpyvke
 

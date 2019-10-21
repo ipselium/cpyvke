@@ -20,7 +20,7 @@
 #
 #
 # Creation Date :
-# Last Modified : mar. 10 avril 2018 21:55:52 CEST
+# Last Modified : mer. 11 avril 2018 00:15:49 CEST
 """
 -----------
 DOCSTRING
@@ -40,6 +40,7 @@ setup(
     name='cpyvke',
     description='A Kernel and variable explorer in Curses',
     long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     version=cpyvke.__version__,
     license='GPL',
     url='https://github.com/ipselium/cpyvke',

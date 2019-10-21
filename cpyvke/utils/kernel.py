@@ -110,8 +110,11 @@ def set_kid(cf):
 def kernel_list(cf=None):
     """ List of connection files. """
 
+    path = os.path.expanduser('~/.local/share/jupyter/runtime/')
+    lstk1 = [path + item for item in os.listdir(path) if 'kernel' in item]
     path = '/run/user/1000/jupyter/'
-    lstk = [path + item for item in os.listdir(path) if 'kernel' in item]
+    lstk2 = [path + item for item in os.listdir(path) if 'kernel' in item]
+    lstk = lstk1 + lstk2
 
     try:
         lst = [(item, '[Alive]' if is_runing(item) else '[Died]') for item in lstk]
@@ -127,8 +130,11 @@ def kernel_dic(cf=None):
         {'name': {'value': val, 'type': 'type'}}
     """
 
+    path = os.path.expanduser('~/.local/share/jupyter/runtime/')
+    lstk1 = [path + item for item in os.listdir(path) if 'kernel' in item]
     path = '/run/user/1000/jupyter/'
-    lstk = [path + item for item in os.listdir(path) if 'kernel' in item]
+    lstk2 = [path + item for item in os.listdir(path) if 'kernel' in item]
+    lstk = lstk1 + lstk2
 
     try:
         return {set_kid(item): {'value': item, 'type': 'Connected'} if is_runing(item) and item == cf
