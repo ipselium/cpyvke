@@ -57,16 +57,22 @@ class Watcher(threading.Thread):
     The client may also request for the content of a variable.
     """
 
-    def __init__(self, kc, delay=0.1, sport=15555, rport=15556):
+    def __init__(self, kc, delay=0.1, sport=15557, rport=15556):
         """ Class constructor """
+
+        logger.info('++++++++++++++++++++++++++++')
+        logger.info('Initialize Watcher')
 
         # Init Thread
         threading.Thread.__init__(self)
         threading.Thread.daemon = True
 
+        logger.info('Watcher sent to thread')
+
         # Events
         self._stop = threading.Event()
         self._pause = threading.Event()
+        logger.info('Events created')
 
         # Inputs
         self.kc = kc
@@ -74,22 +80,37 @@ class Watcher(threading.Thread):
 
         # Queue
         self.kernel_queue = Queue()
+        logger.info('Queue created')
+
 
         # Init Main Socket
-        self.MainSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.MainSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.MainSock.bind(('', sport))
-        self.MainSock.listen(5)
-        self.MainSock.setblocking(0)
-        self.client_main = None
+        try:
+            self.MainSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.MainSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.MainSock.bind(('', sport))
+            self.MainSock.listen(5)
+            self.MainSock.setblocking(0)
+            self.client_main = None
+            logger.info('Main socket created')
+        except Exception as e:
+            logger.info(e)
+            logger.info('Exiting...')
+            sys.exit(1)
 
         # Init Request Socket
-        self.RequestSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.RequestSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.RequestSock.bind(('', rport))
-        self.RequestSock.listen(5)
-        self.RequestSock.setblocking(0)
-        self.client_request = None
+        try:
+            self.RequestSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.RequestSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.RequestSock.bind(('', rport))
+            self.RequestSock.listen(5)
+            self.RequestSock.setblocking(0)
+            self.client_request = None
+            logger.info('Request socket created')
+        except Exception as e:
+            logger.info(e)
+            logger.info('Exiting...')
+            sys.exit(1)
+
 
         logger.info('++++++++++++++++++++++++++++')
         logger.info('Daemon started !')

@@ -110,7 +110,7 @@ class cfg_setup:
         self.cfg.set('font', 'ascii-font', 'small')
 
         self.cfg.add_section('comm')
-        self.cfg.set('comm', 's-port', 15555)
+        self.cfg.set('comm', 's-port', 15557)
         self.cfg.set('comm', 'r-port', 15556)
 
         self.cfg.add_section('daemon')
