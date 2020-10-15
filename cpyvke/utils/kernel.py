@@ -131,10 +131,18 @@ def kernel_dic(cf=None):
         {'name': {'value': val, 'type': 'type'}}
     """
 
-    path = os.path.expanduser('~/.local/share/jupyter/runtime/')
-    lstk1 = [path + item for item in os.listdir(path) if 'kernel' in item]
-    path = '/run/user/1000/jupyter/'
-    lstk2 = [path + item for item in os.listdir(path) if 'kernel' in item]
+    try:
+        path = os.path.expanduser('~/.local/share/jupyter/runtime/')
+        lstk1 = [path + item for item in os.listdir(path) if 'kernel' in item]
+    except FileNotFoundError:
+        lstk1 = []
+
+    try:
+        path = '/run/user/1000/jupyter/'
+        lstk2 = [path + item for item in os.listdir(path) if 'kernel' in item]
+    except FileNotFoundError:
+        lstk2 = []
+
     lstk = lstk1 + lstk2
 
     try:

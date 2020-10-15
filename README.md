@@ -40,7 +40,7 @@ longer maintened !
 
 * 256 colors terminal is preferred, but cpyvke also works with 8 colors terminals.
 * python3-tk : install it with your package manager
-* Tested with **python 3.5 only**
+* Tested with **python 3.5, 3.6 and 3.7**
 
 - - -
 
