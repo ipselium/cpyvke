@@ -111,10 +111,18 @@ def set_kid(cf):
 def kernel_list(cf=None):
     """ List of connection files. """
 
-    path = os.path.expanduser('~/.local/share/jupyter/runtime/')
-    lstk1 = [path + item for item in os.listdir(path) if 'kernel' in item]
-    path = '/run/user/1000/jupyter/'
-    lstk2 = [path + item for item in os.listdir(path) if 'kernel' in item]
+    try:
+        path = os.path.expanduser('~/.local/share/jupyter/runtime/')
+        lstk1 = [path + item for item in os.listdir(path) if 'kernel' in item]
+    except FileNotFoundError:
+        lstk1 = []
+
+    try:
+        path = '/run/user/1000/jupyter/'
+        lstk2 = [path + item for item in os.listdir(path) if 'kernel' in item]
+    except FileNotFoundError:
+        lstk2 = []
+
     lstk = lstk1 + lstk2
 
     try:
